@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MELODÍA — Orquesta de Laptops UC</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --tx:#dfe5ec; --dim:#8b97a6;
+    --acc:#8f9ef0; --acc2:#e8b25a; --ok:#7fc47f; --warn:#e06a5a;
+    --mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--tx);font:13px/1.45 var(--mono);
+       display:flex;flex-direction:column;overflow:hidden;user-select:none;-webkit-user-select:none}
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:9px 14px;
+    border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{font-size:14px;margin:0;letter-spacing:.24em;font-weight:600;white-space:nowrap}
+  header h1 small{letter-spacing:.06em;color:var(--dim);font-weight:400;margin-left:8px;font-size:11px}
+  .grow{flex:1}
+  .ctl{display:flex;align-items:center;gap:6px}
+  label{color:var(--dim);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+  select,button{background:#1b2128;color:var(--tx);border:1px solid var(--line);border-radius:4px;
+    padding:4px 8px;font:12px var(--mono)}
+  button{cursor:pointer} button:hover{border-color:var(--acc)}
+  button.on{background:var(--acc2);color:#1a1204;border-color:var(--acc2);font-weight:700}
+  input[type=range]{width:104px;accent-color:var(--acc)}
+  main{flex:1;display:flex;flex-direction:column;min-height:0;padding:12px 16px;gap:10px;overflow:hidden}
+  #smpctl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:7px 14px;
+    border-bottom:1px solid var(--line);background:#12171d}
+  #smpctl .tt{color:var(--acc2);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase}
+  #smpctl label{display:flex;align-items:center;gap:5px}
+
+  #voces{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .voz{border:1px solid var(--line);border-radius:7px;background:var(--panel);padding:7px 10px;cursor:pointer;
+    display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .voz .t{font-size:15px} .voz .d{font-size:10.5px;color:var(--dim)}
+  .voz.on{background:#2a2010;border-color:var(--acc2)}
+  .voz.on .t{color:var(--acc2);font-weight:700}
+  .voz .o{display:flex;align-items:center;gap:3px;opacity:.55}
+  .voz:hover .o{opacity:1}
+  .voz .o b{font-size:10.5px;color:var(--dim);min-width:44px;text-align:center;font-weight:400}
+  .voz .o button{padding:0 6px;font-size:12px;line-height:17px}
+  #modos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .modo{border:1px solid var(--line);border-radius:7px;background:var(--panel);padding:8px 12px;cursor:pointer}
+  .modo .k{font-size:11px;color:var(--dim);letter-spacing:.1em}
+  .modo .t{font-size:15px;margin-top:2px}
+  .modo .d{font-size:11px;color:var(--dim);margin-top:2px}
+  .modo.on{background:#1b2233;border-color:var(--acc)}
+  .modo.on .t{color:var(--acc);font-weight:700} .modo.on .k{color:var(--acc)}
+
+  #pista{border:1px solid var(--line);border-radius:7px;background:var(--panel);padding:8px 12px;min-height:0}
+  #pista .cab{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+  #pista .cab .t{color:var(--acc2);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase}
+  #pista .cab button{padding:2px 9px;font-size:11px}
+  #pista .cab .ay{color:var(--dim);font-size:10.5px}
+  .nt{display:inline-block;min-width:38px;text-align:center;padding:5px 6px;margin-right:3px;
+    border-radius:5px;background:#1b2128;font-size:14px;border:1px solid transparent}
+  .nt.ya{color:#5d6874;background:#161b21}
+  .nt.now{background:var(--acc);color:#0a0d1c;font-weight:700;transform:scale(1.12)}
+  .nt.sig{border-color:var(--acc2);color:var(--acc2)}
+  .barra{display:inline-block;width:2px;height:22px;background:#3a4450;margin:0 7px;vertical-align:middle}
+  #hoja{overflow-y:auto;max-height:46vh}
+  #hoja svg{display:block;margin:0 auto}
+  .stf{stroke:#49535f;stroke-width:1}
+  .ldg{stroke:#5b6775;stroke-width:1.4}
+  .bar{stroke:#6b7684;stroke-width:1.6}
+  .ncomp{fill:#5b6775;font:600 10px var(--mono)}
+  .nh{fill:#e6ecf4} .nh.hueca{fill:none;stroke:#e6ecf4;stroke-width:1.8}
+  .nh.act{fill:var(--acc2)} .nh.hueca.act{fill:none;stroke:var(--acc2)}
+  .stm,.bm{stroke:#e6ecf4;fill:#e6ecf4}
+  .stm.act,.bm.act{stroke:var(--acc2);fill:var(--acc2)}
+  .acc{fill:#e6ecf4;font:400 20px "STIXGeneral","Bravura","Noto Music",Georgia,serif}
+  .acc.act{fill:var(--acc2)}
+  .rst{fill:#9aa6b4;font:400 30px "STIXGeneral","Bravura","Noto Music",Georgia,serif}
+  .rst.act{fill:var(--acc2)}
+  .clef{fill:#cfd8e3;font:400 50px "STIXGeneral","Bravura","Noto Music",Georgia,serif}
+  .och{fill:#cfd8e3;font:700 13px var(--mono)}
+  .tie{stroke:#e6ecf4;fill:none;stroke-width:1.6}
+  #pista .cab button{padding:3px 11px;font-size:11.5px}
+  #ta{width:100%;height:150px;background:#0d1116;color:var(--tx);border:1px solid var(--acc2);
+    border-radius:5px;padding:9px 11px;font:12.5px/1.7 var(--mono);resize:vertical}
+
+  #piano{flex:none;height:150px;position:relative}
+  #piano svg{width:100%;height:100%;display:block}
+  footer{padding:7px 14px;border-top:1px solid var(--line);background:var(--panel);
+    color:var(--dim);font-size:11px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  kbd{background:#1e242b;border:1px solid var(--line);border-radius:3px;padding:1px 5px;font-size:10.5px;color:var(--tx)}
+  #splash{position:fixed;inset:0;background:rgba(8,10,12,.97);display:flex;align-items:center;
+    justify-content:center;z-index:9;padding:20px}
+  #splash .box{max-width:660px;padding:26px 30px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+  #splash h2{margin:0 0 4px;font-size:21px;letter-spacing:.2em}
+  #splash p{color:var(--dim);font-size:12.5px} #splash b{color:var(--tx)}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<div id="splash"><div class="box">
+  <h2>MELODÍA</h2>
+  <p>Gracias a la Vida · Violeta Parra<br>
+  IEE2003 Orquesta de Laptops · Pontificia Universidad Católica de Chile</p>
+  <p style="margin-top:14px">
+  <b>Tres modos</b>, con <kbd>F1</kbd> <kbd>F2</kbd> <kbd>F3</kbd> o clicando arriba:<br>
+  <b>guiada</b> — da lo mismo qué tecla aprietes, cada pulsación toca la nota siguiente de la melodía.<br>
+  <b>cromática</b> — teclado de piano de dos octavas: hay que aprenderse la melodía.<br>
+  <b>grabar</b> — tocas en el teclado cromático y lo que toques queda como la melodía.</p>
+  <p><b>Elige tu voz arriba</b> — Soprano, Contralto, Tenor o Bajo — y el modo guiado recorre
+  esa línea.  <kbd>Tab</kbd> cambia de voz. Con <b>escuchar las cuatro</b> suena el acorde completo
+  con tu voz por delante.</p>
+  <p style="border-left:2px solid var(--acc2);padding-left:10px">
+  <b>Las cuatro voces vienen cargadas</b> desde la versión coral de José Luis Blasco,
+  del compás 7 al final, ya en la menor. <b>Se ve la partitura</b>: la nota que toca
+  está marcada en ámbar, así se ve si son dos corcheas o una negra.
+  El botón <b>⟲ volver al principio</b> reinicia; <b>◀ una nota</b> retrocede.</p>
+  <p class="hidden"> Se pegan en el editor tal como están escritas
+  en la partitura, una línea por voz:<br>
+  <code style="color:var(--tx)">S: D5 D5 E5 D5 ...</code><br>
+  con la <b>armadura</b> puesta en sol menor no hace falta escribir los bemoles: un
+  <code style="color:var(--tx)">B4</code> ya suena si bemol. Escribe la alteración solo cuando
+  el papel la trae a mano (<code style="color:var(--tx)">F#4</code>, <code style="color:var(--tx)">Bn4</code> para un becuadro)
+  y el control <b>transportar</b> las mueve. El arreglo del Coro UMCE está en sol menor,
+  así que <b>+2 semitonos</b> lo deja en la menor. Al tenor déjale la octava en −1, porque su
+  clave lleva el 8 abajo.</p>
+  <div style="margin-top:18px;display:flex;gap:12px;align-items:center">
+    <button id="go" style="background:var(--acc);color:#0a0d1c;border-color:var(--acc);font-weight:700;padding:8px 18px">Activar audio</button>
+    <span style="color:var(--dim);font-size:11.5px">Chrome o Firefox.</span>
+  </div>
+</div></div>
+
+<header>
+  <h1>MELODÍA <small>Gracias a la Vida · OLUC</small></h1>
+  <div class="ctl"><label>timbre</label>
+    <select id="timbre">
+      <option value="cuerdas">cuerdas</option><option value="guitarra">guitarra</option>
+      <option value="organo">órgano</option><option value="coro">coro</option>
+      <option value="campana">campana</option><option value="sample" disabled>sample</option>
+    </select></div>
+  <div class="ctl"><label>ataque</label>
+    <select id="art"><option value="sost">sostenido</option><option value="corto">staccato</option>
+      <option value="trem">trémolo</option></select></div>
+  <div class="ctl"><label>vibrato</label><input type="range" id="vib" min="0" max="100" value="18"></div>
+  <div class="ctl"><label>vel</label><input type="range" id="bpm" min="40" max="220" value="96"><span id="bpmv" style="width:34px">96</span></div>
+  <div class="ctl"><label><input type="checkbox" id="cuatro" style="accent-color:var(--acc)"> escuchar las cuatro</label></div>
+  <div class="ctl"><label>8va</label>
+    <select id="oct"><option value="-2">−2</option><option value="-1">−1</option>
+      <option value="0" selected>0</option><option value="1">+1</option><option value="2">+2</option></select></div>
+  <div class="ctl"><label>vol</label><input type="range" id="vol" min="0" max="100" value="70"></div>
+  <div class="grow"></div>
+  <button id="btnSmp">cargar sample…</button>
+  <input type="file" id="fsample" accept="audio/*" class="hidden">
+</header>
+
+<div id="smpctl" class="hidden">
+  <span class="tt">sample</span>
+  <div class="ctl"><label>afinación</label><select id="base"></select>
+    <button id="btnAfinar">afinar solo</button></div>
+  <div class="ctl"><label>cents</label><input type="range" id="cents" min="-100" max="100" value="0" style="width:78px">
+    <span id="centsv" style="width:34px;color:var(--dim)">0</span></div>
+  <div class="ctl"><label>definición</label><input type="range" id="defs" min="0" max="100" value="35"></div>
+  <div class="ctl"><label><input type="checkbox" id="loops" style="accent-color:var(--acc)"> loop sostenido</label></div>
+  <div class="grow"></div>
+  <span id="smpinfo" style="color:var(--dim);font-size:11px"></span>
+</div>
+
+<main>
+  <div id="voces"></div>
+  <div id="modos"></div>
+  <div id="pista"></div>
+  <div id="piano"></div>
+</main>
+
+<footer>
+  <span><kbd>F1</kbd> <kbd>F2</kbd> <kbd>F3</kbd> modo</span>
+  <span id="ayuda"></span>
+  <span><kbd>←</kbd> <kbd>→</kbd> octava</span>
+  <span><kbd>Backspace</kbd> retroceder una nota</span>
+  <span>los botones <b>⟲ volver al principio</b> y <b>◀ una nota</b> están sobre la partitura</span>
+  <span><kbd>Esc</kbd> cortar</span>
+  <span class="grow"></span>
+  <span id="info" style="opacity:.7"></span>
+</footer>
+<script>
+/* ============================================================
+   MELODÍA — instrumento para la línea de canto
+   Gracias a la Vida · Violeta Parra · IEE2003 OLUC
+   Mismo motor de sonido que la app de acordes, incluido el sampler.
+   ============================================================ */
+const $=id=>document.getElementById(id);
+const LETRAS=["C","C♯","D","E♭","E","F","F♯","G","G♯","A","B♭","B"];
+const LET="CDEFGAB", SEMI=[0,2,4,5,7,9,11];
+const nombre=m=>LETRAS[((m%12)+12)%12]+(Math.floor(m/12)-1);
+/* armadura: las alteraciones que el papel da por sabidas. Así se puede pegar
+   "B4" leyendo del pentagrama y suena si bemol si la armadura es de sol menor.
+   Un ♭ o un ♯ escrito a mano manda sobre la armadura; ♮ la cancela. */
+let armadura={};   /* las voces cargadas ya vienen en la menor y con sus alteraciones escritas */
+function midiDe(s){
+  const m=/^([A-Ga-g])([#b♯♭n♮]?)(-?\d)$/.exec((s||"").trim());
+  if(!m) return null;
+  const L=m[1].toUpperCase(), a=m[2];
+  const alt = a==="#"||a==="♯" ? 1
+            : a==="b"||a==="♭" ? -1
+            : a==="n"||a==="♮" ? 0
+            : (armadura[L]||0);
+  return 12*(+m[3]+1)+SEMI[LET.indexOf(L)]+alt;
+}
+/* ---------- audio ---------- */
+let ctx=null,master=null,comp=null,salida=null,bufSample=null;
+const frec=m=>440*Math.pow(2,(m-69)/12);
+const NOMB=["do","do♯","re","mi♭","mi","fa","fa♯","sol","sol♯","la","si♭","si"];
+function iniAudio(){
+  if(ctx) return;
+  ctx=new (window.AudioContext||window.webkitAudioContext)();
+  master=ctx.createGain(); master.gain.value=.7;
+  comp=ctx.createDynamicsCompressor();
+  comp.threshold.value=-10; comp.knee.value=10; comp.ratio.value=10; comp.attack.value=.003; comp.release.value=.25;
+  salida=ctx.createGain(); salida.gain.value=.82;
+  master.connect(comp); comp.connect(salida); salida.connect(ctx.destination);
+}
+
+/* una nota sostenida, con soltar() */
+function Sonido(midi,t0,vel,timbre){
+  const f=frec(midi), t=Math.max(t0,ctx.currentTime), g=ctx.createGain(), nodos=[];
+  g.connect(master);
+  let rel=.35;
+  if(timbre==="sample"&&bufSample){
+    const s=ctx.createBufferSource(); s.buffer=bufSample;
+    if(loopSample){ s.loop=true; s.loopStart=0; s.loopEnd=bufSample.duration; }
+    s.playbackRate.value=(f/frec(baseSample))*Math.pow(2,centsSample/1200);
+    s.connect(g);
+    /* definición: un pasabanda muy resonante en la fundamental, en paralelo al
+       sonido seco. Hace cantar la altura aunque la muestra sea ruidosa. */
+    if(defSample>0){
+      const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.Q.value=30; bp.frequency.value=f;
+      const bp2=ctx.createBiquadFilter(); bp2.type="bandpass"; bp2.Q.value=32; bp2.frequency.value=f*2;
+      const bg=ctx.createGain(); bg.gain.value=defSample*7;
+      const bg2=ctx.createGain(); bg2.gain.value=defSample*3;
+      s.connect(bp); bp.connect(bg); bg.connect(g);
+      s.connect(bp2); bp2.connect(bg2); bg2.connect(g);
+    }
+    s.start(t); nodos.push(s); rel=.25;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel,t+.006);
+  }else if(timbre==="guitarra"){
+    const o=ctx.createOscillator(),o2=ctx.createOscillator(),lp=ctx.createBiquadFilter();
+    o.type="sawtooth";o2.type="triangle";o.frequency.value=f;o2.frequency.value=f*1.005;
+    lp.type="lowpass";lp.Q.value=1.4;lp.frequency.setValueAtTime(3200,t);
+    lp.frequency.exponentialRampToValueAtTime(500,t+1.6);
+    o.connect(lp);o2.connect(lp);lp.connect(g);o.start(t);o2.start(t);nodos.push(o,o2);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel,t+.004);
+    g.gain.exponentialRampToValueAtTime(vel*.14,t+2.2); rel=.25;
+  }else if(timbre==="campana"){
+    const c=ctx.createOscillator(),m=ctx.createOscillator(),mg=ctx.createGain();
+    c.frequency.value=f;m.frequency.value=f*3.47;
+    mg.gain.setValueAtTime(f*7,t); mg.gain.exponentialRampToValueAtTime(f*.02,t+2.6);
+    m.connect(mg);mg.connect(c.frequency);c.connect(g);c.start(t);m.start(t);nodos.push(c,m);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.8,t+.004);
+    g.gain.exponentialRampToValueAtTime(vel*.05,t+3.2); rel=.5;
+  }else if(timbre==="organo"){
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.3,t+.02); rel=.12;
+    [1,2,3,4,6].forEach((h,i)=>{ const o=ctx.createOscillator(),gg=ctx.createGain();
+      o.type="sine";o.frequency.value=f*h;gg.gain.value=[1,.5,.34,.18,.1][i];
+      o.connect(gg);gg.connect(g);o.start(t);nodos.push(o); });
+  }else if(timbre==="coro"){
+    const lfo=ctx.createOscillator(),lg=ctx.createGain();
+    lfo.frequency.value=4.8; lg.gain.value=f*.006; lfo.connect(lg); lfo.start(t); nodos.push(lfo);
+    const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=1100; lp.Q.value=3;
+    lp.connect(g);
+    [1,2,3].forEach((h,i)=>{ const o=ctx.createOscillator(),gg=ctx.createGain();
+      o.type=i?"sine":"triangle";o.frequency.value=f*h;gg.gain.value=[1,.28,.12][i];
+      lg.connect(o.frequency); o.connect(gg);gg.connect(lp);o.start(t);nodos.push(o); });
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.42,t+.22); rel=.6;
+  }else{ /* cuerdas */
+    const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.Q.value=1.1;
+    lp.frequency.setValueAtTime(700,t); lp.frequency.linearRampToValueAtTime(2400,t+.5);
+    lp.connect(g);
+    const o=ctx.createOscillator(),o2=ctx.createOscillator();
+    o.type="sawtooth";o2.type="sawtooth";o.frequency.value=f;o2.frequency.value=f*1.0055;
+    o.connect(lp);o2.connect(lp);o.start(t);o2.start(t);nodos.push(o,o2);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.5,t+.14); rel=.45;
+  }
+  this.nodos=nodos;
+  this.soltar=(largo)=>{
+    const n=ctx.currentTime, r=largo||rel;
+    try{ g.gain.cancelScheduledValues(n); g.gain.setValueAtTime(Math.max(.0001,g.gain.value),n);
+         g.gain.exponentialRampToValueAtTime(.0001,n+r); }catch(e){}
+    nodos.forEach(o=>{ try{o.stop(n+r+.05)}catch(e){} });
+  };
+}
+/* nota corta percutida */
+function golpe(midi,t0,dur,vel,timbre){
+  const s=new Sonido(midi,t0,vel,timbre);
+  const esp=Math.max(0,t0-ctx.currentTime)+dur;
+  setTimeout(()=>s.soltar(timbre==="campana"?1.2:.18),esp*1000);
+  return s;
+}
+
+
+/* ---------- melodía ---------- */
+/* La melodía se escribe como nombres de nota separados por espacios.
+   La barra vertical separa frases y no suena. Se puede grabar tocándola. */
+/* ------------------------------------------------------------------
+   LAS CUATRO VOCES, CON SUS FIGURAS
+   Leídas glifo por glifo del PDF vectorial (fuente Anastasia) de la versión
+   coral de J.L. Blasco, desde el c.7 hasta el final, y transportadas de sol
+   menor a la menor. Los 104 compases-voz cuadran exactos con su cifra de
+   compás, sin ningún ajuste a mano.
+
+   PARTES[voz][0] es la línea de arriba del divisi y PARTES[voz][1] la de
+   abajo; donde la voz no va divisi las dos son idénticas. En el c.31 las dos
+   líneas llevan figuras distintas (blanca con puntillo arriba contra tres
+   negras con puntillo abajo), por eso van como listas separadas.
+   Cada evento es [duración en corcheas, nº de compás, [[midi, grado]]];
+   sin nota = silencio.
+
+   El tenor está escrito en clave de sol con el 8 abajo: se dibuja como está
+   escrito y suena una octava más grave (oct:−1 en VOCES).
+   ------------------------------------------------------------------ */
+const PARTES={"S":[[[1,7,[]],[1,7,[[76,37]]],[1,7,[[76,37]]],[2,7,[[76,37]]],[1,7,[[76,37]]],[3.0,8,[[77,38]]],[3.0,8,[[71,34]]],[2,8,[[71,34]]],[1,8,[]],[1,9,[]],[1,9,[[74,36]]],[1,9,[[74,36]]],[2,9,[[74,36]]],[1,9,[[72,35]]],[3.0,10,[[76,37]]],[3.0,10,[[69,33]]],[2,10,[[69,33]]],[1,10,[]],[1,11,[]],[1,11,[[72,35]]],[1,11,[[72,35]]],[2,11,[[72,35]]],[1,11,[[72,35]]],[3.0,12,[[72,35]]],[3.0,12,[[67,32]]],[2,12,[[67,32]]],[1,12,[]],[1,13,[]],[1,13,[[71,34]]],[1,13,[[76,37]]],[1,13,[[76,37]]],[1,13,[[76,37]]],[1,13,[[76,37]]],[2,14,[[76,37]]],[1,14,[[72,35]]],[3.0,14,[[72,35]]],[2,14,[[72,35]]],[1,14,[]],[1,15,[]],[1,15,[[76,37]]],[1,15,[[76,37]]],[1,15,[[76,37]]],[1,15,[[76,37]]],[1,15,[[76,37]]],[2,16,[[76,37]]],[1,16,[[74,36]]],[3.0,16,[[74,36]]],[2,16,[[74,36]]],[1,16,[]],[1,17,[]],[1,17,[[74,36]]],[1,17,[[74,36]]],[1,17,[[74,36]]],[1,17,[[74,36]]],[1,17,[[74,36]]],[2,18,[[74,36]]],[1,18,[[72,35]]],[3.0,18,[[72,35]]],[2,18,[[72,35]]],[1,18,[]],[1,19,[]],[1,19,[[72,35]]],[1,19,[[72,35]]],[1,19,[[72,35]]],[1,19,[[72,35]]],[1,19,[[72,35]]],[1,19,[[72,35]]],[1,19,[[71,34]]],[1,19,[[72,35]]],[3.0,20,[[74,36]]],[2,20,[[74,36]]],[1,20,[[76,37]]],[3.0,21,[[77,38]]],[3.0,21,[[76,37]]],[2,21,[[76,37]]],[1,21,[]],[1,22,[]],[1,22,[[74,36]]],[1,22,[[74,36]]],[1,22,[[74,36]]],[1,22,[[74,36]]],[1,22,[[74,36]]],[1,22,[[72,35]]],[1,22,[[71,34]]],[1,22,[[72,35]]],[3.0,23,[[76,37]]],[2,23,[[76,37]]],[1,23,[[72,35]]],[3.0,24,[[71,34]]],[3.0,24,[[69,33]]],[2,24,[[69,33]]],[1,24,[]],[9,25,[]],[1,26,[]],[1,26,[[74,36]]],[1,26,[[74,36]]],[1,26,[[74,36]]],[1,26,[[74,36]]],[1,26,[[74,36]]],[1,26,[[72,35]]],[1,26,[[71,34]]],[1,26,[[72,35]]],[3.0,27,[[76,37]]],[2,27,[[76,37]]],[1,27,[[72,35]]],[3.0,28,[[71,34]]],[3.0,28,[[69,33]]],[2,28,[[69,33]]],[1,28,[]],[1,29,[]],[1,29,[[76,37]]],[1,29,[[76,37]]],[1,29,[[76,37]]],[1,29,[[76,37]]],[1,29,[[76,37]]],[1,29,[[76,37]]],[1,29,[[74,36]]],[1,29,[[76,37]]],[3.0,30,[[77,38]]],[2,30,[[77,38]]],[1,30,[[74,36]]],[3.0,31,[[77,38]]],[6.0,31,[[76,37]]],[6.0,32,[[76,37]]]],[[1,7,[]],[1,7,[[72,35]]],[1,7,[[72,35]]],[2,7,[[72,35]]],[1,7,[[72,35]]],[3.0,8,[[74,36]]],[3.0,8,[[71,34]]],[2,8,[[71,34]]],[1,8,[]],[1,9,[]],[1,9,[[71,34]]],[1,9,[[71,34]]],[2,9,[[71,34]]],[1,9,[[72,35]]],[3.0,10,[[72,35]]],[3.0,10,[[69,33]]],[2,10,[[69,33]]],[1,10,[]],[1,11,[]],[1,11,[[69,33]]],[1,11,[[69,33]]],[2,11,[[69,33]]],[1,11,[[69,33]]],[3.0,12,[[69,33]]],[3.0,12,[[67,32]]],[2,12,[[67,32]]],[1,12,[]],[1,13,[]],[1,13,[[71,34]]],[1,13,[[72,35]]],[1,13,[[72,35]]],[1,13,[[72,35]]],[1,13,[[72,35]]],[2,14,[[72,35]]],[1,14,[[72,35]]],[3.0,14,[[72,35]]],[2,14,[[72,35]]],[1,14,[]],[1,15,[]],[1,15,[[72,35]]],[1,15,[[72,35]]],[1,15,[[72,35]]],[1,15,[[72,35]]],[1,15,[[72,35]]],[2,16,[[72,35]]],[1,16,[[71,34]]],[3.0,16,[[71,34]]],[2,16,[[71,34]]],[1,16,[]],[1,17,[]],[1,17,[[72,35]]],[1,17,[[72,35]]],[1,17,[[72,35]]],[1,17,[[72,35]]],[1,17,[[72,35]]],[2,18,[[72,35]]],[1,18,[[69,33]]],[3.0,18,[[69,33]]],[2,18,[[69,33]]],[1,18,[]],[1,19,[]],[1,19,[[69,33]]],[1,19,[[69,33]]],[1,19,[[69,33]]],[1,19,[[69,33]]],[1,19,[[68,32]]],[1,19,[[67,32]]],[1,19,[[67,32]]],[1,19,[[69,33]]],[3.0,20,[[71,34]]],[2,20,[[71,34]]],[1,20,[[72,35]]],[3.0,21,[[74,36]]],[3.0,21,[[72,35]]],[2,21,[[72,35]]],[1,21,[]],[1,22,[]],[1,22,[[71,34]]],[1,22,[[71,34]]],[1,22,[[71,34]]],[1,22,[[71,34]]],[1,22,[[71,34]]],[1,22,[[69,33]]],[1,22,[[68,32]]],[1,22,[[69,33]]],[3.0,23,[[71,34]]],[2,23,[[71,34]]],[1,23,[[72,35]]],[3.0,24,[[71,34]]],[3.0,24,[[69,33]]],[2,24,[[69,33]]],[1,24,[]],[9,25,[]],[1,26,[]],[1,26,[[71,34]]],[1,26,[[71,34]]],[1,26,[[71,34]]],[1,26,[[71,34]]],[1,26,[[71,34]]],[1,26,[[69,33]]],[1,26,[[68,32]]],[1,26,[[69,33]]],[3.0,27,[[71,34]]],[2,27,[[71,34]]],[1,27,[[72,35]]],[3.0,28,[[71,34]]],[3.0,28,[[69,33]]],[2,28,[[69,33]]],[1,28,[]],[1,29,[]],[1,29,[[72,35]]],[1,29,[[72,35]]],[1,29,[[72,35]]],[1,29,[[72,35]]],[1,29,[[72,35]]],[1,29,[[72,35]]],[1,29,[[71,34]]],[1,29,[[72,35]]],[3.0,30,[[74,36]]],[2,30,[[74,36]]],[1,30,[[71,34]]],[3.0,31,[[74,36]]],[3.0,31,[[72,35]]],[3.0,31,[[71,34]]],[6.0,32,[[72,35]]]]],"C":[[[1,7,[]],[1,7,[[69,33]]],[1,7,[[69,33]]],[2,7,[[69,33]]],[1,7,[[69,33]]],[3.0,8,[[71,34]]],[3.0,8,[[68,32]]],[2,8,[[67,32]]],[1,8,[]],[1,9,[]],[1,9,[[68,32]]],[1,9,[[67,32]]],[2,9,[[67,32]]],[1,9,[[69,33]]],[3.0,10,[[69,33]]],[3.0,10,[[69,33]]],[2,10,[[69,33]]],[1,10,[]],[1,11,[]],[1,11,[[65,31]]],[1,11,[[65,31]]],[2,11,[[65,31]]],[1,11,[[65,31]]],[3.0,12,[[65,31]]],[3.0,12,[[67,32]]],[2,12,[[67,32]]],[1,12,[]],[1,13,[]],[1,13,[[67,32]]],[1,13,[[69,33]]],[1,13,[[69,33]]],[1,13,[[69,33]]],[1,13,[[67,32]]],[2,14,[[67,32]]],[1,14,[[67,32]]],[3.0,14,[[67,32]]],[2,14,[[67,32]]],[1,14,[]],[1,15,[]],[1,15,[[67,32]]],[1,15,[[67,32]]],[1,15,[[67,32]]],[1,15,[[67,32]]],[1,15,[[67,32]]],[2,16,[[67,32]]],[1,16,[[67,32]]],[3.0,16,[[67,32]]],[2,16,[[67,32]]],[1,16,[]],[1,17,[]],[1,17,[[69,33]]],[1,17,[[69,33]]],[1,17,[[69,33]]],[1,17,[[69,33]]],[1,17,[[69,33]]],[2,18,[[69,33]]],[1,18,[[65,31]]],[3.0,18,[[65,31]]],[2,18,[[65,31]]],[1,18,[]],[1,19,[]],[1,19,[[65,31]]],[1,19,[[65,31]]],[1,19,[[65,31]]],[1,19,[[65,31]]],[1,19,[[64,30]]],[1,19,[[64,30]]],[1,19,[[64,30]]],[1,19,[[69,33]]],[3.0,20,[[68,32]]],[2,20,[[67,32]]],[1,20,[[69,33]]],[3.0,21,[[71,34]]],[3.0,21,[[69,33]]],[2,21,[[69,33]]],[1,21,[]],[1,22,[]],[1,22,[[65,31]]],[1,22,[[69,33]]],[1,22,[[69,33]]],[1,22,[[69,33]]],[1,22,[[68,32]]],[1,22,[[65,31]]],[1,22,[[64,30]]],[1,22,[[64,30]]],[3.0,23,[[68,32]]],[2,23,[[67,32]]],[1,23,[[69,33]]],[3.0,24,[[68,32]]],[3.0,24,[[69,33]]],[2,24,[[69,33]]],[1,24,[]],[2,25,[[67,32]]],[1,25,[[69,33]]],[3.0,25,[[71,34]]],[3.0,25,[[69,33]]],[1,26,[]],[1,26,[[65,31]]],[1,26,[[69,33]]],[1,26,[[69,33]]],[1,26,[[69,33]]],[1,26,[[68,32]]],[1,26,[[65,31]]],[1,26,[[64,30]]],[1,26,[[64,30]]],[3.0,27,[[67,32]]],[2,27,[[67,32]]],[1,27,[[69,33]]],[3.0,28,[[68,32]]],[3.0,28,[[69,33]]],[2,28,[[69,33]]],[1,28,[]],[1,29,[]],[1,29,[[69,33]]],[1,29,[[69,33]]],[1,29,[[69,33]]],[1,29,[[69,33]]],[1,29,[[69,33]]],[1,29,[[68,32]]],[1,29,[[67,32]]],[1,29,[[69,33]]],[3.0,30,[[71,34]]],[2,30,[[71,34]]],[1,30,[[68,32]]],[3.0,31,[[71,34]]],[3.0,31,[[69,33]]],[3.0,31,[[68,32]]],[6.0,32,[[69,33]]]],[[1,7,[]],[1,7,[[69,33]]],[1,7,[[69,33]]],[2,7,[[69,33]]],[1,7,[[69,33]]],[3.0,8,[[71,34]]],[3.0,8,[[68,32]]],[2,8,[[67,32]]],[1,8,[]],[1,9,[]],[1,9,[[68,32]]],[1,9,[[67,32]]],[2,9,[[67,32]]],[1,9,[[69,33]]],[3.0,10,[[69,33]]],[3.0,10,[[69,33]]],[2,10,[[69,33]]],[1,10,[]],[1,11,[]],[1,11,[[65,31]]],[1,11,[[65,31]]],[2,11,[[65,31]]],[1,11,[[65,31]]],[3.0,12,[[65,31]]],[3.0,12,[[67,32]]],[2,12,[[67,32]]],[1,12,[]],[1,13,[]],[1,13,[[67,32]]],[1,13,[[69,33]]],[1,13,[[69,33]]],[1,13,[[69,33]]],[1,13,[[67,32]]],[2,14,[[67,32]]],[1,14,[[67,32]]],[3.0,14,[[67,32]]],[2,14,[[67,32]]],[1,14,[]],[1,15,[]],[1,15,[[67,32]]],[1,15,[[67,32]]],[1,15,[[67,32]]],[1,15,[[67,32]]],[1,15,[[67,32]]],[2,16,[[67,32]]],[1,16,[[67,32]]],[3.0,16,[[67,32]]],[2,16,[[67,32]]],[1,16,[]],[1,17,[]],[1,17,[[69,33]]],[1,17,[[69,33]]],[1,17,[[69,33]]],[1,17,[[69,33]]],[1,17,[[69,33]]],[2,18,[[69,33]]],[1,18,[[65,31]]],[3.0,18,[[65,31]]],[2,18,[[65,31]]],[1,18,[]],[1,19,[]],[1,19,[[65,31]]],[1,19,[[65,31]]],[1,19,[[65,31]]],[1,19,[[65,31]]],[1,19,[[64,30]]],[1,19,[[64,30]]],[1,19,[[64,30]]],[1,19,[[69,33]]],[3.0,20,[[68,32]]],[2,20,[[67,32]]],[1,20,[[69,33]]],[3.0,21,[[71,34]]],[3.0,21,[[69,33]]],[2,21,[[69,33]]],[1,21,[]],[1,22,[]],[1,22,[[65,31]]],[1,22,[[69,33]]],[1,22,[[69,33]]],[1,22,[[69,33]]],[1,22,[[68,32]]],[1,22,[[65,31]]],[1,22,[[64,30]]],[1,22,[[64,30]]],[3.0,23,[[68,32]]],[2,23,[[67,32]]],[1,23,[[69,33]]],[3.0,24,[[68,32]]],[3.0,24,[[69,33]]],[2,24,[[69,33]]],[1,24,[]],[2,25,[[67,32]]],[1,25,[[69,33]]],[3.0,25,[[71,34]]],[3.0,25,[[69,33]]],[1,26,[]],[1,26,[[65,31]]],[1,26,[[69,33]]],[1,26,[[69,33]]],[1,26,[[69,33]]],[1,26,[[68,32]]],[1,26,[[65,31]]],[1,26,[[64,30]]],[1,26,[[64,30]]],[3.0,27,[[67,32]]],[2,27,[[67,32]]],[1,27,[[69,33]]],[3.0,28,[[68,32]]],[3.0,28,[[69,33]]],[2,28,[[69,33]]],[1,28,[]],[1,29,[]],[1,29,[[69,33]]],[1,29,[[69,33]]],[1,29,[[69,33]]],[1,29,[[69,33]]],[1,29,[[69,33]]],[1,29,[[68,32]]],[1,29,[[67,32]]],[1,29,[[69,33]]],[3.0,30,[[71,34]]],[2,30,[[71,34]]],[1,30,[[68,32]]],[3.0,31,[[71,34]]],[3.0,31,[[69,33]]],[3.0,31,[[68,32]]],[6.0,32,[[69,33]]]]],"T":[[[3.0,7,[[76,37]]],[3.0,7,[[77,38]]],[3.0,8,[[76,37]]],[2,8,[[76,37]]],[1,8,[[76,37]]],[2,8,[[74,36]]],[1,8,[[76,37]]],[2,9,[[77,38]]],[1,9,[[76,37]]],[2,9,[[77,38]]],[1,9,[[77,38]]],[3.0,10,[[76,37]]],[2,10,[[76,37]]],[1,10,[[76,37]]],[2,10,[[79,39]]],[1,10,[[77,38]]],[2,11,[[76,37]]],[1,11,[[74,36]]],[3.0,11,[[74,36]]],[2,12,[[74,36]]],[1,12,[[76,37]]],[3.0,12,[[77,38]]],[3.0,12,[[77,38]]],[3.0,13,[[77,38]]],[3.0,13,[[77,38]]],[2,14,[[76,37]]],[1,14,[[76,37]]],[3.0,14,[[77,38]]],[3.0,14,[[79,39]]],[3.0,15,[[76,37]]],[3.0,15,[[77,38]]],[3.0,16,[[76,37]]],[2,16,[[76,37]]],[1,16,[[76,37]]],[3.0,16,[[77,38]]],[2,17,[[77,38]]],[1,17,[[76,37]]],[2,17,[[77,38]]],[1,17,[[79,39]]],[2,18,[[77,38]]],[1,18,[[76,37]]],[3.0,18,[[76,37]]],[3.0,18,[[77,38]]],[2,19,[[76,37]]],[1,19,[[77,38]]],[2,19,[[76,37]]],[1,19,[[76,37]]],[2,19,[[74,36]]],[1,19,[[76,37]]],[2,20,[[77,38]]],[1,20,[[76,37]]],[2,20,[[77,38]]],[1,20,[[79,39]]],[2,21,[[77,38]]],[1,21,[[77,38]]],[3.0,21,[[77,38]]],[3.0,21,[[76,37]]],[2,22,[[74,36]]],[1,22,[[77,38]]],[2,22,[[77,38]]],[1,22,[[76,37]]],[3.0,22,[[74,36]]],[2,23,[[76,37]]],[1,23,[[74,36]]],[2,23,[[76,37]]],[1,23,[[77,38]]],[2,24,[[76,37]]],[1,24,[[76,37]]],[3.0,24,[[77,38]]],[3.0,24,[[76,37]]],[2,25,[[77,38]]],[1,25,[[76,37]]],[3.0,25,[[74,36]]],[3.0,25,[[72,35]]],[2,26,[[74,36]]],[1,26,[[77,38]]],[2,26,[[77,38]]],[1,26,[[76,37]]],[3.0,26,[[74,36]]],[2,27,[[76,37]]],[1,27,[[74,36]]],[2,27,[[76,37]]],[1,27,[[77,38]]],[2,28,[[76,37]]],[1,28,[[76,37]]],[3.0,28,[[77,38]]],[3.0,28,[[76,37]]],[2,29,[[76,37]]],[1,29,[[76,37]]],[2,29,[[76,37]]],[1,29,[[77,38]]],[2,29,[[77,38]]],[1,29,[[76,37]]],[2,30,[[74,36]]],[1,30,[[76,37]]],[2,30,[[77,38]]],[1,30,[[76,37]]],[3.0,31,[[74,36]]],[6.0,31,[[76,37]]],[6.0,32,[[76,37]]]],[[3.0,7,[[72,35]]],[3.0,7,[[74,36]]],[3.0,8,[[71,34]]],[2,8,[[71,34]]],[1,8,[[74,36]]],[2,8,[[71,34]]],[1,8,[[72,35]]],[2,9,[[74,36]]],[1,9,[[76,37]]],[2,9,[[74,36]]],[1,9,[[72,35]]],[3.0,10,[[72,35]]],[2,10,[[72,35]]],[1,10,[[72,35]]],[2,10,[[76,37]]],[1,10,[[74,36]]],[2,11,[[72,35]]],[1,11,[[74,36]]],[3.0,11,[[72,35]]],[2,12,[[72,35]]],[1,12,[[76,37]]],[3.0,12,[[74,36]]],[3.0,12,[[72,35]]],[3.0,13,[[74,36]]],[3.0,13,[[74,36]]],[2,14,[[72,35]]],[1,14,[[72,35]]],[3.0,14,[[74,36]]],[3.0,14,[[76,37]]],[3.0,15,[[72,35]]],[3.0,15,[[74,36]]],[3.0,16,[[72,35]]],[2,16,[[72,35]]],[1,16,[[76,37]]],[3.0,16,[[74,36]]],[2,17,[[74,36]]],[1,17,[[72,35]]],[2,17,[[74,36]]],[1,17,[[76,37]]],[2,18,[[74,36]]],[1,18,[[72,35]]],[3.0,18,[[76,37]]],[3.0,18,[[74,36]]],[2,19,[[72,35]]],[1,19,[[74,36]]],[2,19,[[76,37]]],[1,19,[[76,37]]],[2,19,[[74,36]]],[1,19,[[72,35]]],[2,20,[[74,36]]],[1,20,[[76,37]]],[2,20,[[74,36]]],[1,20,[[72,35]]],[2,21,[[71,34]]],[1,21,[[72,35]]],[3.0,21,[[74,36]]],[3.0,21,[[72,35]]],[2,22,[[71,34]]],[1,22,[[74,36]]],[2,22,[[74,36]]],[1,22,[[71,34]]],[3.0,22,[[72,35]]],[2,23,[[74,36]]],[1,23,[[74,36]]],[2,23,[[74,36]]],[1,23,[[74,36]]],[2,24,[[72,35]]],[1,24,[[74,36]]],[3.0,24,[[74,36]]],[3.0,24,[[72,35]]],[2,25,[[74,36]]],[1,25,[[72,35]]],[3.0,25,[[71,34]]],[3.0,25,[[69,33]]],[2,26,[[71,34]]],[1,26,[[74,36]]],[2,26,[[74,36]]],[1,26,[[71,34]]],[3.0,26,[[72,35]]],[2,27,[[74,36]]],[1,27,[[74,36]]],[2,27,[[74,36]]],[1,27,[[74,36]]],[2,28,[[72,35]]],[1,28,[[74,36]]],[3.0,28,[[74,36]]],[3.0,28,[[72,35]]],[2,29,[[72,35]]],[1,29,[[72,35]]],[2,29,[[72,35]]],[1,29,[[76,37]]],[2,29,[[74,36]]],[1,29,[[72,35]]],[2,30,[[71,34]]],[1,30,[[72,35]]],[2,30,[[74,36]]],[1,30,[[72,35]]],[3.0,31,[[71,34]]],[3.0,31,[[72,35]]],[3.0,31,[[74,36]]],[6.0,32,[[72,35]]]]],"B":[[[3.0,7,[[57,26]]],[3.0,7,[[59,27]]],[3.0,8,[[56,25]]],[2,8,[[55,25]]],[1,8,[[59,27]]],[2,8,[[55,25]]],[1,8,[[57,26]]],[2,9,[[59,27]]],[1,9,[[60,28]]],[2,9,[[59,27]]],[1,9,[[57,26]]],[3.0,10,[[57,26]]],[2,10,[[57,26]]],[1,10,[[57,26]]],[2,10,[[60,28]]],[1,10,[[59,27]]],[2,11,[[57,26]]],[1,11,[[59,27]]],[3.0,11,[[57,26]]],[2,12,[[57,26]]],[1,12,[[60,28]]],[3.0,12,[[59,27]]],[3.0,12,[[57,26]]],[3.0,13,[[57,26]]],[3.0,13,[[57,26]]],[2,14,[[55,25]]],[1,14,[[55,25]]],[3.0,14,[[59,27]]],[3.0,14,[[60,28]]],[3.0,15,[[55,25]]],[3.0,15,[[59,27]]],[3.0,16,[[55,25]]],[2,16,[[55,25]]],[1,16,[[60,28]]],[3.0,16,[[59,27]]],[2,17,[[57,26]]],[1,17,[[57,26]]],[2,17,[[59,27]]],[1,17,[[60,28]]],[2,18,[[60,28]]],[1,18,[[57,26]]],[3.0,18,[[60,28]]],[3.0,18,[[59,27]]],[2,19,[[57,26]]],[1,19,[[59,27]]],[2,19,[[60,28]]],[1,19,[[60,28]]],[2,19,[[59,27]]],[1,19,[[57,26]]],[2,20,[[59,27]]],[1,20,[[60,28]]],[2,20,[[59,27]]],[1,20,[[57,26]]],[2,21,[[56,25]]],[1,21,[[57,26]]],[3.0,21,[[59,27]]],[3.0,21,[[57,26]]],[2,22,[[55,25]]],[1,22,[[59,27]]],[2,22,[[59,27]]],[1,22,[[55,25]]],[3.0,22,[[57,26]]],[2,23,[[60,28]]],[1,23,[[59,27]]],[2,23,[[57,26]]],[1,23,[[57,26]]],[2,24,[[57,26]]],[1,24,[[60,28]]],[3.0,24,[[59,27]]],[3.0,24,[[57,26]]],[2,25,[[59,27]]],[1,25,[[57,26]]],[3.0,25,[[56,25]]],[3.0,25,[[52,23]]],[2,26,[[56,25]]],[1,26,[[59,27]]],[2,26,[[59,27]]],[1,26,[[55,25]]],[3.0,26,[[57,26]]],[2,27,[[60,28]]],[1,27,[[59,27]]],[2,27,[[57,26]]],[1,27,[[57,26]]],[2,28,[[57,26]]],[1,28,[[60,28]]],[3.0,28,[[59,27]]],[3.0,28,[[57,26]]],[2,29,[[57,26]]],[1,29,[[57,26]]],[2,29,[[57,26]]],[1,29,[[60,28]]],[2,29,[[59,27]]],[1,29,[[57,26]]],[2,30,[[56,25]]],[1,30,[[57,26]]],[2,30,[[59,27]]],[1,30,[[57,26]]],[3.0,31,[[56,25]]],[3.0,31,[[57,26]]],[3.0,31,[[59,27]]],[6.0,32,[[57,26]]]],[[3.0,7,[[57,26]]],[3.0,7,[[59,27]]],[3.0,8,[[56,25]]],[2,8,[[55,25]]],[1,8,[[59,27]]],[2,8,[[55,25]]],[1,8,[[57,26]]],[2,9,[[59,27]]],[1,9,[[60,28]]],[2,9,[[59,27]]],[1,9,[[57,26]]],[3.0,10,[[57,26]]],[2,10,[[57,26]]],[1,10,[[57,26]]],[2,10,[[60,28]]],[1,10,[[59,27]]],[2,11,[[57,26]]],[1,11,[[59,27]]],[3.0,11,[[57,26]]],[2,12,[[57,26]]],[1,12,[[60,28]]],[3.0,12,[[59,27]]],[3.0,12,[[57,26]]],[3.0,13,[[57,26]]],[3.0,13,[[57,26]]],[2,14,[[55,25]]],[1,14,[[55,25]]],[3.0,14,[[59,27]]],[3.0,14,[[60,28]]],[3.0,15,[[55,25]]],[3.0,15,[[59,27]]],[3.0,16,[[55,25]]],[2,16,[[55,25]]],[1,16,[[60,28]]],[3.0,16,[[59,27]]],[2,17,[[57,26]]],[1,17,[[57,26]]],[2,17,[[59,27]]],[1,17,[[60,28]]],[2,18,[[60,28]]],[1,18,[[57,26]]],[3.0,18,[[60,28]]],[3.0,18,[[59,27]]],[2,19,[[57,26]]],[1,19,[[59,27]]],[2,19,[[60,28]]],[1,19,[[60,28]]],[2,19,[[59,27]]],[1,19,[[57,26]]],[2,20,[[59,27]]],[1,20,[[60,28]]],[2,20,[[59,27]]],[1,20,[[57,26]]],[2,21,[[56,25]]],[1,21,[[57,26]]],[3.0,21,[[59,27]]],[3.0,21,[[57,26]]],[2,22,[[55,25]]],[1,22,[[59,27]]],[2,22,[[59,27]]],[1,22,[[55,25]]],[3.0,22,[[57,26]]],[2,23,[[60,28]]],[1,23,[[59,27]]],[2,23,[[57,26]]],[1,23,[[57,26]]],[2,24,[[57,26]]],[1,24,[[60,28]]],[3.0,24,[[59,27]]],[3.0,24,[[57,26]]],[2,25,[[59,27]]],[1,25,[[57,26]]],[3.0,25,[[56,25]]],[3.0,25,[[52,23]]],[2,26,[[56,25]]],[1,26,[[59,27]]],[2,26,[[59,27]]],[1,26,[[55,25]]],[3.0,26,[[57,26]]],[2,27,[[60,28]]],[1,27,[[59,27]]],[2,27,[[57,26]]],[1,27,[[57,26]]],[2,28,[[57,26]]],[1,28,[[60,28]]],[3.0,28,[[59,27]]],[3.0,28,[[57,26]]],[2,29,[[57,26]]],[1,29,[[57,26]]],[2,29,[[57,26]]],[1,29,[[60,28]]],[2,29,[[59,27]]],[1,29,[[57,26]]],[2,30,[[56,25]]],[1,30,[[57,26]]],[2,30,[[59,27]]],[1,30,[[57,26]]],[3.0,31,[[56,25]]],[3.0,31,[[57,26]]],[3.0,31,[[59,27]]],[6.0,32,[[57,26]]]]]};
+const HAYDIV={"S": true, "C": false, "T": true, "B": false};
+
+const VOCES=[{id:"S",n:"Soprano",cl:"G",oct:0},{id:"C",n:"Contralto",cl:"G",oct:0},
+             {id:"T",n:"Tenor",cl:"G8",oct:-1},{id:"B",n:"Bajo",cl:"F",oct:0}];
+let vozSel="S", cuatro=false, editando=false, divisi=0;   /* 0 = la de arriba, 1 = la de abajo */
+let pos=0, modo="guiada", octava=0, vibrato=.18, bpm=96, art="sost", timbre="cuerdas";
+let baseSample=60, centsSample=0, loopSample=false, defSample=.35;
+const vivas=new Map();
+
+const EV=id=>PARTES[id||vozSel][(!id||id===vozSel)?divisi:0];
+/* Cada voz trae DOS líneas ya separadas: PARTES[voz][0] es la de arriba y
+   PARTES[voz][1] la de abajo.  Donde no hay divisi las dos son iguales; en el
+   c.31 llevan figuras distintas (blanca con puntillo arriba, tres negras con
+   puntillo abajo), por eso cada una es una lista aparte.
+   Cada evento es [duración en corcheas, nº de compás, [[midi,grado]]];
+   sin nota = silencio. */
+function nota1(e){ const a=e[2]; return a.length?a[0]:null; }
+const NOTAS=id=>EV(id).filter(e=>e[2].length);
+function evDeNota(id,k){
+  const e=EV(id); let c=0;
+  for(let i=0;i<e.length;i++){ if(e[i][2].length){ if(c===k) return i; c++; } }
+  return -1;
+}
+const vozDe=id=>VOCES.find(v=>v.id===(id||vozSel));
+const sonante=(midi,id)=>midi+12*vozDe(id).oct+12*octava;
+
+/* ---------- voces ---------- */
+function tocar(id,midi,vel){
+  if(vivas.has(id)) return;
+  iniAudio(); if(ctx.state==="suspended") ctx.resume();
+  const t=ctx.currentTime+.01, v={midi,voces:[],trem:null};
+  const abre=(m,t0,vel)=>{
+    const s=new Sonido(m,t0,vel,timbre);
+    if(vibrato>0&&s.nodos) {
+      const lfo=ctx.createOscillator(), lg=ctx.createGain();
+      lfo.frequency.value=5.2; lg.gain.value=vibrato*45;
+      lfo.connect(lg); s.nodos.forEach(o=>{ if(o.detune) lg.connect(o.detune); });
+      lfo.start(t0); s.nodos.push(lfo);
+    }
+    v.voces.push(s); return s;
+  };
+  if(art==="trem"){
+    v.trem={t:t,paso:60/bpm/2,midi,vel:vel||.5};
+  }else{
+    abre(midi,t,vel||.55);
+    if(art==="corto") setTimeout(()=>{ v.voces.forEach(s=>s.soltar(.12)); v.voces=[]; },140);
+  }
+  vivas.set(id,v);
+  pintarPiano();
+}
+function callar(id){
+  const v=vivas.get(id); if(!v) return;
+  vivas.delete(id);
+  v.voces.forEach(s=>s.soltar(.28));
+  pintarPiano();
+}
+function todoFuera(){ [...vivas.keys()].forEach(callar); }
+setInterval(()=>{
+  if(!ctx) return;
+  const hor=ctx.currentTime+.14;
+  vivas.forEach(v=>{ if(!v.trem) return;
+    let g=0;
+    while(v.trem.t<hor&&g++<24){
+      const s=new Sonido(v.trem.midi,v.trem.t,v.trem.vel,timbre);
+      const fin=Math.max(0,v.trem.t-ctx.currentTime)+v.trem.paso*.8;
+      setTimeout(()=>s.soltar(.09),fin*1000);
+      v.trem.t+=v.trem.paso;
+    }
+  });
+},25);
+
+/* ---------- teclado cromático (disposición clásica de tracker) ---------- */
+const PIANO={KeyZ:0,KeyS:1,KeyX:2,KeyD:3,KeyC:4,KeyV:5,KeyG:6,KeyB:7,KeyH:8,KeyN:9,KeyJ:10,KeyM:11,
+  Comma:12,KeyL:13,Period:14,Semicolon:15,Slash:16,
+  KeyQ:12,Digit2:13,KeyW:14,Digit3:15,KeyE:16,KeyR:17,Digit5:18,KeyT:19,Digit6:20,KeyY:21,Digit7:22,
+  KeyU:23,KeyI:24,Digit9:25,KeyO:26,Digit0:27,KeyP:28};
+const ETIQ={KeyZ:"Z",KeyS:"S",KeyX:"X",KeyD:"D",KeyC:"C",KeyV:"V",KeyG:"G",KeyB:"B",KeyH:"H",KeyN:"N",
+  KeyJ:"J",KeyM:"M",Comma:",",KeyL:"L",Period:".",Semicolon:"Ñ",Slash:"-",
+  KeyQ:"Q",Digit2:"2",KeyW:"W",Digit3:"3",KeyE:"E",KeyR:"R",Digit5:"5",KeyT:"T",Digit6:"6",KeyY:"Y",
+  Digit7:"7",KeyU:"U",KeyI:"I",Digit9:"9",KeyO:"O",Digit0:"0",KeyP:"P"};
+const BASE=()=>60+12*octava;                        /* do4, corrido por el registro */
+const NEGRA=p=>[1,3,6,8,10].includes(((p%12)+12)%12);
+
+function pintarPiano(){
+  const b=BASE(), semis=[...new Set(Object.values(PIANO))].sort((a,b)=>a-b);
+  const max=Math.max(...semis);
+  const blancas=[]; for(let i=0;i<=max;i++) if(!NEGRA(b+i)) blancas.push(i);
+  const W=100/blancas.length, H=100;
+  const teclaDe=i=>Object.keys(PIANO).filter(k=>PIANO[k]===i).map(k=>ETIQ[k]).join("/");
+  const sonando=new Set([...vivas.values()].map(v=>v.midi));
+  const g0=(modo!=="grabar"&&NOTAS().length&&pos<NOTAS().length)?NOTAS()[pos]:null;
+  const guia=g0?{m:sonante(nota1(g0)[0])}:null;
+  let sv=`<svg viewBox="0 0 ${blancas.length*10} 100" preserveAspectRatio="none">`;
+  blancas.forEach((i,k)=>{
+    const m=b+i, on=sonando.has(m), g=guia&&guia.m===m;
+    sv+=`<rect x="${k*10+.3}" y="0" width="9.4" height="100" rx="1.2"
+      fill="${on?"#8f9ef0":g?"#3a3018":"#e6e9ee"}" stroke="#0b0d10" stroke-width=".4"/>`;
+    if(g&&!on) sv+=`<rect x="${k*10+.3}" y="0" width="9.4" height="100" rx="1.2" fill="none" stroke="#e8b25a" stroke-width="1.2"/>`;
+    const t=teclaDe(i);
+    if(t) sv+=`<text x="${k*10+5}" y="90" text-anchor="middle" font-size="${t.length>1?3.4:4.4}" fill="${on?"#0a0d1c":"#5b6775"}" font-family="ui-monospace,monospace">${t}</text>`;
+    sv+=`<text x="${k*10+5}" y="80" text-anchor="middle" font-size="3.4" fill="${on?"#0a0d1c":"#9aa6b4"}" font-family="ui-monospace,monospace">${nombre(m)}</text>`;
+  });
+  blancas.forEach((i,k)=>{
+    const n=i+1; if(n>max||!NEGRA(b+n)) return;
+    const m=b+n, on=sonando.has(m), g=guia&&guia.m===m, t=teclaDe(n);
+    sv+=`<rect x="${k*10+6.6}" y="0" width="6.8" height="62" rx="1"
+      fill="${on?"#8f9ef0":g?"#4a3a10":"#151a20"}" stroke="#0b0d10" stroke-width=".4"/>`;
+    if(g&&!on) sv+=`<rect x="${k*10+6.6}" y="0" width="6.8" height="62" rx="1" fill="none" stroke="#e8b25a" stroke-width="1.1"/>`;
+    if(t) sv+=`<text x="${k*10+10}" y="54" text-anchor="middle" font-size="${t.length>1?3.1:4}" fill="${on?"#0a0d1c":"#8b97a6"}" font-family="ui-monospace,monospace">${t}</text>`;
+  });
+  sv+="</svg>";
+  $("piano").innerHTML=sv;
+}
+
+
+/* ---------- pentagrama ----------
+   Mismo motor de dibujo que la app de In C: cabezas, plicas, corchetes, vigas
+   con niveles secundarios, puntillos, ligaduras de prolongación, alteraciones,
+   líneas adicionales y quiebre en varios sistemas. Acá se le suman las
+   divisorias, los silencios y las tres claves (sol, sol 8ª baja y fa). */
+const GAP=11, SYSH=104, X0=62, MARGSUP=40;
+const VALORES=[8,6,4,3,2,1.5,1,.5];
+const SEMIT=[0,2,4,5,7,9,11];
+function descomponer(d){
+  const r=[]; let x=d;
+  for(const v of VALORES){ while(x>=v-1e-6&&r.length<6){ r.push(v); x-=v; } }
+  if(!r.length) r.push(Math.max(.5,d));
+  return r;
+}
+const banderas=d=>d<.75?2:d<2?1:0;
+const conPunto=d=>Math.abs(d-1.5)<1e-6||Math.abs(d-3)<1e-6||Math.abs(d-6)<1e-6;
+const hueca=d=>d>=4;
+const avance=d=>26+15*Math.sqrt(d);
+const baseClave=cl=>cl==="F"?18:30;               /* sol2 / mi4 en la línea inferior */
+const midiNat=dn=>12*(Math.floor(dn/7)+1)+SEMIT[((dn%7)+7)%7];
+
+function trazar(ev, cl, anchoMax, actual){
+  const W=Math.max(430,anchoMax), items=[]; let x=X0, sys=0, comp=null;
+  /* la tonalidad es la menor: sin alteraciones en la armadura, así que solo se
+     escribe la alteración cuando la nota se aparta de lo que rige en ese compás */
+  let efec={};
+  const quiebre=w=>{ if(x+w>W-16&&x>X0+6){ sys++; x=X0; } };
+  ev.forEach((e,i)=>{
+    const dur=e[0], nc=e[1], par=e[2].length?e[2][Math.min(divisi,e[2].length-1)]:null;
+    const midi=par?par[0]:0, dn=par?par[1]:0;
+    if(nc!==comp){                                  /* divisoria + reinicio de alteraciones */
+      if(comp!==null){ quiebre(12); items.push({t:"bar",x,sys,nc}); x+=12; }
+      else items.push({t:"num",x,sys,nc});
+      efec={}; comp=nc;
+    }
+    if(!midi){ descomponer(dur).forEach(d=>{ quiebre(avance(d)); items.push({t:"r",d,x,sys,i}); x+=avance(d); }); return; }
+    const alt=midi-midiNat(dn);
+    let ac="";
+    if((efec[dn]||0)!==alt){ ac=alt===1?"♯":alt===-1?"♭":"♮"; efec[dn]=alt; }
+    descomponer(dur).forEach((d,k)=>{ quiebre(avance(d));
+      items.push({t:"n",dn,d,x,sys,i,ac:k===0?ac:"",lig:k<descomponer(dur).length-1}); x+=avance(d); });
+  });
+  const NS=sys+1, ALTO=MARGSUP+NS*SYSH+22, ANCHO=NS>1?W:Math.max(430,x+22);
+  const yBase=s=>MARGSUP+s*SYSH+4*GAP;
+  const yDe=(dn,s)=>yBase(s)-(dn-baseClave(cl))*(GAP/2);
+
+  const grupos=[]; let g=[];
+  const cerrar=()=>{ if(g.length>1) grupos.push(g); g=[]; };
+  items.forEach(it=>{
+    if(it.t==="n"&&banderas(it.d)>0){ if(g.length&&(g[g.length-1].sys!==it.sys)) cerrar(); g.push(it); if(g.length>=3) cerrar(); }
+    else cerrar();
+  });
+  cerrar();
+  const enViga=new Set(); grupos.forEach(gr=>gr.forEach(it=>enViga.add(it)));
+
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ANCHO} ${ALTO}" width="${ANCHO}" height="${ALTO}">`;
+  for(let q=0;q<NS;q++){
+    const yb=yBase(q);
+    for(let l=0;l<5;l++){ const y=yb-l*GAP; s+=`<line class="stf" x1="14" y1="${y}" x2="${ANCHO-12}" y2="${y}"/>`; }
+    s+=cl==="F" ? `<text class="clef" x="18" y="${yb-GAP+2}">\u{1D122}</text>`
+                : `<text class="clef" x="18" y="${yb+1}">\u{1D11E}</text>`+
+                  (cl==="G8"?`<text class="och" x="27" y="${yb+27}">8</text>`:"");
+  }
+  const ledger=(dn,cx,sy)=>{ let o="";
+    for(let d=baseClave(cl)+10;d<=dn;d+=2){ const y=yDe(d,sy); o+=`<line class="ldg" x1="${cx-9}" y1="${y}" x2="${cx+9}" y2="${y}"/>`; }
+    for(let d=baseClave(cl)-2;d>=dn;d-=2){ const y=yDe(d,sy); o+=`<line class="ldg" x1="${cx-9}" y1="${y}" x2="${cx+9}" y2="${y}"/>`; }
+    return o; };
+
+  items.forEach(it=>{
+    const yb=yBase(it.sys), act=(it.i===actual)?" act":"";
+    if(it.t==="bar"){ s+=`<line class="bar" x1="${it.x+5}" y1="${yb-4*GAP}" x2="${it.x+5}" y2="${yb}"/>`+
+      `<text class="ncomp" x="${it.x+8}" y="${yb-4*GAP-5}">${it.nc}</text>`; return; }
+    if(it.t==="num"){ s+=`<text class="ncomp" x="${it.x-2}" y="${yb-4*GAP-5}">${it.nc}</text>`; return; }
+    if(it.t==="r"){
+      const cx=it.x+7;
+      if(it.d>=8) s+=`<rect class="nh${act}" x="${cx-7}" y="${yb-3*GAP}" width="14" height="5"/>`;
+      else if(it.d>=4) s+=`<rect class="nh${act}" x="${cx-7}" y="${yb-2*GAP-5}" width="14" height="5"/>`;
+      else if(it.d>=2) s+=`<text class="rst${act}" x="${cx-7}" y="${yb-GAP+5}">\u{1D13D}</text>`;
+      else{ const yt=yb-3*GAP+3, yby=yb-GAP+3;
+        s+=`<g class="${act.trim()}"><line class="stm${act}" x1="${cx+5}" y1="${yt}" x2="${cx-2}" y2="${yby}" stroke-width="1.8"/>`+
+           `<circle class="nh${act}" cx="${cx-1.5}" cy="${yt+2}" r="2.8"/>`+
+           (it.d<.75?`<circle class="nh${act}" cx="${cx+0.6}" cy="${yt+10}" r="2.8"/>`:"")+`</g>`; }
+      if(conPunto(it.d)) s+=`<circle class="nh${act}" cx="${it.x+21}" cy="${yb-2*GAP-4}" r="2"/>`;
+      return;
+    }
+    const y=yDe(it.dn,it.sys), cx=it.x+8, arriba=it.dn<baseClave(cl)+4;
+    it._cx=cx; it._y=y; it._arr=arriba;
+    s+=`<g>`+ledger(it.dn,cx,it.sys);
+    if(it.ac) s+=`<text class="acc${act}" x="${cx-24}" y="${y+6}">${it.ac}</text>`;
+    s+=`<ellipse class="nh${hueca(it.d)?" hueca":""}${act}" cx="${cx}" cy="${y}" rx="6.4" ry="4.8" transform="rotate(-18 ${cx} ${y})"/>`;
+    if(conPunto(it.d)) s+=`<circle class="nh${act}" cx="${cx+13}" cy="${y-(it.dn%2===0?6:0)}" r="2"/>`;
+    if(it.d<8&&!enViga.has(it)){
+      const sx=arriba?cx+6:cx-6, sy=arriba?y-32:y+32;
+      s+=`<line class="stm${act}" x1="${sx}" y1="${y}" x2="${sx}" y2="${sy}" stroke-width="1.6"/>`;
+      for(let k=0;k<banderas(it.d);k++){ const yy=sy+(arriba?k*7:-k*7);
+        s+=`<path class="bm${act}" d="M${sx},${yy} q8,3 9,${arriba?13:-13} q-3,-8 -9,-7 z"/>`; }
+    }
+    s+=`</g>`;
+    if(it.lig){ const sig=items[items.indexOf(it)+1];
+      if(sig&&sig.sys===it.sys) s+=`<path class="tie" d="M${cx+8},${y+(arriba?10:-10)} q${(sig.x+8-cx-16)/2},${arriba?10:-10} ${sig.x+8-cx-16},0"/>`; }
+  });
+  grupos.forEach(gr=>{
+    const arr=gr.filter(it=>it._arr).length>=gr.length/2;
+    const ys=gr.map(it=>arr?it._y-32:it._y+32);
+    const yv=arr?Math.min(...ys):Math.max(...ys);
+    const px=o=>arr?o._cx+6:o._cx-6;
+    const act=gr.some(it=>it.i===actual)?" act":"";
+    gr.forEach(it=>{ s+=`<line class="stm${it.i===actual?" act":""}" x1="${px(it)}" y1="${it._y}" x2="${px(it)}" y2="${yv}" stroke-width="1.6"/>`; });
+    s+=`<rect class="bm${act}" x="${px(gr[0])-0.8}" y="${yv-(arr?0:4.5)}" width="${px(gr[gr.length-1])-px(gr[0])+1.6}" height="4.5"/>`;
+    for(let k=0;k<gr.length-1;k++) if(banderas(gr[k].d)>=2&&banderas(gr[k+1].d)>=2){
+      const y2=yv+(arr?7:-11.5);
+      s+=`<rect class="bm${act}" x="${px(gr[k])-0.8}" y="${y2}" width="${px(gr[k+1])-px(gr[k])+1.6}" height="4.5"/>`; }
+  });
+  s+="</svg>";
+  return {svg:s,ancho:ANCHO,alto:ALTO};
+}
+
+/* ---------- pista de la melodía ---------- */
+const MODOS=[{k:"F1",id:"guiada",t:"guiada",d:"cualquier tecla toca la nota siguiente"},
+             {k:"F2",id:"cromatica",t:"cromática",d:"teclado de piano: hay que aprenderse la melodía"},
+             {k:"F3",id:"grabar",t:"grabar",d:"lo que toques queda escrito como la melodía"}];
+function pintarVoces(){
+  $("voces").innerHTML=VOCES.map(v=>
+    `<div class="voz${v.id===vozSel?" on":""}" data-v="${v.id}">
+       <div><div class="t">${v.n}</div>
+         <div class="d">${NOTAS(v.id).length} notas${v.oct?" · suena 8ª baja":""}</div></div>
+     </div>`).join("");
+}
+function pintarModos(){
+  $("modos").innerHTML=MODOS.map(m=>
+    `<div class="modo${m.id===modo?" on":""}" data-m="${m.id}">
+      <div class="k">${m.k}</div><div class="t">${m.t}</div><div class="d">${m.d}</div></div>`).join("");
+  $("ayuda").innerHTML=(modo==="guiada"&&!NOTAS().length)
+    ? '<b style="color:var(--warn)">esta voz está vacía — mientras tanto suena el teclado cromático</b>'
+    : MODOS.find(m=>m.id===modo).d;
+}
+function pintarPista(){
+  const cab=`<div class="cab"><span class="t">${vozDe().n}</span>
+    <button id="btnInicio">⟲ volver al principio</button>
+    <button id="btnAtras">◀ una nota</button>
+    <button id="btnDiv"${HAYDIV[vozSel]?"":" disabled"}>divisi: ${divisi?"voz de abajo":"voz de arriba"}</button>
+    <button id="btnEd">${editando?"cerrar":"ver las notas"}</button>
+    <span class="ay">nota ${Math.min(pos+1,NOTAS().length)} de ${NOTAS().length}
+      · compás ${(EV()[evDeNota(vozSel,Math.min(pos,NOTAS().length-1))]||[0,"—"])[1]}
+</span></div>`;
+  if(editando){
+    const txt=VOCES.map(v=>v.id+": "+EV(v.id).map(e=>e[2].length?nombre(e[2][0][0]):"·").join(" ")).join("\n\n");
+    $("pista").innerHTML=cab+`<textarea id="ta" spellcheck="false" readonly>${txt}</textarea>`;
+    return;
+  }
+  const cont=$("pista"), disp=Math.max(430,cont.clientWidth-34);
+  const act=evDeNota(vozSel,Math.min(pos,NOTAS().length-1));
+  const r=trazar(EV(),vozDe().cl,disp,act);
+  cont.innerHTML=cab+`<div id="hoja">${r.svg}</div>`;
+  const n=cont.querySelector(".act");
+  if(n){ const b=n.getBoundingClientRect(), h=$("hoja").getBoundingClientRect();
+    if(b.top<h.top+10||b.bottom>h.bottom-10) $("hoja").scrollTop+=b.top-h.top-h.height/2; }
+}
+function pintarInfo(){
+  $("info").textContent=`${vozDe().n} · ${MODOS.find(m=>m.id===modo).t} · ${timbre} · ${art} · registro ${octava>0?"+"+octava:octava}`
+    +(NOTAS().length?` · nota ${Math.min(pos+1,NOTAS().length)}/${NOTAS().length}`:" · vacía");
+}
+const repintar=()=>{ pintarVoces(); pintarModos(); pintarPista(); pintarPiano(); pintarInfo(); };
+
+/* detecta la altura de la muestra por autocorrelacion normalizada */
+function detectarAltura(buf){
+  const sr=buf.sampleRate, ch=buf.getChannelData(0);
+  const ini=Math.min(Math.floor(sr*.05),Math.max(0,ch.length-1));
+  const N=Math.min(16384,ch.length-ini);
+  if(N<2048) return null;
+  const x=new Float32Array(N); let med=0;
+  for(let i=0;i<N;i++) med+=ch[ini+i]; med/=N;
+  let en=0; for(let i=0;i<N;i++){ x[i]=ch[ini+i]-med; en+=x[i]*x[i]; }
+  if(Math.sqrt(en/N)<1e-4) return null;
+  const lmin=Math.max(2,Math.floor(sr/1600)), lmax=Math.min(Math.floor(sr/45),N-2);
+  const v=new Float32Array(lmax+1); let mejor=0;
+  for(let lag=lmin;lag<=lmax;lag++){
+    let sm=0,e1=0,e2=0;
+    for(let i=0;i+lag<N;i++){ sm+=x[i]*x[i+lag]; e1+=x[i]*x[i]; e2+=x[i+lag]*x[i+lag]; }
+    v[lag]=sm/Math.sqrt(e1*e2+1e-12);
+    if(v[lag]>mejor) mejor=v[lag];
+  }
+  if(mejor<.3) return null;
+  /* primer MAXIMO LOCAL que casi empata con el global: evita el error de octava
+     hacia abajo sin quedarse en el hombro de la curva (eso subia la altura ~6%) */
+  let el=-1;
+  for(let lag=lmin+1;lag<lmax;lag++)
+    if(v[lag]>v[lag-1]&&v[lag]>=v[lag+1]&&v[lag]>=mejor*.9){ el=lag; break; }
+  if(el<0) return null;
+  const a=v[el-1],b0=v[el],c=v[el+1],den=a-2*b0+c;
+  const d=Math.abs(den)>1e-9?Math.max(-1,Math.min(1,(a-c)/(2*den))):0;
+  return sr/(el+d);
+}
+function afinarSolo(){
+  if(!bufSample){ return; }
+  const f=detectarAltura(bufSample);
+  if(!f){ $("smpinfo").textContent="no pude detectar una altura clara en la muestra — ajústala a mano"; return; }
+  const mid=69+12*Math.log2(f/440), red=Math.round(mid);
+  baseSample=Math.max(36,Math.min(84,red));
+  centsSample=Math.max(-100,Math.min(100,Math.round((mid-red)*100)));
+  $("base").value=baseSample; $("cents").value=centsSample; $("centsv").textContent=centsSample;
+  $("smpinfo").textContent=`muestra detectada en ${nombre(baseSample)}${centsSample?(centsSample>0?" +":" ")+centsSample+" cents":""} (${f.toFixed(1)} Hz)`;
+}
+/* ---------- foco ----------
+   Un control se queda con el foco despues de usarlo con el mouse y el teclado
+   del instrumento deja de responder. Pero NO se puede soltar el foco en
+   pointerup: eso cierra el menu nativo de un <select> apenas se abre y el
+   desplegable parpadea. Asi que:
+     - los botones se sueltan en "click" (no tienen menu que estorbar),
+     - los sliders y checkbox en "change" (ya termino la interaccion),
+     - los <select> NO se tocan: los suelta la primera tecla que toques.
+   La red de seguridad de abajo es la que hace el trabajo de verdad. */
+const CTRL="select,button,input[type=range],input[type=checkbox],input[type=file]";
+const soltar1=t=>{ if(t) setTimeout(()=>{ if(document.activeElement===t) t.blur(); },0); };
+addEventListener("click",e=>soltar1(e.target&&e.target.closest?e.target.closest("button"):null),true);
+addEventListener("change",e=>soltar1(e.target&&e.target.closest?e.target.closest("input"):null),true);
+/* si quedo un control enfocado, la primera tecla lo suelta y ademas se procesa:
+   el preventDefault evita que la tecla mueva el <select> por busqueda rapida */
+function foco(e){
+  const a=document.activeElement;
+  if(a&&a!==document.body&&!a.isContentEditable&&a.tagName!=="TEXTAREA"&&a.matches&&a.matches(CTRL)){
+    a.blur(); if(e) e.preventDefault(); return true;
+  }
+  return false;
+}
+
+/* ---------- controles ---------- */
+$("timbre").onchange=e=>{timbre=e.target.value;pintarInfo();};
+$("art").onchange=e=>{art=e.target.value;pintarInfo();};
+$("vib").oninput=e=>vibrato=(+e.target.value)/100;
+$("bpm").oninput=e=>{bpm=+e.target.value;$("bpmv").textContent=bpm;};
+$("oct").onchange=e=>{octava=+e.target.value;pintarInfo();};
+$("vol").oninput=e=>{ if(master) master.gain.setTargetAtTime((+e.target.value)/100,ctx.currentTime,.02); };
+$("btnSmp").onclick=()=>$("fsample").click();
+$("fsample").onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return; iniAudio();
+  try{ bufSample=await ctx.decodeAudioData(await f.arrayBuffer());
+    const o=$("timbre").querySelector('option[value=sample]');
+    o.disabled=false; o.textContent="sample: "+f.name.slice(0,20);
+    $("timbre").value="sample"; timbre="sample"; $("smpctl").classList.remove("hidden");
+    $("smpinfo").textContent="analizando…"; setTimeout(afinarSolo,20);
+  }catch(err){ alert("No pude leer ese audio: "+err.message); }
+};
+$("base").innerHTML=(()=>{ let o=""; for(let m=36;m<=84;m++)
+  o+=`<option value="${m}"${m===60?" selected":""}>${nombre(m)}</option>`; return o; })();
+$("base").onchange=e=>baseSample=+e.target.value;
+$("cents").oninput=e=>{centsSample=+e.target.value;$("centsv").textContent=centsSample;};
+$("defs").oninput=e=>defSample=(+e.target.value)/100;
+$("loops").onchange=e=>loopSample=e.target.checked;
+$("btnAfinar").onclick=afinarSolo;
+$("cuatro").onchange=e=>cuatro=e.target.checked;
+$("voces").addEventListener("click",e=>{
+  const d=e.target.closest(".voz");
+  if(d){ vozSel=d.dataset.v; pos=Math.min(pos,NOTAS().length); todoFuera(); repintar(); }
+});
+$("go").onclick=()=>{ iniAudio(); ctx.resume(); $("splash").classList.add("hidden"); repintar(); };
+$("modos").addEventListener("click",e=>{ const d=e.target.closest(".modo");
+  if(d){ modo=d.dataset.m; todoFuera(); repintar(); }});
+$("pista").addEventListener("click",e=>{
+  if(e.target.id==="btnInicio"){ pos=0; todoFuera(); repintar(); return; }
+  if(e.target.id==="btnAtras"){ pos=Math.max(0,pos-1); repintar(); return; }
+  if(e.target.id==="btnDiv"){ divisi=divisi?0:1; pos=Math.min(pos,Math.max(0,NOTAS().length-1)); todoFuera(); repintar(); return; }
+  if(e.target.id==="btnEd"){ editando=!editando; pintarPista(); return; }
+});
+addEventListener("resize",()=>{ if(!editando) pintarPista(); });
+
+/* ---------- teclado ---------- */
+addEventListener("keydown",e=>{
+  const ae=document.activeElement;
+  if(ae&&(ae.isContentEditable||ae.tagName==="TEXTAREA")) return;
+  foco(e);
+  if(!$("splash").classList.contains("hidden")){ if(e.code==="Space"||e.code==="Enter"){e.preventDefault();$("go").click();} return; }
+  if(/^F[1-3]$/.test(e.key)){ e.preventDefault(); modo=MODOS[+e.key[1]-1].id; todoFuera(); repintar(); return; }
+  switch(e.code){
+    case "Escape": todoFuera(); return;
+    case "Tab": e.preventDefault();
+      vozSel=VOCES[(VOCES.findIndex(v=>v.id===vozSel)+(e.shiftKey?3:1))%4].id;
+      pos=Math.min(pos,NOTAS().length); todoFuera(); repintar(); return;
+    case "Home": case "Digit0": e.preventDefault(); pos=0; todoFuera(); repintar(); return;
+    case "Backspace": e.preventDefault(); pos=Math.max(0,pos-1); repintar(); return;
+    case "ArrowLeft":  e.preventDefault(); $("oct").value=Math.max(-2,octava-1); octava=+$("oct").value; repintar(); return;
+    case "ArrowRight": e.preventDefault(); $("oct").value=Math.min(2,octava+1);  octava=+$("oct").value; repintar(); return;
+  }
+  if(e.repeat) return;
+  /* si la voz elegida está vacía, el modo guiado no puede guiar nada: en vez de
+     quedarse mudo, la tecla cae al teclado cromático de más abajo */
+  if(modo==="guiada"&&NOTAS().length){
+    if(e.metaKey||e.ctrlKey||e.altKey) return;
+    if(e.code.startsWith("F")&&e.code.length<=3) return;
+    const ns=NOTAS();
+    e.preventDefault();
+    if(pos>=ns.length) return;                 /* se acabó la voz: el botón vuelve al principio */
+    tocar(e.code,sonante(nota1(ns[pos])[0]));
+    if(cuatro) VOCES.forEach(v=>{ if(v.id===vozSel) return;
+      const o=NOTAS(v.id);
+      if(o[pos]) tocar(e.code+":"+v.id,sonante(nota1(o[pos])[0],v.id),.3); });
+    pos++;
+    repintar();
+    return;
+  }
+  const p=PIANO[e.code];
+  if(p!==undefined){
+    e.preventDefault();
+    const m=BASE()+p;
+    tocar(e.code,m);
+
+  }
+});
+addEventListener("keyup",e=>{ callar(e.code); VOCES.forEach(v=>callar(e.code+":"+v.id)); });
+addEventListener("blur",()=>todoFuera());
+
+/* ---------- arranque ---------- */
+repintar();
+</script>
+</body>
+</html>

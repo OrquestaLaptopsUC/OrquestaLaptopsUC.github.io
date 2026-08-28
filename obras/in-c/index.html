@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IN C — Orquesta de Laptops UC</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --tx:#dfe5ec; --dim:#8b97a6;
+    --acc:#8f9ef0; --acc2:#e8b25a; --ok:#7fc47f; --warn:#e06a5a;
+    --mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--tx);font:13px/1.45 var(--mono);
+       display:flex;flex-direction:column;overflow:hidden;user-select:none;-webkit-user-select:none}
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:9px 14px;
+    border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{font-size:15px;margin:0;letter-spacing:.3em;font-weight:600}
+  header h1 small{letter-spacing:.06em;color:var(--dim);font-weight:400;margin-left:10px;font-size:11px}
+  .grow{flex:1}
+  .ctl{display:flex;align-items:center;gap:6px}
+  label{color:var(--dim);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+  select,button,input[type=file]{background:#1b2128;color:var(--tx);border:1px solid var(--line);
+    border-radius:4px;padding:4px 8px;font:12px var(--mono)}
+  button{cursor:pointer}
+  button:hover{border-color:var(--acc)}
+  button.on{background:var(--acc2);color:#1a1204;border-color:var(--acc2);font-weight:700}
+  input[type=range]{width:110px;accent-color:var(--acc)}
+  main{flex:1;display:grid;grid-template-columns:238px 1fr;min-height:0}
+  #lista{border-right:1px solid var(--line);background:var(--panel);overflow-y:auto;padding:6px 0}
+  .pat{display:flex;gap:8px;align-items:baseline;padding:4px 12px;cursor:pointer;border-left:3px solid transparent}
+  .pat:hover{background:#1a2029}
+  .pat .n{color:var(--dim);width:22px;text-align:right;font-size:11px}
+  .pat .m{font-size:11px;color:#6f7b8a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pat.sel{background:#1b2233;border-left-color:var(--acc)}
+  .pat.sel .n{color:var(--acc);font-weight:700}
+  .pat.sel .m{color:var(--tx)}
+  .pat.done{opacity:.5}
+  #stage{display:flex;flex-direction:column;min-height:0;min-width:0}
+  #cabecera{display:flex;align-items:baseline;gap:16px;padding:10px 20px 2px;flex-wrap:wrap}
+  #numgrande{font-size:44px;line-height:1;letter-spacing:.02em;font-weight:700}
+  #numgrande.play{color:var(--acc2)}
+  #meta{color:var(--dim);font-size:11.5px}
+  #partitura{flex:1;min-height:0;overflow:auto;padding:6px 20px 10px;display:flex;align-items:center;background:#0d1116;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:8px 0 0}
+  #partitura svg{display:block;flex:none;margin:auto}
+  .stf{stroke:#49535f;stroke-width:1}
+  .ldg{stroke:#5b6775;stroke-width:1.4}
+  .nh{fill:#e6ecf4}
+  .nh.act{fill:var(--acc2)}
+  .nh.hueca{fill:none;stroke:#e6ecf4;stroke-width:1.8}
+  .nh.hueca.act{fill:none;stroke:var(--acc2)}
+  .stm,.bm{stroke:#e6ecf4;fill:#e6ecf4}
+  .stm.act,.bm.act{stroke:var(--acc2);fill:var(--acc2)}
+  .acc{fill:#e6ecf4;font:400 20px "STIXGeneral","Bravura","Noto Music",Georgia,serif}
+  .rst.act{fill:var(--acc2)}
+  .rst{fill:#9aa6b4;font:400 30px "STIXGeneral","Bravura","Noto Music",Georgia,serif}
+  .clef{fill:#cfd8e3;font:400 54px "STIXGeneral","Bravura","Noto Music",Georgia,serif}
+  .tie{stroke:#e6ecf4;fill:none;stroke-width:1.6}
+  .cursor{stroke:var(--acc2);stroke-width:1;opacity:.55}
+  #barra{display:flex;align-items:center;gap:18px;padding:8px 20px;flex-wrap:wrap}
+  .led{width:12px;height:12px;border-radius:50%;background:#2a323c;display:inline-block;transition:background .05s}
+  .led.on{background:var(--acc2);box-shadow:0 0 10px var(--acc2)}
+  #estado{font-size:12px;color:var(--dim)}
+  #estado b{color:var(--tx)}
+  kbd{background:#1e242b;border:1px solid var(--line);border-radius:3px;padding:1px 5px;font-size:10.5px;color:var(--tx)}
+  footer{padding:7px 14px;border-top:1px solid var(--line);background:var(--panel);
+    color:var(--dim);font-size:11px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+  #splash{position:fixed;inset:0;background:rgba(8,10,12,.97);display:flex;align-items:center;
+    justify-content:center;z-index:9;padding:20px}
+  #splash .box{max-width:660px;padding:26px 30px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+  #splash h2{margin:0 0 4px;font-size:22px;letter-spacing:.3em}
+  #splash p{color:var(--dim);font-size:12.5px}
+  #splash b{color:var(--tx)}
+  .hidden{display:none !important}
+  #bigmsg{position:absolute;right:22px;top:14px;font-size:11px;color:var(--dim);text-align:right}
+</style>
+</head>
+<body>
+
+<div id="splash"><div class="box">
+  <h2>I N&nbsp;&nbsp;C</h2>
+  <p>Terry Riley, 1964 · realización para orquesta de laptops<br>
+  IEE2003 Orquesta de Laptops · Pontificia Universidad Católica de Chile</p>
+  <p style="margin-top:14px">
+  <b>Elige un patrón</b> en la lista de la izquierda (o con <kbd>↑</kbd> <kbd>↓</kbd>).<br>
+  <b>Mantén apretada la barra espaciadora</b> y el patrón suena en loop; al soltarla, calla.<br>
+  <kbd>Enter</kbd> deja el patrón sonando sin tener que sujetar la tecla.<br>
+  <kbd>→</kbd> avanza al patrón siguiente, <kbd>←</kbd> retrocede.</p>
+  <p>Regla de la obra: todos empiezan en el patrón 1 y avanzan en orden, repitiendo cada patrón
+  las veces que quieran. Nadie se adelanta más de dos o tres patrones al resto. Una persona
+  toca el <b>pulso</b> (do agudo en corcheas) durante toda la obra: <kbd>P</kbd>.</p>
+  <div style="margin-top:18px;display:flex;gap:12px;align-items:center">
+    <button id="go" style="background:var(--acc);color:#0a0d1c;border-color:var(--acc);font-weight:700;padding:8px 18px">Activar audio</button>
+    <span style="color:var(--dim);font-size:11.5px">Chrome o Firefox. Usa audífonos o tu parlante.</span>
+  </div>
+</div></div>
+
+<header>
+  <h1>IN C <small>Riley 1964 · OLUC</small></h1>
+  <div class="ctl"><label>tempo</label>
+    <input type="range" id="bpm" min="60" max="240" step="1" value="120">
+    <span id="bpmv" style="width:52px">120 <span style="color:var(--dim)">bpm</span></span></div>
+  <div class="ctl"><label>timbre</label>
+    <select id="timbre">
+      <option value="marimba">marimba</option>
+      <option value="pluck">pluck</option>
+      <option value="organo">órgano</option>
+      <option value="campana">campana</option>
+      <option value="cuerda">cuerda</option>
+      <option value="sample" disabled>sample (carga uno)</option>
+    </select></div>
+  <div class="ctl"><label>8va</label>
+    <select id="oct"><option value="-2">−2</option><option value="-1">−1</option>
+      <option value="0" selected>0</option><option value="1">+1</option><option value="2">+2</option></select></div>
+  <div class="ctl"><label>vol</label><input type="range" id="vol" min="0" max="100" value="70"></div>
+  <div class="grow"></div>
+  <button id="btnPulso">pulso <kbd>P</kbd></button>
+  <button id="btnSmp">cargar sample…</button><input type="file" id="fsample" accept="audio/*" class="hidden">
+</header>
+
+<main>
+  <div id="lista"></div>
+  <div id="stage">
+    <div id="cabecera">
+      <div id="numgrande">1</div>
+      <div>
+        <div id="meta"></div>
+        <div style="margin-top:3px"><span class="led" id="led"></span>
+          <span id="estado" style="margin-left:8px">detenido</span></div>
+      </div>
+    </div>
+    <div id="partitura"></div>
+    <div id="barra">
+      <div class="ctl"><label>articulación</label><input type="range" id="gate" min="15" max="100" value="85">
+        <span id="gatev" style="color:var(--dim);width:64px">85%</span></div>
+      <div class="ctl"><label>al soltar</label>
+        <select id="soltar"><option value="fin">terminar el patrón</option><option value="ya">cortar de inmediato</option></select></div>
+      <div class="ctl"><label>vol pulso</label><input type="range" id="volp" min="0" max="100" value="45"></div>
+      <div class="grow"></div>
+      <div id="estado2" style="color:var(--dim);font-size:11.5px"></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span><kbd>espacio</kbd> sostener = sonar</span>
+  <span><kbd>Enter</kbd> loop fijo</span>
+  <span><kbd>←</kbd> <kbd>→</kbd> patrón</span>
+  <span><kbd>↑</kbd> <kbd>↓</kbd> patrón</span>
+  <span><kbd>P</kbd> pulso</span>
+  <span><kbd>[</kbd> <kbd>]</kbd> tempo</span>
+  <span><kbd>,</kbd> <kbd>.</kbd> octava</span>
+  <span><kbd>1</kbd>…<kbd>9</kbd> saltar de a 5</span>
+  <span class="grow"></span>
+  <span id="fuente" style="opacity:.65"></span>
+</footer>
+<script>
+/* ============================================================
+   IN C — Terry Riley (1964) · realización web para OLUC
+   Datos de los 53 patrones: transcripción de la realización
+   de código abierto teropa/in-c (github.com/teropa/in-c).
+   Unidad de duración = corchea. 0 = silencio. flag 1 = mordente.
+   Formato: [altura, duración, velocidad, esMordente]
+   ============================================================ */
+const PATRONES=[
+[["C4",0,0.45,1],["E4",2,1],["C4",0,0.45,1],["E4",2,1],["C4",0,0.45,1],["E4",2,1]],
+[["C4",0,0.45,1],["E4",1,1],["F4",1,0.45],["E4",2,0.72]],
+[[0,1,0],["E4",1,0.45],["F4",1,0.72],["E4",1,0.45]],
+[[0,1,0],["E4",1,0.45],["F4",1,0.72],["G4",1,0.45]],
+[["E4",1,1],["F4",1,0.45],["G4",1,0.72],[0,1,0]],
+[["C5",8,1],["C5",8,1]],
+[[0,2,0],[0,2,0],[0,2,0],[0,1,0],["C4",0.5,1],["C4",0.5,0.45],["C4",1,0.45],[0,1,0],[0,2,0],[0,2,0],[0,2,0],[0,2,0]],
+[["G4",12,1],["F4",8,0.72],["F4",8,0.72]],
+[["B4",0.5,1],["G4",0.5,0.45],[0,1,0],[0,2,0],[0,2,0],[0,2,0]],
+[["B4",0.5,1],["G4",0.5,0.45]],
+[["F4",0.5,1],["G4",0.5,0.45],["B4",0.5,0.72],["G4",0.5,0.45],["B4",0.5,0.72],["G4",0.5,0.45]],
+[["F4",1,1],["G4",1,0.45],["B4",8,0.72],["C5",2,1]],
+[["B4",0.5,1],["G4",1.5,0.45],["G4",0.5,0.72],["F4",0.5,0.45],["G4",1,0.72],[0,1.5,0],["G4",0.5,1],["G4",6,0.45]],
+[["C5",8,1],["B4",8,0.72],["G4",8,0.72],["F#4",8,0.72]],
+[["G4",0.5,1],[0,1.5,0],[0,2,0],[0,2,0],[0,2,0]],
+[["G4",0.5,1],["B4",0.5,0.45],["C5",0.5,0.72],["B4",0.5,0.45]],
+[["B4",0.5,1],["C5",0.5,0.45],["B4",0.5,0.72],["C5",0.5,0.45],["B4",0.5,0.72],[0,0.5,0]],
+[["E4",0.5,1],["F#4",0.5,0.45],["E4",0.5,0.72],["F#4",0.5,0.45],["E4",1.5,0.72],["E4",0.5,0.45]],
+[[0,3,0],["G5",3,1]],
+[["E4",0.5,1],["F#4",0.5,0.45],["E4",0.5,0.72],["F#4",0.5,0.45],["G3",1.5,1],["E4",0.5,0.45],["F#4",0.5,0.72],["E4",0.5,0.45],["F#4",0.5,0.72],["E4",0.5,0.45]],
+[["F#4",6,1]],
+[["E4",3,1],["E4",3,0.72],["E4",3,0.72],["E4",3,0.72],["E4",3,0.72],["F#4",3,0.72],["G4",3,0.72],["A4",3,0.72],["B4",1,0.72]],
+[["E4",1,0.45],["F#4",3,1],["F#4",3,0.72],["F#4",3,0.72],["F#4",3,0.72],["F#4",3,0.72],["G4",3,0.72],["A4",3,0.72],["B4",2,0.72]],
+[["E4",1,0.45],["F#4",1,0.45],["G4",3,1],["G4",3,0.72],["G4",3,0.72],["G4",3,0.72],["G4",3,0.72],["A4",3,0.72],["B4",1,0.45]],
+[["E4",1,0.45],["F#4",1,0.45],["G4",1,0.45],["A4",3,1],["A4",3,0.72],["A4",3,0.72],["A4",3,0.72],["A4",3,0.72],["B4",3,0.72]],
+[["E4",1,0.45],["F#4",1,0.45],["G4",1,0.45],["A4",1,0.45],["B4",3,1],["B4",3,0.72],["B4",3,0.72],["B4",3,0.72],["B4",3,0.72]],
+[["E4",0.5,1],["F#4",0.5,0.45],["E4",0.5,0.72],["F#4",0.5,0.45],["G4",1,1],["E4",0.5,0.72],["G4",0.5,0.45],["F#4",0.5,0.72],["E4",0.5,0.45],["F#4",0.5,0.72],["E4",0.5,0.45]],
+[["E4",0.5,1],["F#4",0.5,0.45],["E4",0.5,0.72],["F#4",0.5,0.45],["E4",1.5,1],["E4",0.5,0.45]],
+[["E4",6,1],["G4",6,0.72],["C5",6,0.72]],
+[["C5",12,1]],
+[["G4",0.5,1],["F4",0.5,0.45],["G4",0.5,0.72],["B4",0.5,0.45],["G4",0.5,0.72],["B4",0.5,0.45]],
+[["F4",0.5,1],["G4",0.5,0.45],["F4",0.5,0.72],["G4",0.5,0.45],["B4",0.5,1],["F4",0.5,0.45],["F4",6,0.72],["G4",3,0.72]],
+[["G4",0.5,1],["F4",0.5,0.45],[0,1,0]],
+[["G4",0.5,1],["F4",0.5,0.45]],
+[["F4",0.5,1],["G4",0.5,0.45],["B4",0.5,0.72],["G4",0.5,0.45],["B4",0.5,0.72],["G4",0.5,0.45],["B4",0.5,0.72],["G4",0.5,0.45],["B4",0.5,0.72],["G4",0.5,0.45],[0,1,0],[0,2,0],[0,2,0],[0,2,0],["Bb4",2,1],["G5",6,0.72],["A5",1,1],["G5",1,0.45],["G5",1,0.72],["B5",1,0.45],["A5",3,0.72],["G5",1,0.45],["E5",6,0.72],["G5",1,1],["F#5",1,0.45],["F#5",6,0.45],[0,2,0],[0,2,0],[0,1,0],["E5",1,0.45],["E5",4,1],["F5",12,0.72]],
+[["F4",0.5,1],["G4",0.5,0.45],["B4",0.5,0.72],["G4",0.5,0.45],["B4",0.5,0.72],["G4",0.5,0.45]],
+[["F4",0.5,1],["G4",0.5,0.45]],
+[["F4",0.5,1],["G4",0.5,0.45],["B4",0.5,0.72],["F4",0.5,1],["G4",0.5,0.45],["B4",0.5,0.72]],
+[["B4",0.5,1],["G4",0.5,0.45],["F4",0.5,0.72],["G4",0.5,0.45],["B4",0.5,0.72],["C5",0.5,0.45]],
+[["B4",0.5,1],["F4",0.5,0.45]],
+[["B4",0.5,1],["G4",0.5,0.45]],
+[["C5",8,1],["B4",8,1],["A4",8,1],["C5",8,1]],
+[["F5",0.5,1],["E5",0.5,0.45],["F5",0.5,0.72],["E5",0.5,0.45],["E5",1,1],["E5",1,0.72],["E5",1,0.72],["F5",0.5,0.72],["E5",0.5,0.45]],
+[["F5",1,1],["E5",1,0.72],["E5",1,0.72],["E5",1,0.72],["C5",2,1]],
+[["D5",2,1],["D5",2,0.72],["G4",2,0.72]],
+[["G4",0.5,1],["D5",0.5,0.45],["E5",0.5,0.72],["D5",0.5,0.45],[0,1,0],["G4",1,0.72],[0,1,0],["G4",1,0.72],[0,1,0],["G4",1,0.72],["G4",0.5,1],["D5",0.5,0.45],["E5",0.5,0.72],["D5",0.5,0.45]],
+[["D5",0.5,1],["E5",0.5,0.45],["D5",1,0.72]],
+[["G4",12,1],["G4",8,1],["F4",8,1],["F4",2,0.72]],
+[["F4",0.5,1],["G4",0.5,0.45],["Bb4",0.5,0.72],["G4",0.5,0.45],["Bb4",0.5,0.72],["G4",0.5,0.45]],
+[["F4",0.5,1],["G4",0.5,0.45]],
+[["F4",0.5,1],["G4",0.5,0.45],["Bb4",0.5,0.72],["F4",0.5,1],["G4",0.5,0.45],["Bb4",0.5,0.72]],
+[["G4",0.5,1],["Bb4",0.5,0.45]],
+[["Bb4",0.5,1],["G4",0.5,0.45]]
+];
+
+/* ---------- utilidades de altura ---------- */
+const LET="CDEFGAB", SEMI=[0,2,4,5,7,9,11];
+const cacheNota={};
+function nota(s){
+  if(cacheNota[s]) return cacheNota[s];
+  const m=/^([A-G])([#b]?)(-?\d+)$/.exec(s);
+  const li=LET.indexOf(m[1]), oc=+m[3], alt=m[2]==="#"?1:m[2]==="b"?-1:0;
+  return cacheNota[s]={letra:m[1],alt:m[2],oct:oc,dn:oc*7+li,midi:12*(oc+1)+SEMI[li]+alt,id:m[1]+m[3]};
+}
+const frec=m=>440*Math.pow(2,(m-69)/12);
+
+/* ---------- audio ---------- */
+let ctx=null,master=null,comp=null,salida=null,bufSample=null;
+const PARAM={
+  marimba:{tipo:"fm",ratio:4,ind:6,dec:.55,att:.002,sost:0},
+  pluck  :{tipo:"sub",onda:"sawtooth",fc:2600,dec:.85,att:.003,sost:0},
+  organo :{tipo:"add",arm:[1,2,3,4],amp:[1,.5,.32,.16],att:.02,rel:.12,sost:1},
+  campana:{tipo:"fm",ratio:3.46,ind:9,dec:2.4,att:.001,sost:0},
+  cuerda :{tipo:"sub",onda:"sawtooth",fc:1500,att:.09,rel:.28,sost:1},
+  sample :{tipo:"smp"}
+};
+function iniAudio(){
+  if(ctx) return;
+  ctx=new (window.AudioContext||window.webkitAudioContext)();
+  master=ctx.createGain(); master.gain.value=.7;
+  comp=ctx.createDynamicsCompressor();
+  comp.threshold.value=-10; comp.knee.value=10; comp.ratio.value=10; comp.attack.value=.003; comp.release.value=.25;
+  salida=ctx.createGain(); salida.gain.value=.82;
+  master.connect(comp); comp.connect(salida); salida.connect(ctx.destination);
+}
+function voz(midi,t0,durSeg,vel,nombreTimbre,salida){
+  const p=PARAM[nombreTimbre]||PARAM.marimba, f=frec(midi), g=ctx.createGain(), out=salida||master;
+  g.connect(out);
+  const A=Math.max(.001,vel), t=Math.max(t0,ctx.currentTime);
+  if(p.tipo==="smp"&&bufSample){
+    const s=ctx.createBufferSource(); s.buffer=bufSample; s.playbackRate.value=f/261.6256;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(A,t+.004);
+    const fin=t+Math.max(.08,durSeg);
+    g.gain.setValueAtTime(A,Math.max(t+.005,fin-.04));
+    g.gain.linearRampToValueAtTime(.0001,fin+.05);
+    s.connect(g); s.start(t); s.stop(fin+.1); return;
+  }
+  if(p.tipo==="fm"){
+    const c=ctx.createOscillator(), m=ctx.createOscillator(), mg=ctx.createGain();
+    c.frequency.value=f; m.frequency.value=f*p.ratio;
+    mg.gain.setValueAtTime(f*p.ind,t);
+    mg.gain.exponentialRampToValueAtTime(f*.02,t+p.dec);
+    m.connect(mg); mg.connect(c.frequency);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(A,t+p.att);
+    g.gain.exponentialRampToValueAtTime(.0005,t+p.dec+Math.min(durSeg,.4));
+    c.connect(g); c.start(t); m.start(t);
+    const fin=t+p.dec+Math.min(durSeg,.4)+.05; c.stop(fin); m.stop(fin); return;
+  }
+  if(p.tipo==="sub"){
+    const o=ctx.createOscillator(), o2=ctx.createOscillator(), lp=ctx.createBiquadFilter();
+    o.type=o2.type=p.onda; o.frequency.value=f; o2.frequency.value=f*1.004;
+    lp.type="lowpass"; lp.Q.value=2;
+    o.connect(lp); o2.connect(lp); lp.connect(g);
+    if(p.sost){
+      lp.frequency.setValueAtTime(p.fc,t);
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(A*.42,t+p.att);
+      const fin=t+Math.max(.1,durSeg);
+      g.gain.setValueAtTime(A*.42,Math.max(t+p.att+.005,fin));
+      g.gain.linearRampToValueAtTime(.0001,fin+p.rel);
+      o.start(t);o2.start(t);o.stop(fin+p.rel+.05);o2.stop(fin+p.rel+.05);
+    }else{
+      lp.frequency.setValueAtTime(p.fc,t);
+      lp.frequency.exponentialRampToValueAtTime(400,t+p.dec);
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(A*.6,t+p.att);
+      g.gain.exponentialRampToValueAtTime(.0005,t+p.dec+Math.min(durSeg,.3));
+      const fin=t+p.dec+Math.min(durSeg,.3)+.05;
+      o.start(t);o2.start(t);o.stop(fin);o2.stop(fin);
+    }
+    return;
+  }
+  /* aditivo */
+  const os=[];
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(A*.26,t+p.att);
+  const fin=t+Math.max(.08,durSeg);
+  g.gain.setValueAtTime(A*.26,Math.max(t+p.att+.005,fin));
+  g.gain.linearRampToValueAtTime(.0001,fin+p.rel);
+  p.arm.forEach((h,i)=>{
+    const o=ctx.createOscillator(), gg=ctx.createGain();
+    o.type="sine"; o.frequency.value=f*h; gg.gain.value=p.amp[i];
+    o.connect(gg); gg.connect(g); o.start(t); o.stop(fin+p.rel+.05); os.push(o);
+  });
+}
+
+/* ---------- partitura SVG (con quiebre de sistemas) ---------- */
+const GAP=12, SYSH=118, X0=64, MARGSUP=46;
+const VALORES=[8,6,4,3,2,1.5,1,.5];
+function descomponer(d){
+  const r=[]; let x=d;
+  for(const v of VALORES){ while(x>=v-1e-6 && r.length<6){ r.push(v); x-=v; } }
+  if(!r.length) r.push(Math.max(.5,d));
+  return r;
+}
+const banderas=d=>d<.75?2:d<2?1:0;
+const conPunto=d=>Math.abs(d-1.5)<1e-6||Math.abs(d-3)<1e-6||Math.abs(d-6)<1e-6;
+const hueca=d=>d>=4;
+const avance=d=>28+16*Math.sqrt(d);
+
+function trazar(pat,anchoMax){
+  const W=Math.max(430,anchoMax);
+  /* --- 1. layout con quiebre --- */
+  const items=[]; let x=X0, sys=0; const vistos={};
+  const quiebre=(w)=>{ if(x+w>W-18 && x>X0+6){ sys++; x=X0; } };
+  pat.forEach((e,i)=>{
+    const [alt,dur,vel,mord]=e;
+    if(alt===0){ descomponer(dur).forEach(d=>{ quiebre(avance(d)); items.push({t:"r",d,x,sys,i}); x+=avance(d); }); return; }
+    const n=nota(alt);
+    if(mord){ quiebre(19); items.push({t:"g",n,x,sys,i}); x+=19; return; }
+    let ac="";
+    if(vistos[n.id]!==n.alt){ vistos[n.id]=n.alt; ac=n.alt==="#"?"♯":n.alt==="b"?"♭":""; }
+    const ps=descomponer(dur);
+    ps.forEach((d,k)=>{ quiebre(avance(d));
+      items.push({t:"n",n,d,x,sys,i,ac:k===0?ac:"",lig:k<ps.length-1,solo:ps.length===1}); x+=avance(d); });
+  });
+  const NS=sys+1, ALTO=MARGSUP+NS*SYSH+26, ANCHO=NS>1?W:Math.max(430,x+26);
+  const yBase=s=>MARGSUP+s*SYSH+4*GAP;            /* y de la linea inferior (mi4) */
+  const yDe=(dn,s)=>yBase(s)-(dn-30)*(GAP/2);
+
+  /* --- 2. vigas (no cruzan sistemas) --- */
+  const grupos=[]; let g=[];
+  const cerrar=()=>{ if(g.length>1) grupos.push(g); g=[]; };
+  items.forEach(it=>{
+    if(it.t==="n"&&it.solo&&banderas(it.d)>0){
+      if(g.length&&g[g.length-1].sys!==it.sys) cerrar();
+      g.push(it); if(g.length>=8) cerrar();
+    } else cerrar();
+  });
+  cerrar();
+  const enViga=new Set(); grupos.forEach(gr=>gr.forEach(it=>enViga.add(it)));
+
+  /* --- 3. dibujo --- */
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ANCHO} ${ALTO}" width="${ANCHO}" height="${ALTO}">`;
+  for(let q=0;q<NS;q++){
+    const yb=yBase(q);
+    for(let l=0;l<5;l++){ const y=yb-l*GAP; s+=`<line class="stf" x1="16" y1="${y}" x2="${ANCHO-14}" y2="${y}"/>`; }
+    s+=`<text class="clef" x="20" y="${yb+2}">\u{1D11E}</text>`;
+  }
+  const ledger=(dn,cx,sy)=>{
+    let o="";
+    for(let d=40;d<=dn;d+=2){ const y=yDe(d,sy); o+=`<line class="ldg" x1="${cx-10}" y1="${y}" x2="${cx+10}" y2="${y}"/>`; }
+    for(let d=28;d>=dn;d-=2) if(d<30){ const y=yDe(d,sy); o+=`<line class="ldg" x1="${cx-10}" y1="${y}" x2="${cx+10}" y2="${y}"/>`; }
+    return o;
+  };
+  const cabeza=(cx,cy,vacia)=>`<ellipse class="nh${vacia?" hueca":""}" cx="${cx}" cy="${cy}" rx="6.6" ry="4.9" transform="rotate(-18 ${cx} ${cy})"/>`;
+
+  items.forEach(it=>{
+    const idc=` data-i="${it.i}"`, yb=yBase(it.sys);
+    if(it.t==="r"){
+      const cx=it.x+7;
+      if(it.d>=8) s+=`<rect class="nh" x="${cx-7}" y="${yb-3*GAP}" width="14" height="5"${idc}/>`;
+      else if(it.d>=4) s+=`<rect class="nh" x="${cx-7}" y="${yb-2*GAP-5}" width="14" height="5"${idc}/>`;
+      else if(it.d>=2) s+=`<text class="rst" x="${cx-7}" y="${yb-GAP+5}"${idc}>\u{1D13D}</text>`;
+      else{
+        const yt=yb-3*GAP+3, yby=yb-GAP+3;
+        s+=`<g${idc}><line class="stm" x1="${cx+5}" y1="${yt}" x2="${cx-2}" y2="${yby}" stroke-width="1.8"/>`+
+           `<circle class="nh" cx="${cx-1.5}" cy="${yt+2}" r="2.8"/>`+
+           (it.d<.75?`<circle class="nh" cx="${cx+0.6}" cy="${yt+10}" r="2.8"/>`:"")+`</g>`;
+      }
+      if(conPunto(it.d)) s+=`<circle class="nh" cx="${it.x+21}" cy="${yb-2*GAP-4}" r="2"/>`;
+      return;
+    }
+    if(it.t==="g"){
+      const y=yDe(it.n.dn,it.sys), cx=it.x+6;
+      s+=`<g${idc}>`+ledger(it.n.dn,cx,it.sys);
+      if(it.n.alt) s+=`<text class="acc" x="${cx-19}" y="${y+6}" font-size="15">${it.n.alt==="#"?"♯":"♭"}</text>`;
+      s+=`<ellipse class="nh" cx="${cx}" cy="${y}" rx="4.3" ry="3.2" transform="rotate(-18 ${cx} ${y})"/>`+
+         `<line class="stm" x1="${cx+4}" y1="${y}" x2="${cx+4}" y2="${y-22}" stroke-width="1.2"/>`+
+         `<path class="bm" d="M${cx+4},${y-22} q6,3 7,10 q-2,-6 -7,-5 z"/>`+
+         `<line class="stm" x1="${cx-3}" y1="${y-6}" x2="${cx+11}" y2="${y-17}" stroke-width="1.3"/></g>`;
+      return;
+    }
+    const y=yDe(it.n.dn,it.sys), cx=it.x+8, arriba=it.n.dn<34;
+    it._cx=cx; it._y=y; it._arr=arriba;
+    s+=`<g${idc}>`+ledger(it.n.dn,cx,it.sys);
+    if(it.ac) s+=`<text class="acc" x="${cx-25}" y="${y+7}">${it.ac}</text>`;
+    s+=cabeza(cx,y,hueca(it.d));
+    if(conPunto(it.d)) s+=`<circle class="nh" cx="${cx+13}" cy="${y-(it.n.dn%2===0?6:0)}" r="2"/>`;
+    if(it.d<8&&!enViga.has(it)){
+      const sx=arriba?cx+6.2:cx-6.2, sy=arriba?y-34:y+34;
+      s+=`<line class="stm" x1="${sx}" y1="${y}" x2="${sx}" y2="${sy}" stroke-width="1.6"/>`;
+      const nb=banderas(it.d);
+      for(let k=0;k<nb;k++){ const yy=sy+(arriba?k*7:-k*7);
+        s+=`<path class="bm" d="M${sx},${yy} q8,3 9,${arriba?13:-13} q-3,-8 -9,-7 z"/>`; }
+    }
+    s+=`</g>`;
+    if(it.lig){
+      const sig=items[items.indexOf(it)+1];
+      if(sig&&sig.sys===it.sys){
+        const dx=sig.x+8-cx;
+        s+=`<path class="tie" d="M${cx+8},${y+(arriba?10:-10)} q${(dx-16)/2},${arriba?10:-10} ${dx-16},0"/>`;
+      }
+    }
+  });
+
+  grupos.forEach(gr=>{
+    const arr=gr.filter(it=>it._arr).length>=gr.length/2;
+    const ys=gr.map(it=>arr?it._y-34:it._y+34);
+    const yv=arr?Math.min(...ys):Math.max(...ys);
+    const px=o=>arr?o._cx+6.2:o._cx-6.2;
+    let o="";
+    gr.forEach(it=>{ o+=`<line class="stm" x1="${px(it)}" y1="${it._y}" x2="${px(it)}" y2="${yv}" stroke-width="1.6"/>`; });
+    o+=`<rect class="bm" x="${px(gr[0])-0.8}" y="${yv-(arr?0:4.5)}" width="${px(gr[gr.length-1])-px(gr[0])+1.6}" height="4.5"/>`;
+    for(let k=0;k<gr.length-1;k++)
+      if(banderas(gr[k].d)>=2&&banderas(gr[k+1].d)>=2){
+        const y2=yv+(arr?7:-11.5);
+        o+=`<rect class="bm" x="${px(gr[k])-0.8}" y="${y2}" width="${px(gr[k+1])-px(gr[k])+1.6}" height="4.5"/>`;
+      }
+    s+=o;
+  });
+  s+="</svg>";
+  return {svg:s,ancho:ANCHO,alto:ALTO};
+}
+
+/* ---------- estado ---------- */
+let iPat=0, sonando=false, latch=false, pararAlFin=false, teclaEspacio=false;
+let bpm=120, octava=0, gate=.85, timbre="marimba", pulso=false;
+let tSig=0, iEv=0, reps=0, agenda=[], agendaP=[];
+const spu=()=>60/bpm/2;                      /* segundos por corchea */
+const $=id=>document.getElementById(id);
+
+/* ---------- lista ---------- */
+function resumen(p){
+  return p.map(e=>e[0]===0?"·":e[0].replace("4","").replace("5","′").replace("3","‚")).join(" ");
+}
+function pintarLista(){
+  $("lista").innerHTML=PATRONES.map((p,i)=>
+    `<div class="pat${i===iPat?" sel":""}${i<iPat?" done":""}" data-p="${i}">
+       <span class="n">${i+1}</span><span class="m">${resumen(p)}</span></div>`).join("");
+  const sel=$("lista").querySelector(".sel"); if(sel) sel.scrollIntoView({block:"nearest"});
+}
+$("lista").addEventListener("click",e=>{
+  const d=e.target.closest(".pat"); if(!d) return;
+  irA(+d.dataset.p);
+});
+
+/* ---------- render del patrón ---------- */
+function pintarPatron(){
+  const p=PATRONES[iPat], cont=$("partitura");
+  const disp=Math.max(430,cont.clientWidth-46);
+  const r=trazar(p,disp);
+  cont.innerHTML=r.svg;
+  const svg=cont.querySelector("svg");
+  const dispY=cont.clientHeight-24;
+  let esc=Math.min(2.0,disp/r.ancho,dispY/r.alto);
+  if(esc<.6) esc=.6;
+  svg.setAttribute("width",Math.round(r.ancho*esc));
+  svg.setAttribute("height",Math.round(r.alto*esc));
+  $("numgrande").textContent=iPat+1;
+  const corcheas=p.reduce((a,e)=>a+e[1],0);
+  const alturas=p.filter(e=>e[0]!==0).map(e=>e[0]);
+  const notas=[...new Set(alturas)].join(" ")||"—";
+  $("meta").innerHTML=`patrón <b style="color:var(--tx)">${iPat+1}</b> de 53 · ${corcheas} corcheas `+
+    `(${(corcheas/2).toFixed(corcheas%2?1:0)} negras) · alturas: ${notas}`;
+}
+function irA(n){
+  iPat=Math.max(0,Math.min(52,n));
+  pintarLista(); pintarPatron();
+  if(sonando){ iEv=0; reps=0; tSig=Math.max(tSig,ctx?ctx.currentTime+.02:0); }
+}
+
+/* ---------- secuenciador ---------- */
+function arrancar(){
+  iniAudio();
+  if(ctx.state==="suspended") ctx.resume();
+  if(sonando) return;
+  sonando=true; pararAlFin=false; iEv=0; reps=0; agenda=[];
+  tSig=ctx.currentTime+.06;
+  $("led").classList.add("on"); $("numgrande").classList.add("play");
+}
+function detener(inmediato){
+  if(!sonando) return;
+  if(inmediato){ sonando=false; agenda=[]; $("led").classList.remove("on");
+    $("numgrande").classList.remove("play"); marcar(-1); estado(); }
+  else pararAlFin=true;
+  estado();
+}
+function planificador(){
+  if(!ctx) return;
+  const horizonte=ctx.currentTime+.15;
+  while(sonando && tSig<horizonte){
+    const p=PATRONES[iPat], e=p[iEv], u=spu();
+    if(e[0]!==0){
+      const m=nota(e[0]).midi+12*octava;
+      if(e[3]) voz(m,tSig-Math.min(.06,u*.45),u*.4,e[2]*.7,timbre);
+      else{ voz(m,tSig,Math.max(.05,e[1]*u*gate),e[2],timbre);
+            agenda.push({t:tSig,i:iEv}); }
+    }else agenda.push({t:tSig,i:iEv});
+    tSig+=e[1]*u;
+    iEv++;
+    if(iEv>=p.length){
+      iEv=0; reps++;
+      if(pararAlFin){ sonando=false; pararAlFin=false;
+        $("led").classList.remove("on"); $("numgrande").classList.remove("play"); }
+    }
+  }
+  /* pulso */
+  if(pulso){
+    const u=spu();
+    if(!agendaP.t) agendaP.t=ctx.currentTime+.06;
+    while(agendaP.t<horizonte){
+      voz(72+12*0,agendaP.t,u*.5,.5*volPulso(),"marimba");
+      voz(84,agendaP.t,u*.5,.35*volPulso(),"marimba");
+      agendaP.t+=u;
+    }
+  }else agendaP.t=0;
+}
+const volPulso=()=>(+$("volp").value)/100*1.6;
+
+/* ---------- cursor ---------- */
+let ultimo=-1;
+function marcar(i){
+  if(i===ultimo) return;
+  const cont=$("partitura");
+  cont.querySelectorAll(".act").forEach(n=>n.classList.remove("act"));
+  if(i>=0){
+    cont.querySelectorAll(`[data-i="${i}"]`).forEach(g=>{
+      g.querySelectorAll?.(".nh,.stm,.bm").forEach(n=>n.classList.add("act"));
+      if(g.classList.contains("nh")||g.classList.contains("rst")) g.classList.add("act");
+    });
+  }
+  ultimo=i;
+}
+function animar(){
+  if(ctx&&sonando){
+    const t=ctx.currentTime; let cur=-1;
+    while(agenda.length&&agenda[0].t<=t){ cur=agenda[0].i; agenda.shift(); }
+    if(cur>=0) marcar(cur);
+  }else if(!sonando&&ultimo!==-1) marcar(-1);
+  estado();
+  requestAnimationFrame(animar);
+}
+function estado(){
+  $("estado").innerHTML = sonando
+    ? (pararAlFin?"<b style='color:var(--warn)'>termina el patrón y calla</b>":`sonando · repetición <b>${reps+1}</b>`)
+    : (latch?"detenido":"detenido");
+  $("estado2").textContent = (latch?"loop fijo · ":"")+(pulso?"pulso activo · ":"")+
+    `patrón ${iPat+1}/53`;
+}
+
+/* ---------- controles ---------- */
+$("bpm").oninput=e=>{ bpm=+e.target.value; $("bpmv").innerHTML=bpm+' <span style="color:var(--dim)">bpm</span>'; };
+$("vol").oninput=e=>{ if(master) master.gain.setTargetAtTime((+e.target.value)/100,ctx.currentTime,.02); };
+$("gate").oninput=e=>{ gate=(+e.target.value)/100; $("gatev").textContent=e.target.value+"%"; };
+$("oct").onchange=e=>octava=+e.target.value;
+$("timbre").onchange=e=>timbre=e.target.value;
+$("btnPulso").onclick=()=>{ iniAudio(); pulso=!pulso; $("btnPulso").classList.toggle("on",pulso); estado(); };
+$("fsample").onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return; iniAudio();
+  try{
+    bufSample=await ctx.decodeAudioData(await f.arrayBuffer());
+    const o=$("timbre").querySelector('option[value=sample]');
+    o.disabled=false; o.textContent="sample: "+f.name.slice(0,22);
+    $("timbre").value="sample"; timbre="sample";
+  }catch(err){ alert("No pude leer ese audio: "+err.message); }
+};
+$("btnSmp").onclick=()=>$("fsample").click();
+$("go").onclick=()=>{ iniAudio(); ctx.resume(); $("splash").classList.add("hidden"); pintarPatron(); };
+
+/* ---------- teclado ---------- */
+const HITOS=[1,7,13,19,25,31,37,43,49];
+
+/* ---------- foco ----------
+   Un control se queda con el foco despues de usarlo con el mouse y el teclado
+   del instrumento deja de responder. Pero NO se puede soltar el foco en
+   pointerup: eso cierra el menu nativo de un <select> apenas se abre y el
+   desplegable parpadea. Asi que:
+     - los botones se sueltan en "click" (no tienen menu que estorbar),
+     - los sliders y checkbox en "change" (ya termino la interaccion),
+     - los <select> NO se tocan: los suelta la primera tecla que toques.
+   La red de seguridad de abajo es la que hace el trabajo de verdad. */
+const CTRL="select,button,input[type=range],input[type=checkbox],input[type=file]";
+const soltar1=t=>{ if(t) setTimeout(()=>{ if(document.activeElement===t) t.blur(); },0); };
+addEventListener("click",e=>soltar1(e.target&&e.target.closest?e.target.closest("button"):null),true);
+addEventListener("change",e=>soltar1(e.target&&e.target.closest?e.target.closest("input"):null),true);
+/* si quedo un control enfocado, la primera tecla lo suelta y ademas se procesa:
+   el preventDefault evita que la tecla mueva el <select> por busqueda rapida */
+function foco(e){
+  const a=document.activeElement;
+  if(a&&a!==document.body&&!a.isContentEditable&&a.matches&&a.matches(CTRL)){
+    a.blur(); if(e) e.preventDefault(); return true;
+  }
+  return false;
+}
+addEventListener("keydown",e=>{
+  if(document.activeElement&&document.activeElement.isContentEditable) return;
+  foco(e);
+  if(!$("splash").classList.contains("hidden")&&e.code!=="Space") return;
+  switch(e.code){
+    case "Space":
+      e.preventDefault();
+      if(!$("splash").classList.contains("hidden")){ $("go").click(); return; }
+      if(e.repeat||teclaEspacio) return;
+      teclaEspacio=true; latch=false; arrancar(); break;
+    case "Enter":
+      e.preventDefault();
+      if(sonando&&latch){ latch=false; detener(true); }
+      else{ latch=true; arrancar(); }
+      break;
+    case "ArrowRight": case "ArrowDown": e.preventDefault(); irA(iPat+1); break;
+    case "ArrowLeft":  case "ArrowUp":   e.preventDefault(); irA(iPat-1); break;
+    case "Home": irA(0); break;
+    case "End": irA(52); break;
+    case "KeyP": $("btnPulso").click(); break;
+    case "BracketLeft":  $("bpm").value=Math.max(60,bpm-2);  $("bpm").oninput({target:$("bpm")}); break;
+    case "BracketRight": $("bpm").value=Math.min(240,bpm+2); $("bpm").oninput({target:$("bpm")}); break;
+    case "Comma":  $("oct").value=Math.max(-2,octava-1); octava=+$("oct").value; break;
+    case "Period": $("oct").value=Math.min(2,octava+1);  octava=+$("oct").value; break;
+    case "Escape": latch=false; detener(true); break;
+    default:
+      const m=/^Digit([1-9])$/.exec(e.code);
+      if(m) irA(HITOS[+m[1]-1]-1);
+  }
+  estado();
+});
+addEventListener("keyup",e=>{
+  if(e.code==="Space"){
+    teclaEspacio=false;
+    if(!latch) detener($("soltar").value==="ya");
+  }
+});
+addEventListener("blur",()=>{ teclaEspacio=false; if(!latch) detener(true); });
+addEventListener("resize",()=>{ if($("partitura").firstChild) pintarPatron(); });
+
+/* ---------- arranque ---------- */
+$("fuente").textContent="datos de los patrones: transcripción teropa/in-c";
+pintarLista(); pintarPatron();
+setInterval(planificador,25);
+requestAnimationFrame(animar);
+</script>
+</body>
+</html>

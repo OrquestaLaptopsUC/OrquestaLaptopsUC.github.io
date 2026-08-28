@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PERCUSIÓN — Orquesta de Laptops UC</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --tx:#dfe5ec; --dim:#8b97a6;
+    --acc:#8f9ef0; --acc2:#e8b25a; --ok:#7fc47f; --warn:#e06a5a;
+    --mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--tx);font:13px/1.45 var(--mono);
+       display:flex;flex-direction:column;overflow:hidden;user-select:none;-webkit-user-select:none}
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:9px 14px;
+    border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{font-size:14px;margin:0;letter-spacing:.24em;font-weight:600;white-space:nowrap}
+  header h1 small{letter-spacing:.06em;color:var(--dim);font-weight:400;margin-left:8px;font-size:11px}
+  .grow{flex:1}
+  .ctl{display:flex;align-items:center;gap:6px}
+  label{color:var(--dim);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+  select,button,input[type=number]{background:#1b2128;color:var(--tx);border:1px solid var(--line);
+    border-radius:4px;padding:4px 8px;font:12px var(--mono)}
+  button{cursor:pointer} button:hover{border-color:var(--acc)}
+  button.on{background:var(--acc2);color:#1a1204;border-color:var(--acc2);font-weight:700}
+  input[type=range]{width:104px;accent-color:var(--acc)}
+  main{flex:1;display:flex;flex-direction:column;min-height:0;padding:12px 16px;gap:10px}
+  #rejilla{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:5px}
+  .pat{display:grid;grid-template-columns:34px 132px 96px 1fr 62px;gap:8px;align-items:center;
+    border:1px solid var(--line);border-radius:7px;background:var(--panel);padding:5px 8px;cursor:pointer}
+  .pat:hover{border-color:#3d4756}
+  .pat.on{background:#1b2233;border-color:var(--acc)}
+  .pat.esperando{border-color:var(--acc2)}
+  .pat .k{font-size:17px;font-weight:700;text-align:center;color:var(--dim)}
+  .pat.on .k{color:var(--acc)}
+  .pat .nm{font-size:13px}
+  .pat .vz{font-size:10.5px;color:var(--dim);letter-spacing:.06em}
+  .pat .pasos{display:flex;gap:2px}
+  .pat .pasos i{flex:1;height:22px;border-radius:3px;background:#191f26;display:block;position:relative}
+  .pat .pasos i.b{background:#1f2833}
+  .pat .pasos i.x{background:#4d5a94}
+  .pat .pasos i.o{background:#33406b}
+  .pat.on .pasos i.x{background:var(--acc)}
+  .pat.on .pasos i.o{background:#5a68a8}
+  .pat .pasos i.aqui{outline:2px solid var(--acc2);outline-offset:-2px}
+  .pat .vol{display:flex;align-items:center;gap:3px}
+  .pat .vol input{width:56px}
+  #ed{border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:6px 10px}
+  #ed .cab{display:flex;align-items:center;gap:10px}
+  #ed .cab .t{color:var(--acc2);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase}
+  #ed .cab button{padding:2px 9px;font-size:11px}
+  #ed .cab .ay{color:var(--dim);font-size:10.5px}
+  #ta{width:100%;height:180px;background:#0d1116;color:var(--tx);border:1px solid var(--acc2);
+    border-radius:5px;padding:9px 11px;font:12.5px/1.7 var(--mono);resize:vertical;margin-top:6px}
+  #compas{display:flex;align-items:center;gap:8px;color:var(--dim);font-size:11px}
+  #compas .puntos{display:flex;gap:3px}
+  #compas .puntos i{width:9px;height:9px;border-radius:50%;background:#232a32;display:block}
+  #compas .puntos i.on{background:var(--acc2)}
+  footer{padding:7px 14px;border-top:1px solid var(--line);background:var(--panel);
+    color:var(--dim);font-size:11px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  kbd{background:#1e242b;border:1px solid var(--line);border-radius:3px;padding:1px 5px;font-size:10.5px;color:var(--tx)}
+  #splash{position:fixed;inset:0;background:rgba(8,10,12,.97);display:flex;align-items:center;
+    justify-content:center;z-index:9;padding:20px}
+  #splash .box{max-width:680px;padding:26px 30px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+  #splash h2{margin:0 0 4px;font-size:21px;letter-spacing:.2em}
+  #splash p{color:var(--dim);font-size:12.5px} #splash b{color:var(--tx)}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<div id="splash"><div class="box">
+  <h2>PERCUSIÓN</h2>
+  <p>Gracias a la Vida · Violeta Parra<br>
+  IEE2003 Orquesta de Laptops · Pontificia Universidad Católica de Chile</p>
+  <p style="margin-top:14px">
+  Cada tecla de la fila del medio (<kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> …) <b>enciende
+  y apaga un patrón rítmico</b>. Se van superponiendo: todos corren sobre el mismo reloj, así que
+  entran calzados. Por defecto un patrón <b>entra al empezar el compás siguiente</b>, no en el acto.</p>
+  <p><b>6/8, ♩. = 80</b>, según el arreglo coral de Santiago Vera para el Coro UMCE.
+  Los dos primeros patrones son la figura de acompañamiento que el coro canta como
+  «Dum Dum»: es el motor rítmico de la obra, no un ritmo cualquiera.</p>
+  <p style="border-left:2px solid var(--acc2);padding-left:10px">
+  <b>La pista original no lleva percusión.</b> «Gracias a la vida» abre <i>Las últimas
+  composiciones</i> (1966) con el charango de Violeta y la guitarra de Ángel, nada más.
+  El bombo legüero de Zapicán y los cascabeles de Isabel están en otras pistas del mismo disco,
+  y en «Una copla me ha cantado» Ángel e Isabel percuten sobre la caja de la guitarra.<br>
+  Por eso el kit de acá no es una batería: son <b>los gestos percusivos que existen en ese disco</b> —
+  rasgueo apagado, chasquido del charango, golpe en la tapa, legüero de parche y de aro, cascabeles,
+  palmas, zapateo. Los patrones son un punto de partida, no una transcripción.</p>
+  <p>Reescríbelos con <b>editar</b>: <code style="color:var(--tx)">x</code> golpe fuerte,
+  <code style="color:var(--tx)">o</code> golpe suave, <code style="color:var(--tx)">.</code> silencio.
+  Cada capa puede tener su propio largo.</p>
+  <div style="margin-top:18px;display:flex;gap:12px;align-items:center">
+    <button id="go" style="background:var(--acc);color:#0a0d1c;border-color:var(--acc);font-weight:700;padding:8px 18px">Activar audio</button>
+    <span style="color:var(--dim);font-size:11.5px">Chrome o Firefox.</span>
+  </div>
+</div></div>
+
+<header>
+  <h1>PERCUSIÓN <small>Gracias a la Vida · OLUC</small></h1>
+  <div class="ctl"><label>tempo</label>
+    <input type="range" id="bpm" min="40" max="200" value="80"><span id="bpmv" style="width:52px">80 <span style="color:var(--dim)">bpm</span></span></div>
+  <div class="ctl"><label>compás</label>
+    <select id="compasSel">
+      <option value="2,12" selected>6/8 · 2 tiempos, 12 pasos</option>
+      <option value="2,6">6/8 · 2 tiempos, 6 pasos</option>
+      <option value="3,12">3/4 · 3 tiempos, 12 pasos</option>
+      <option value="4,16">4/4 · 4 tiempos, 16 pasos</option>
+    </select></div>
+  <div class="ctl"><label>entrada</label>
+    <select id="entrada"><option value="compas">al compás siguiente</option><option value="ya">de inmediato</option></select></div>
+  <div class="ctl"><label>swing</label><input type="range" id="swing" min="0" max="60" value="0"></div>
+  <div class="ctl"><label>vol</label><input type="range" id="vol" min="0" max="100" value="70"></div>
+  <div class="grow"></div>
+  <div id="compas"></div>
+  <button id="btnTodo">apagar todo <kbd>Esc</kbd></button>
+</header>
+
+<main>
+  <div id="rejilla"></div>
+  <div id="ed"></div>
+</main>
+
+<footer>
+  <span><kbd>A</kbd>…<kbd>Ñ</kbd> encender / apagar patrón</span>
+  <span><kbd>espacio</kbd> silenciar mientras lo mantienes</span>
+  <span><kbd>[</kbd> <kbd>]</kbd> tempo</span>
+  <span><kbd>Esc</kbd> apagar todo</span>
+  <span class="grow"></span>
+  <span id="info" style="opacity:.7"></span>
+</footer>
+<script>
+/* ============================================================
+   PERCUSIÓN — capas rítmicas superpuestas sobre un solo reloj
+   Gracias a la Vida · Violeta Parra · IEE2003 OLUC
+   ============================================================ */
+const $=id=>document.getElementById(id);
+
+/* ---------- audio ---------- */
+let ctx=null,master=null,comp=null,salida=null,ruido=null,bufSample=null;
+function iniAudio(){
+  if(ctx) return;
+  ctx=new (window.AudioContext||window.webkitAudioContext)();
+  master=ctx.createGain(); master.gain.value=.7;
+  comp=ctx.createDynamicsCompressor();
+  comp.threshold.value=-10; comp.knee.value=10; comp.ratio.value=10; comp.attack.value=.003; comp.release.value=.25;
+  salida=ctx.createGain(); salida.gain.value=.82;
+  master.connect(comp); comp.connect(salida); salida.connect(ctx.destination);
+  const n=ctx.sampleRate*2, b=ctx.createBuffer(1,n,ctx.sampleRate), d=b.getChannelData(0);
+  for(let i=0;i<n;i++) d[i]=Math.random()*2-1;
+  ruido=b;
+}
+function env(g,t,a,d,pico){
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(pico,t+a);
+  g.gain.exponentialRampToValueAtTime(.0005,t+a+d);
+}
+function fuenteRuido(t,dur){
+  const s=ctx.createBufferSource(); s.buffer=ruido; s.loop=true;
+  s.playbackRate.value=.8+Math.random()*.4;
+  s.start(t,Math.random()*1.5); s.stop(t+dur+.05); return s;
+}
+function tono(t,f0,f1,dur,tipo){
+  const o=ctx.createOscillator(); o.type=tipo||"sine";
+  o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+dur);
+  o.start(t); o.stop(t+dur+.08); return o;
+}
+/* ------------------------------------------------------------------
+   EL KIT SALE DEL DISCO, NO DE UNA BATERÍA GENÉRICA.
+   "Gracias a la vida" abre "Las últimas composiciones" (1966) y en esa pista
+   NO hay percusión: son el charango de Violeta y la guitarra de Ángel. El
+   bombo legüero de Alberto Zapicán y los cascabeles de Isabel están en otras
+   pistas del mismo disco, y en "Una copla me ha cantado" Ángel e Isabel
+   percuten sobre la caja de la guitarra.
+   Así que las capas de acá son los gestos percusivos que existen en ese
+   disco y en ese modo de tocar: golpe en la tapa, rasgueo apagado, chasquido
+   del charango, bombo legüero de parche y de aro, cascabeles, palmas, zapateo.
+   ------------------------------------------------------------------ */
+function perc(voz,t,vel){
+  const g=ctx.createGain(); g.connect(master);
+  const V=Math.max(.02,vel);
+  const filtro=(tipo,f,q)=>{const b=ctx.createBiquadFilter();b.type=tipo;b.frequency.value=f;if(q)b.Q.value=q;return b;};
+  const ruidito=(dur,tipo,f,q,pico,att,dec)=>{
+    const n=fuenteRuido(t,dur), fl=filtro(tipo,f,q), gg=ctx.createGain();
+    gg.gain.setValueAtTime(0,t); gg.gain.linearRampToValueAtTime(pico*V,t+(att||.002));
+    gg.gain.exponentialRampToValueAtTime(.0005,t+(att||.002)+dec);
+    n.connect(fl); fl.connect(gg); gg.connect(g); return fl;
+  };
+  const cuerpo=(f0,f1,dur,pico,tipo)=>{
+    const gg=ctx.createGain();
+    gg.gain.setValueAtTime(0,t); gg.gain.linearRampToValueAtTime(pico*V,t+.002);
+    gg.gain.exponentialRampToValueAtTime(.0005,t+dur);
+    tono(t,f0,f1,dur,tipo).connect(gg); gg.connect(g);
+  };
+  switch(voz){
+    /* bombo legüero: parche grave y ancho, con la madera adentro */
+    case "legüero":   cuerpo(105,44,.62,1.05); ruidito(.09,"lowpass",800,0,.34,.002,.09); break;
+    /* el aro del legüero, el golpe seco en el borde de madera */
+    case "aro":       cuerpo(420,300,.06,.5,"triangle"); ruidito(.08,"bandpass",1900,4,.5,.001,.06); break;
+    /* golpe con los dedos en la tapa de la guitarra */
+    case "tapa":      cuerpo(190,120,.16,.85); ruidito(.1,"lowpass",1600,0,.4,.001,.05); break;
+    /* golpe agudo cerca del puente */
+    case "tapa aguda":cuerpo(360,260,.07,.55); ruidito(.09,"bandpass",2400,2,.45,.001,.05); break;
+    /* rasgueo con las cuerdas apagadas: el chasquido que lleva el pulso */
+    case "rasgueo":   { const fs=[520,780,1180,1650];
+                        fs.forEach((f,k)=>ruidito(.12,"bandpass",f,9,.34-k*.05,.004+k*.006,.09)); break; }
+    /* el charango apagado, más agudo y metálico que la guitarra */
+    case "charango":  { const fs=[1600,2400,3300,4200];
+                        fs.forEach((f,k)=>ruidito(.09,"bandpass",f,11,.26-k*.04,.003+k*.004,.06)); break; }
+    /* cascabeles */
+    case "cascabeles":{ ruidito(.3,"bandpass",6200,2,.4,.004,.22);
+                        ruidito(.3,"highpass",9000,0,.22,.006,.16); break; }
+    case "palmas":    ruidito(.16,"bandpass",1500,1.4,.9,.002,.12); break;
+    /* zapateo en la tarima */
+    case "zapateo":   cuerpo(90,55,.2,.8); ruidito(.12,"lowpass",500,0,.5,.002,.08); break;
+    /* pandero chileno: parche más un puñado de sonajas */
+    case "pandero":   { cuerpo(230,170,.1,.5);
+                        ruidito(.22,"bandpass",5200,1.6,.42,.003,.15); break; }
+    case "sample":    { if(!bufSample) break;
+                        const s=ctx.createBufferSource(); s.buffer=bufSample;
+                        env(g,t,.002,Math.min(1.2,bufSample.duration),V); s.connect(g); s.start(t);
+                        s.stop(t+Math.min(1.4,bufSample.duration)+.05); break; }
+    default:          ruidito(.15,"bandpass",1200,1,.7,.002,.12);
+  }
+}
+const VOCES=["legüero","aro","tapa","tapa aguda","rasgueo","charango","cascabeles","palmas","zapateo","pandero","sample"];
+
+/* ---------- patrones ----------
+   nombre | voz | pasos      ·  x = golpe fuerte, o = suave, . = silencio
+   Los de abajo son un punto de partida en 12 pasos por compás. Cámbialos. */
+const PATRONES_INICIAL=`dum dum (tapa)    | tapa       | x...x.x...x.
+dum dum (legüero) | legüero    | x...x.x...x.
+rasgueo apagado   | rasgueo    | x.x.x.x.x.x.
+charango picado   | charango   | xx.xx.xx.xx.
+tapa aguda        | tapa aguda | ....x.....x.
+legüero aro       | aro        | ...x.....x..
+cascabeles        | cascabeles | x.....x.....
+palmas            | palmas     | x...x.x...x.
+zapateo           | zapateo    | x.....x.....
+pandero           | pandero    | x.x...x.x...`;
+
+const TECLAS=[["KeyA","A"],["KeyS","S"],["KeyD","D"],["KeyF","F"],["KeyG","G"],
+              ["KeyH","H"],["KeyJ","J"],["KeyK","K"],["KeyL","L"],["Semicolon","Ñ"]];
+let PATS=[], bpm=80, pasos=12, swing=0, entradaYa=false, editando=false, silencio=false;
+let paso=0, tSig=0, MAPA={};
+
+function leerPats(txt){
+  return txt.split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{
+    const p=l.split("|").map(x=>x.trim());
+    const voz=VOCES.includes(p[1])?p[1]:"caja";
+    const pt=(p[2]||"").replace(/[^xoXO.\-_]/g,"").replace(/[\-_]/g,".").toLowerCase()||".";
+    return {n:p[0]||"patrón", voz, pt, on:false, desde:-1, hasta:-1, vol:.8};
+  }).slice(0,TECLAS.length);
+}
+const escribirPats=()=>PATS.map(p=>`${p.n} | ${p.voz} | ${p.pt}`).join("\n");
+
+/* ---------- reloj ---------- */
+let tiempos=2;                           /* 6/8 = dos tiempos de negra con puntillo */
+const segPaso=()=>(60/bpm)/(pasos/tiempos);
+function reloj(){
+  if(!ctx||editando&&false) return;
+  if(!ctx) return;
+  const hor=ctx.currentTime+.12;
+  if(tSig===0) tSig=ctx.currentTime+.06;
+  let guarda=0;
+  while(tSig<hor&&guarda++<64){
+    const sp=segPaso();
+    const t=tSig+((paso%2===1&&swing>0)?sp*swing/100*.5:0);
+    if(!silencio) PATS.forEach(p=>{
+      if(!p.on&&p.hasta<0) return;
+      if(p.desde>=0&&paso<p.desde) return;
+      if(p.hasta>=0&&paso>=p.hasta){ p.on=false; p.hasta=-1; p.desde=-1; return; }
+      const c=p.pt[paso%p.pt.length];
+      if(c==="x") perc(p.voz,t,p.vol);
+      else if(c==="o") perc(p.voz,t,p.vol*.5);
+    });
+    tSig+=sp; paso++;
+    if(paso%pasos===0) marcarCompas();
+  }
+}
+let compasActual=0;
+function marcarCompas(){ compasActual++; }
+const proxCompas=()=>Math.ceil((paso+1)/pasos)*pasos;
+
+function alternar(i){
+  const p=PATS[i]; if(!p) return;
+  iniAudio(); if(ctx.state==="suspended") ctx.resume();
+  if(tSig===0) tSig=ctx.currentTime+.06;
+  if(p.on||p.desde>=0&&!p.on){ /* apagar */ }
+  if(p.on){
+    if(entradaYa){ p.on=false; p.desde=-1; p.hasta=-1; }
+    else p.hasta=proxCompas();
+  }else{
+    p.on=true; p.hasta=-1;
+    p.desde=entradaYa?-1:proxCompas();
+  }
+  pintar();
+}
+function apagarTodo(){ PATS.forEach(p=>{p.on=false;p.desde=-1;p.hasta=-1;}); pintar(); }
+
+/* ---------- interfaz ---------- */
+function pintar(){
+  if(editando) return;
+  $("rejilla").innerHTML=PATS.map((p,i)=>{
+    const esp=p.desde>=0&&paso<p.desde, sal=p.hasta>=0;
+    return `<div class="pat${p.on&&!esp?" on":""}${esp||sal?" esperando":""}" data-p="${i}">
+      <div class="k">${TECLAS[i]?TECLAS[i][1]:""}</div>
+      <div><div class="nm">${p.n}</div><div class="vz">${esp?"entra al compás":sal?"sale al compás":p.voz}</div></div>
+      <div class="vz">${p.pt.length} pasos</div>
+      <div class="pasos">${[...p.pt].map((c,k)=>
+        `<i class="${c==="x"?"x":c==="o"?"o":(k%(pasos/tiempos)===0?"b":"")}${
+          (paso%p.pt.length)===k&&p.on&&!esp?" aqui":""}"></i>`).join("")}</div>
+      <div class="vol"><input type="range" min="0" max="100" value="${Math.round(p.vol*100)}" data-v="${i}"></div>
+    </div>`;}).join("");
+  MAPA={}; PATS.forEach((p,i)=>{ if(TECLAS[i]) MAPA[TECLAS[i][0]]=i; });
+  if(MAPA.Semicolon!==undefined) MAPA.Quote=MAPA.Semicolon;
+}
+function pintarEd(){
+  const cab=`<div class="cab"><span class="t">patrones</span>
+    <button id="btnEd">${editando?"aplicar":"editar"}</button>
+    <button id="btnCopiar">copiar</button>
+    <span class="ay">${editando
+      ? "nombre | voz | pasos · x golpe fuerte, o suave, . silencio · voces: "+VOCES.join(", ")
+      : "el original no lleva percusión: son charango y guitarra · estas capas extienden ese gesto"}</span></div>`;
+  $("ed").innerHTML=cab+(editando?`<textarea id="ta" spellcheck="false">${escribirPats()}</textarea>`:"");
+}
+function pintarCompas(){
+  const p=paso%pasos;
+  $("compas").innerHTML=`<span>compás</span><span class="puntos">`+
+    Array.from({length:tiempos},(_,i)=>
+      `<i class="${Math.floor(p/(pasos/tiempos))===i?"on":""}"></i>`).join("")+`</span>`;
+  $("info").textContent=`${PATS.filter(p=>p.on).length} de ${PATS.length} patrones · ${bpm} bpm · ${pasos} pasos`+
+    (silencio?" · SILENCIO":"");
+}
+function animar(){
+  if(!editando){
+    document.querySelectorAll(".pat").forEach(d=>{
+      const p=PATS[+d.dataset.p]; if(!p) return;
+      const esp=p.desde>=0&&paso<p.desde;
+      d.classList.toggle("on",p.on&&!esp);
+      d.classList.toggle("esperando",esp||p.hasta>=0);
+      d.querySelectorAll(".pasos i").forEach((n,k)=>
+        n.classList.toggle("aqui",(paso%p.pt.length)===k&&p.on&&!esp));
+      const vz=d.querySelector(".vz");
+      if(vz) vz.textContent=esp?"entra al compás":p.hasta>=0?"sale al compás":p.voz;
+    });
+  }
+  pintarCompas();
+  requestAnimationFrame(animar);
+}
+
+/* ---------- controles ---------- */
+$("bpm").oninput=e=>{bpm=+e.target.value;$("bpmv").innerHTML=bpm+' <span style="color:var(--dim)">bpm</span>';};
+$("compasSel").onchange=e=>{const [t,p]=e.target.value.split(",").map(Number);tiempos=t;pasos=p;pintar();};
+$("swing").oninput=e=>swing=+e.target.value;
+$("entrada").onchange=e=>entradaYa=e.target.value==="ya";
+$("vol").oninput=e=>{ if(master) master.gain.setTargetAtTime((+e.target.value)/100,ctx.currentTime,.02); };
+$("btnTodo").onclick=apagarTodo;
+$("go").onclick=()=>{ iniAudio(); ctx.resume(); $("splash").classList.add("hidden"); tSig=ctx.currentTime+.06; };
+$("rejilla").addEventListener("input",e=>{
+  const v=e.target.closest("[data-v]"); if(v){ PATS[+v.dataset.v].vol=(+v.value)/100; }});
+$("rejilla").addEventListener("click",e=>{
+  if(e.target.closest("input")) return;
+  const d=e.target.closest(".pat"); if(d) alternar(+d.dataset.p);
+});
+$("ed").addEventListener("click",e=>{
+  if(e.target.id==="btnEd"){
+    if(editando){ const t=$("ta").value; const nu=leerPats(t);
+      if(nu.length){ const est=PATS.map(p=>({on:p.on,vol:p.vol}));
+        PATS=nu; PATS.forEach((p,i)=>{ if(est[i]){ p.on=est[i].on; p.vol=est[i].vol; } });
+      }
+      editando=false; pintarEd(); pintar();
+    } else { editando=true; pintarEd(); $("ta").focus(); }
+    return;
+  }
+  if(e.target.id==="btnCopiar"){ const t=editando?$("ta").value:escribirPats();
+    navigator.clipboard?.writeText(t).then(()=>{e.target.textContent="copiado ✓";
+      setTimeout(()=>{if($("btnCopiar"))$("btnCopiar").textContent="copiar";},1200);},()=>prompt("Copia esto:",t)); }
+});
+/* ---------- foco ----------
+   Un control se queda con el foco despues de usarlo con el mouse y el teclado
+   del instrumento deja de responder. Pero NO se puede soltar el foco en
+   pointerup: eso cierra el menu nativo de un <select> apenas se abre y el
+   desplegable parpadea. Asi que:
+     - los botones se sueltan en "click" (no tienen menu que estorbar),
+     - los sliders y checkbox en "change" (ya termino la interaccion),
+     - los <select> NO se tocan: los suelta la primera tecla que toques.
+   La red de seguridad de abajo es la que hace el trabajo de verdad. */
+const CTRL="select,button,input[type=range],input[type=checkbox],input[type=file]";
+const soltar1=t=>{ if(t) setTimeout(()=>{ if(document.activeElement===t) t.blur(); },0); };
+addEventListener("click",e=>soltar1(e.target&&e.target.closest?e.target.closest("button"):null),true);
+addEventListener("change",e=>soltar1(e.target&&e.target.closest?e.target.closest("input"):null),true);
+/* si quedo un control enfocado, la primera tecla lo suelta y ademas se procesa:
+   el preventDefault evita que la tecla mueva el <select> por busqueda rapida */
+function foco(e){
+  const a=document.activeElement;
+  if(a&&a!==document.body&&!a.isContentEditable&&a.tagName!=="TEXTAREA"&&a.matches&&a.matches(CTRL)){
+    a.blur(); if(e) e.preventDefault(); return true;
+  }
+  return false;
+}
+addEventListener("keydown",e=>{
+  const ae=document.activeElement;
+  if(ae&&(ae.isContentEditable||ae.tagName==="TEXTAREA")) return;
+  foco(e);
+  if(!$("splash").classList.contains("hidden")){ if(e.code==="Space"||e.code==="Enter"){e.preventDefault();$("go").click();} return; }
+  if(MAPA[e.code]!==undefined&&!e.repeat){ e.preventDefault(); alternar(MAPA[e.code]); return; }
+  switch(e.code){
+    case "Space": e.preventDefault(); silencio=true; break;
+    case "Escape": apagarTodo(); break;
+    case "BracketLeft":  $("bpm").value=Math.max(40,bpm-2);  $("bpm").oninput({target:$("bpm")}); break;
+    case "BracketRight": $("bpm").value=Math.min(200,bpm+2); $("bpm").oninput({target:$("bpm")}); break;
+  }
+});
+addEventListener("keyup",e=>{ if(e.code==="Space") silencio=false; });
+addEventListener("blur",()=>{ silencio=false; });
+
+/* ---------- arranque ---------- */
+PATS=leerPats(PATRONES_INICIAL);
+pintar(); pintarEd(); pintarCompas();
+setInterval(reloj,25);
+requestAnimationFrame(animar);
+</script>
+</body>
+</html>

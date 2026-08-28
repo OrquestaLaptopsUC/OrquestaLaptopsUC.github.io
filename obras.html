@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="description" content="Página interna: instrumentos web del repertorio de la Orquesta de Laptops UC." />
+  <title>Obras — Orquesta de Laptops UC</title>
+
+  <style>
+    :root{
+      --bg:#0b0f19; --card:#111827; --text:#e5e7eb; --muted:#9ca3af;
+      --accent:#60a5fa; --accent2:#34d399;
+      --border:rgba(255,255,255,.08);
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --radius:16px; --max:1040px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+      background:radial-gradient(1200px 800px at 20% 0%, rgba(96,165,250,.18), transparent 60%),
+                 radial-gradient(1000px 700px at 80% 10%, rgba(52,211,153,.14), transparent 60%),
+                 var(--bg);
+      color:var(--text); line-height:1.55}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    header{position:sticky; top:0; z-index:10;
+      background:rgba(11,15,25,.72); backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--border)}
+    .nav{max-width:var(--max); margin:0 auto; padding:12px 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap}
+    .brand{display:flex; align-items:center; gap:12px}
+    .ucmark{height:32px; width:auto; max-width:140px; display:block; border-radius:8px;
+      background:rgba(255,255,255,.04); border:1px solid var(--border); padding:4px; object-fit:contain}
+    .brandtext{display:flex; flex-direction:column; line-height:1.05}
+    .brandtext strong{font-size:15px; letter-spacing:.2px}
+    .brandtext span{font-size:12px; color:var(--muted); margin-top:2px}
+
+    .wrap{max-width:var(--max); margin:0 auto; padding:24px 16px 60px}
+
+    .card{background:rgba(17,24,39,.72); border:1px solid var(--border);
+      border-radius:var(--radius); box-shadow:var(--shadow); padding:22px}
+    h1{margin:0 0 8px; font-size:30px; line-height:1.15}
+    h2{margin:0 0 6px; font-size:22px}
+    h3{margin:0 0 8px; font-size:18px; letter-spacing:.3px}
+    p{margin:0 0 12px}
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+
+    .badge{display:inline-block; font-size:12px; padding:5px 10px; border-radius:999px;
+      border:1px solid var(--border); background:rgba(255,255,255,.03); color:var(--muted); margin-bottom:10px}
+
+    .grid{display:grid; gap:14px; grid-template-columns:repeat(12,1fr); margin-top:14px}
+    .span12{grid-column:span 12}
+    .span6{grid-column:span 6}
+    @media (max-width:900px){ .span6{grid-column:span 12} h1{font-size:25px} }
+
+    .obra{background:rgba(255,255,255,.02); display:flex; flex-direction:column}
+    .obra .compositor{color:var(--muted); font-size:13px; margin:-4px 0 10px}
+    .obra p.desc{flex:1 1 auto}
+
+    .pillrow{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px}
+    .pill{font-size:12px; color:var(--text); opacity:.9; border:1px solid var(--border);
+      padding:4px 9px; border-radius:999px; background:rgba(255,255,255,.03)}
+
+    .cta{display:flex; flex-wrap:wrap; gap:8px; margin-top:4px}
+    .btn{display:inline-flex; align-items:center; justify-content:center;
+      padding:9px 13px; border-radius:12px; border:1px solid var(--border);
+      background:rgba(255,255,255,.04); color:var(--text); font-weight:600; font-size:14px}
+    .btn.primary{background:linear-gradient(135deg, rgba(96,165,250,.95), rgba(52,211,153,.85));
+      border:none; color:#061018}
+    .btn:hover{transform:translateY(-1px); transition:.15s ease; text-decoration:none}
+
+    footer{border-top:1px solid var(--border); margin-top:30px; padding-top:18px;
+      color:var(--muted); font-size:13px}
+  </style>
+</head>
+
+<body>
+<header>
+  <nav class="nav">
+    <div class="brand">
+      <img class="ucmark" src="assets/logoUClaptop.png" alt="Logo Pontificia Universidad Católica de Chile" />
+      <div class="brandtext">
+        <strong>Orquesta de Laptops UC</strong>
+        <span>Obras · página interna</span>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <section class="grid">
+    <div class="card span12">
+      <span class="badge">Uso interno · no enlazada desde el sitio público</span>
+      <h1>Obras</h1>
+      <p class="muted">
+        Instrumentos web del repertorio. Cada obra se abre en el navegador, no necesita instalar nada
+        y funciona sin conexión entre laptops: cada estación lleva su propio reloj.
+        Conviene abrirlas en <strong>Chrome o Safari</strong>, con audífonos o con el sistema de amplificación de la estación.
+      </p>
+    </div>
+  </section>
+
+  <section class="grid">
+
+    <div class="card span6 obra">
+      <h3>NUBE</h3>
+      <p class="compositor">Rodrigo Cádiz (2026) · 7:00 · 8 voces (funciona desde 4)</p>
+      <p class="desc muted">
+        Síntesis granular. Nadie produce una nota: cada laptop emite granos de 5 a 600 ms y las ocho
+        estaciones juntas forman una masa continua que nadie controla por separado.
+      </p>
+      <div class="pillrow"><span class="pill">granular</span><span class="pill">sin red</span><span class="pill">reloj de sistema</span></div>
+      <div class="cta">
+        <a class="btn primary" href="obras/nube/index.html">Tocar</a>
+        <a class="btn" href="obras/nube/director.html">Consola del director</a>
+        <a class="btn" href="obras/nube/PARTITURA.md">Partitura</a>
+      </div>
+    </div>
+
+    <div class="card span6 obra">
+      <h3>CAMPO</h3>
+      <p class="compositor">Rodrigo Cádiz (2026) · 7:30 · 8 voces (funciona desde 4)</p>
+      <p class="desc muted">
+        Síntesis FM controlada solo con el mouse. El instrumento no tiene teclas: toda la obra se ejecuta
+        moviendo el cursor por un cuadrante y decidiendo cuándo apretar el botón. Tres movimientos con dos entreactos.
+      </p>
+      <div class="pillrow"><span class="pill">FM</span><span class="pill">solo mouse</span><span class="pill">sin red</span></div>
+      <div class="cta">
+        <a class="btn primary" href="obras/campo/index.html">Tocar</a>
+        <a class="btn" href="obras/campo/director.html">Consola del director</a>
+        <a class="btn" href="obras/campo/PARTITURA.md">Partitura</a>
+      </div>
+    </div>
+
+    <div class="card span6 obra">
+      <h3>IN C</h3>
+      <p class="compositor">Terry Riley (1964)</p>
+      <p class="desc muted">
+        Los 53 patrones de la obra. Se elige uno de la lista, se ve en pantalla en notación real y suena
+        mientras se mantiene apretada la barra espaciadora. Tempo ajustable por cada intérprete.
+      </p>
+      <div class="pillrow"><span class="pill">53 patrones</span><span class="pill">barra espaciadora</span><span class="pill">partitura en pantalla</span></div>
+      <div class="cta">
+        <a class="btn primary" href="obras/in-c/index.html">Tocar</a>
+      </div>
+    </div>
+
+    <div class="card span6 obra">
+      <h3>GRACIAS A LA VIDA</h3>
+      <p class="compositor">Violeta Parra (1966) · versión para orquesta de laptops</p>
+      <p class="desc muted">
+        Tres instrumentos que se reparten entre las estaciones: la armonía, la melodía y la percusión.
+        Se pueden tocar por separado o los tres a la vez.
+      </p>
+      <div class="pillrow"><span class="pill">síntesis + samples</span><span class="pill">tres instrumentos</span></div>
+      <div class="cta">
+        <a class="btn primary" href="obras/gracias-a-la-vida/index.html">Acordes</a>
+        <a class="btn primary" href="obras/gracias-a-la-vida/melodia.html">Melodía</a>
+        <a class="btn primary" href="obras/gracias-a-la-vida/percusion.html">Percusión</a>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="grid">
+    <div class="card span12">
+      <h2>Cómo se reparten</h2>
+      <p class="muted small">
+        <strong>Nube</strong> y <strong>Campo</strong>: todas las estaciones abren la misma página; el director
+        abre además su consola. <strong>In C</strong>: cada intérprete elige su patrón y avanza a su propio ritmo.
+        <strong>Gracias a la vida</strong>: se reparten las tres páginas entre las estaciones — por ejemplo, la mitad
+        en acordes, un par en melodía (cada una con su voz: soprano, contralto, tenor o bajo) y el resto en percusión.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <p>© <span id="year"></span> Orquesta de Laptops UC · Rodrigo F. Cádiz · Pontificia Universidad Católica de Chile.</p>
+  </footer>
+
+</main>
+
+<script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GRACIAS A LA VIDA — Orquesta de Laptops UC</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --tx:#dfe5ec; --dim:#8b97a6;
+    --acc:#8f9ef0; --acc2:#e8b25a; --ok:#7fc47f; --warn:#e06a5a;
+    --mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--tx);font:13px/1.45 var(--mono);
+       display:flex;flex-direction:column;overflow:hidden;user-select:none;-webkit-user-select:none}
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:9px 14px;
+    border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{font-size:14px;margin:0;letter-spacing:.24em;font-weight:600;white-space:nowrap}
+  header h1 small{letter-spacing:.06em;color:var(--dim);font-weight:400;margin-left:8px;font-size:11px}
+  .grow{flex:1}
+  .ctl{display:flex;align-items:center;gap:6px}
+  label{color:var(--dim);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+  select,button{background:#1b2128;color:var(--tx);border:1px solid var(--line);border-radius:4px;
+    padding:4px 8px;font:12px var(--mono)}
+  button{cursor:pointer} button:hover{border-color:var(--acc)}
+  input[type=range]{width:104px;accent-color:var(--acc)}
+  main{flex:1;display:flex;flex-direction:column;min-height:0;padding:12px 16px;gap:14px;justify-content:center}
+
+  /* articulaciones */
+  #arts{display:grid;grid-template-columns:repeat(10,1fr);gap:7px}
+  .art{border:1px solid var(--line);border-radius:6px;background:var(--panel);
+    padding:7px 6px 8px;text-align:center;cursor:pointer;transition:.08s}
+  .art .k{font-size:15px;font-weight:700;color:var(--dim)}
+  .art .t{font-size:11px;color:var(--dim);margin-top:2px;letter-spacing:.02em}
+  .art:hover{border-color:#3d4756}
+  .art.on{background:#2a2010;border-color:var(--acc2)}
+  .art.on .k,.art.on .t{color:var(--acc2)} .art.on .t{font-weight:700}
+
+  /* acordes */
+  #acordes{flex:1;min-height:150px;max-height:430px;display:flex;flex-direction:column;gap:8px}
+  #acordes .fila{flex:1;min-height:0;display:grid;gap:8px}
+  #acordes.apretado .ac .nom{font-size:clamp(18px,2.2vw,34px)}
+  #acordes.apretado .ac{padding:6px 3px;gap:3px}
+  #acordes.apretado .ac .tecla{top:4px;font-size:11px}
+  #acordes.apretado .ac .grado{font-size:10.5px}
+  #acordes.apretado .ac .alt{font-size:9.5px}
+  #acordes.apretado .ac .notas{font-size:9.5px}
+  #acordes.apretado .ac .tr{transform:scale(.85)}
+  .ac{position:relative;border:1px solid var(--line);border-radius:9px;background:var(--panel);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    padding:10px 4px;cursor:pointer;overflow:hidden;transition:transform .05s,background .05s}
+  .ac .tecla{position:absolute;top:7px;left:0;right:0;text-align:center;
+    font-size:12px;color:var(--dim);letter-spacing:.14em}
+  .ac .nom{font-size:clamp(26px,4vw,66px);font-weight:700;line-height:1;letter-spacing:.01em}
+  .ac .nom sup{font-size:.5em;font-weight:600;vertical-align:super}
+  .ac .nom em{font-size:.46em;font-weight:600;font-style:normal;letter-spacing:.02em}
+  .ac .grado{font-size:12px;color:var(--dim);letter-spacing:.1em}
+  .ac .alt{font-size:11px;color:var(--acc2);opacity:.62}
+  .ac .notas{font-size:11px;color:#6f7b8a;letter-spacing:.06em;text-align:center;padding:0 4px}
+  .ac:hover{border-color:#3d4756}
+  .ac.on{background:#1c2740;border-color:var(--acc);transform:translateY(2px)}
+  .ac.on .nom{color:var(--acc)}
+  .ac.on .grado,.ac.on .notas{color:#9fb0d8}
+  .ac.pedal{border-color:var(--ok)}
+  .ac .barra{position:absolute;left:0;bottom:0;height:3px;background:var(--acc);width:0}
+
+  /* progresion */
+  /* transposicion por acorde */
+  .ac .tr{display:flex;align-items:center;gap:4px;margin-top:2px;opacity:.5}
+  .ac:hover .tr,.ac .tr.act{opacity:1}
+  .ac .tr b{font-size:11px;min-width:26px;text-align:center;color:var(--dim);font-weight:400}
+  .ac .tr.act b{color:var(--acc2);font-weight:700}
+  .ac .tr button{padding:0 6px;font-size:12px;line-height:17px;background:#1b2128;border-color:#2b333d}
+
+  /* eje de complejidad */
+  #nivel{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:-4px 0 -2px}
+  #nivel .et{color:var(--dim);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;margin-right:2px}
+  #nivel i{width:30px;height:7px;border-radius:4px;background:#222932;display:inline-block;transition:background .1s}
+  #nivel i.on{background:var(--acc2)}
+  #nivel b{color:var(--acc2);font-size:12.5px;margin:0 4px 0 6px;min-width:56px}
+  #nivel .ay{color:var(--dim);font-size:10.5px}
+  #nivel button{padding:2px 9px;font-size:11px}
+  #nivel button.on{background:var(--acc2);color:#1a1204;border-color:var(--acc2);font-weight:700}
+
+  /* cifrado con letra */
+  #estructura{border:1px solid var(--line);border-radius:6px;background:var(--panel);
+    padding:6px 10px 8px;max-height:min(38vh,320px);overflow-y:auto;flex:none}
+  #estructura .cab{display:flex;align-items:center;gap:10px;margin-bottom:4px;position:sticky;top:-6px;
+    background:var(--panel);padding:4px 0 3px;z-index:2}
+  #estructura .cab .t{color:var(--acc2);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase}
+  #estructura .cab button{padding:2px 9px;font-size:11px}
+  #estructura .cab .ay{color:var(--dim);font-size:10.5px}
+  #ta{width:100%;height:210px;background:#0d1116;color:var(--tx);border:1px solid var(--acc2);
+    border-radius:5px;padding:9px 11px;font:12.5px/1.7 var(--mono);resize:vertical}
+  .sec{padding:3px 6px 4px;border-radius:5px;border-left:3px solid transparent;cursor:pointer;margin-bottom:2px}
+  .sec:hover{background:#191f26}
+  .sec.act{background:#1b2233;border-left-color:var(--acc)}
+  .sec .nm{font-size:10.5px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:1px}
+  .sec.act .nm{color:var(--acc)}
+  .ln{white-space:nowrap;line-height:1.15;margin-bottom:3px}
+  .sg{display:inline-block;vertical-align:bottom}
+  .sg .ch{display:block;width:max-content;max-width:100%;font-size:12px;color:var(--acc2);font-weight:700;letter-spacing:.02em;
+    height:15px;border-radius:3px;padding:0 2px}
+  .sg .ch.hi{background:var(--acc);color:#0a0d1c}
+  .sg .tx{display:block;font-size:13px;color:var(--tx)}
+  #smpctl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:7px 14px;
+    border-bottom:1px solid var(--line);background:#12171d}
+  #smpctl .tt{color:var(--acc2);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase}
+  #smpctl label{display:flex;align-items:center;gap:5px}
+  footer{padding:7px 14px;border-top:1px solid var(--line);background:var(--panel);
+    color:var(--dim);font-size:11px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  kbd{background:#1e242b;border:1px solid var(--line);border-radius:3px;padding:1px 5px;font-size:10.5px;color:var(--tx)}
+  #splash{position:fixed;inset:0;background:rgba(8,10,12,.97);display:flex;align-items:center;
+    justify-content:center;z-index:9;padding:20px}
+  #splash .box{max-width:660px;padding:26px 30px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+  #splash h2{margin:0 0 4px;font-size:21px;letter-spacing:.2em}
+  #splash p{color:var(--dim);font-size:12.5px} #splash b{color:var(--tx)}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<div id="splash"><div class="box">
+  <h2>GRACIAS A LA VIDA</h2>
+  <p>Violeta Parra, 1966 · instrumento armónico para orquesta de laptops<br>
+  IEE2003 Orquesta de Laptops · Pontificia Universidad Católica de Chile</p>
+  <p style="margin-top:14px">
+  <b>Fila del medio del teclado</b> (<kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>G</kbd>
+  <kbd>H</kbd> <kbd>J</kbd> <kbd>K</kbd> <kbd>L</kbd> <kbd>Ñ</kbd>) = los diez acordes de la canción.
+  Cada tecla está dibujada en pantalla con su acorde.<br>
+  <b>Fila de números</b> (<kbd>1</kbd>…<kbd>0</kbd>) = cómo suena ese acorde: tenuto, trémolo,
+  arpegios, rasgueo, pizzicato, halo, campanas.<br>
+  <b>Espacio</b> = pedal (lo que toques queda sonando). <kbd>Esc</kbd> corta todo.</p>
+  <div style="margin-top:18px;display:flex;gap:12px;align-items:center">
+    <button id="go" style="background:var(--acc);color:#0a0d1c;border-color:var(--acc);font-weight:700;padding:8px 18px">Activar audio</button>
+    <span style="color:var(--dim);font-size:11.5px">Chrome o Firefox.</span>
+  </div>
+</div></div>
+
+<header>
+  <h1>GRACIAS A LA VIDA <small>Violeta Parra · OLUC</small></h1>
+  <div class="ctl"><label>timbre</label>
+    <select id="timbre">
+      <option value="cuerdas">cuerdas</option>
+      <option value="guitarra">guitarra</option>
+      <option value="organo">órgano</option>
+      <option value="coro">coro</option>
+      <option value="campana">campana</option>
+      <option value="sample" disabled>sample</option>
+    </select></div>
+  <div class="ctl"><label>vel</label>
+    <input type="range" id="bpm" min="40" max="200" value="84"><span id="bpmv" style="width:46px">84</span></div>
+  <div class="ctl"><label>figura</label>
+    <select id="sub">
+      <option value="1">negras</option><option value="2" selected>corcheas</option>
+      <option value="3">tresillos</option><option value="4">semicorcheas</option>
+      <option value="6">seisillos</option><option value="8">fusas</option></select></div>
+  <div class="ctl"><label>registro</label>
+    <select id="oct"><option value="-2">−2</option><option value="-1">−1</option>
+      <option value="0" selected>0</option><option value="1">+1</option><option value="2">+2</option></select></div>
+  <div class="ctl"><label>amplitud</label>
+    <select id="amp"><option value="0">cerrada</option><option value="1" selected>media</option>
+      <option value="2">abierta</option></select></div>
+  <div class="ctl"><label>vol</label><input type="range" id="vol" min="0" max="100" value="70"></div>
+  <div class="grow"></div>
+  <button id="btnSmp">cargar sample…</button>
+  <input type="file" id="fsample" accept="audio/*" class="hidden">
+</header>
+
+<div id="smpctl" class="hidden">
+  <span class="tt">sample</span>
+  <div class="ctl"><label>afinación</label><select id="base"></select>
+    <button id="btnAfinar" title="detecta la altura de la muestra">afinar solo</button></div>
+  <div class="ctl"><label>cents</label><input type="range" id="cents" min="-100" max="100" value="0" style="width:78px">
+    <span id="centsv" style="width:34px;color:var(--dim)">0</span></div>
+  <div class="ctl"><label>voces</label>
+    <select id="vsmp"><option value="todas">acorde completo</option>
+      <option value="raizb">solo la raíz (grave)</option><option value="raiz">solo la raíz (media)</option>
+      <option value="raiz5">raíz + quinta</option><option value="aguda">solo la más aguda</option></select></div>
+  <div class="ctl"><label>definición</label><input type="range" id="defs" min="0" max="100" value="40"></div>
+  <div class="ctl"><label>refuerzo</label><input type="range" id="refs" min="0" max="100" value="45"></div>
+  <div class="ctl"><label><input type="checkbox" id="loops" style="accent-color:var(--acc)"> loop sostenido</label></div>
+  <div class="grow"></div>
+  <span id="smpinfo" style="color:var(--dim);font-size:11px"></span>
+</div>
+
+<main>
+  <div id="arts"></div>
+  <div id="nivel"></div>
+  <div id="acordes"></div>
+  <div id="estructura"></div>
+</main>
+
+
+<footer>
+  <span><kbd>A</kbd>…<kbd>Ñ</kbd> y <kbd>Q</kbd>…<kbd>P</kbd> acordes</span>
+  <span><kbd>1</kbd>…<kbd>0</kbd> articulación</span>
+  <span><kbd>espacio</kbd> pedal</span>
+  <span><b style="color:var(--acc2)">mouse ↕</b> complejidad del acorde</span>
+  <span><kbd>Z</kbd> <kbd>X</kbd> registro</span>
+  <span><kbd>C</kbd> <kbd>V</kbd> amplitud</span>
+  <span><kbd>←</kbd> <kbd>→</kbd> figura</span>
+  <span><kbd>↑</kbd> <kbd>↓</kbd> velocidad</span>
+  <span><kbd>[</kbd> <kbd>]</kbd> sección</span>
+  <span><kbd>Esc</kbd> cortar todo</span>
+  <span class="grow"></span>
+  <span id="info" style="opacity:.7"></span>
+</footer>
+<script>
+/* ============================================================
+   GRACIAS A LA VIDA — Violeta Parra (1966)
+   Instrumento armónico para orquesta de laptops · IEE2003 UC
+   Tonalidad de trabajo: la menor, con salida al relativo mayor (do).
+   Cifrado contrastado en cancioneros.com y cifraclub.
+   ============================================================ */
+
+/* ---------- acordes ---------- */
+/* raiz = clase de altura (0=do) ; intervalos en semitonos desde la raiz */
+/* ------------------------------------------------------------------
+   CATALOGO DE ACORDES
+   Los de abajo vienen con su nombre y su grado escritos a mano. Cualquier
+   otro acorde que escribas en el cifrado se arma solo (ver acordeDe()).
+   ------------------------------------------------------------------ */
+const LET="CDEFGAB", SEMI=[0,2,4,5,7,9,11];
+const ACORDES=[
+ {cl:"am9",   nom:"Am", sup:"9",   grado:"i9",       raiz:9,  iv:[0,3,7,10,14]},
+ {cl:"bm7b5", nom:"Bm", sup:"7♭5", grado:"iiø",      raiz:11, iv:[0,3,6,10]},
+ {cl:"e7",    nom:"E",  sup:"7",   grado:"V7",       raiz:4,  iv:[0,4,7,10]},
+ {cl:"g",     nom:"G",  sup:"",    grado:"VII",      raiz:7,  iv:[0,4,7]},
+ {cl:"c7m",   nom:"C",  sup:"maj7",grado:"IIImaj7",  raiz:0,  iv:[0,4,7,11]},
+ {cl:"gm9",   nom:"Gm", sup:"9",   grado:"ii9/VI",   raiz:7,  iv:[0,3,7,10,14]},
+ {cl:"f7m",   nom:"F",  sup:"maj7",grado:"VImaj7",   raiz:5,  iv:[0,4,7,11]},
+ {cl:"e7b9",  nom:"E",  sup:"7♭9", grado:"V7♭9",     raiz:4,  iv:[0,4,7,10,13]},
+ {cl:"am6",   nom:"Am", sup:"6",   grado:"i6",       raiz:9,  iv:[0,3,7,9]},
+ {cl:"g6",    nom:"G",  sup:"6",   grado:"VII6",     raiz:7,  iv:[0,4,7,9]},
+ {cl:"dm7",   nom:"Dm", sup:"7",   grado:"iv7",      raiz:2,  iv:[0,3,7,10]},
+ {cl:"c7",    nom:"C",  sup:"7",   grado:"V7/VI",    raiz:0,  iv:[0,4,7,10]},
+ {cl:"am7",   nom:"Am", sup:"7",   grado:"i7",       raiz:9,  iv:[0,3,7,10]},
+ {cl:"dm",    nom:"Dm", sup:"",    grado:"iv",       raiz:2,  iv:[0,3,7]},
+ {cl:"am",    nom:"Am", sup:"",    grado:"i",        raiz:9,  iv:[0,3,7]},
+ {cl:"c",     nom:"C",  sup:"",    grado:"III",      raiz:0,  iv:[0,4,7]},
+ {cl:"f",     nom:"F",  sup:"",    grado:"VI",       raiz:5,  iv:[0,4,7]},
+ {cl:"gm7",   nom:"Gm", sup:"7",   grado:"ii7/VI",   raiz:7,  iv:[0,3,7,10]},
+ {cl:"g7",    nom:"G",  sup:"7",   grado:"V7/III",   raiz:7,  iv:[0,4,7,10]}
+];
+/* fila de abajo primero (los acordes principales), después la de arriba */
+const TECLAS=[["KeyA","A"],["KeyS","S"],["KeyD","D"],["KeyF","F"],["KeyG","G"],
+              ["KeyH","H"],["KeyJ","J"],["KeyK","K"],["KeyL","L"],["Semicolon","Ñ"],
+              ["KeyQ","Q"],["KeyW","W"],["KeyE","E"],["KeyR","R"],["KeyT","T"],
+              ["KeyY","Y"],["KeyU","U"],["KeyI","I"],["KeyO","O"],["KeyP","P"]];
+
+/* calidades reconocidas al escribir un acorde nuevo en el cifrado */
+const CAL={"":[0,4,7],"M":[0,4,7],"maj":[0,4,7],
+ "m":[0,3,7],"min":[0,3,7],"-":[0,3,7],
+ "5":[0,7],"6":[0,4,7,9],"m6":[0,3,7,9],"69":[0,4,7,9,14],
+ "7":[0,4,7,10],"m7":[0,3,7,10],"-7":[0,3,7,10],
+ "maj7":[0,4,7,11],"M7":[0,4,7,11],"7M":[0,4,7,11],"mmaj7":[0,3,7,11],
+ "m7b5":[0,3,6,10],"ø":[0,3,6,10],"m7-5":[0,3,6,10],
+ "dim":[0,3,6],"°":[0,3,6],"dim7":[0,3,6,9],"°7":[0,3,6,9],
+ "aug":[0,4,8],"+":[0,4,8],"7#5":[0,4,8,10],"7b5":[0,4,6,10],
+ "sus":[0,5,7],"sus4":[0,5,7],"sus2":[0,2,7],"7sus4":[0,5,7,10],
+ "9":[0,4,7,10,14],"m9":[0,3,7,10,14],"maj9":[0,4,7,11,14],"add9":[0,4,7,14],
+ "7b9":[0,4,7,10,13],"7#9":[0,4,7,10,15],
+ "11":[0,4,7,10,14,17],"m11":[0,3,7,10,14,17],"13":[0,4,7,10,14,21]};
+const GRADOS=["I","♭II","II","III","♯III","IV","♯IV","V","VI","♯VI","VII","♯VII"];
+
+/* devuelve el índice del acorde en el catálogo, creándolo si hace falta */
+function acordeDe(txt){
+  /* normaliza la notación de los cancioneros: Bm7(b5), Am7/9, C7M, E7/b9, Am6- */
+  let t=(txt||"").trim().replace(/[()]/g,"").replace(/♭/g,"b").replace(/♯/g,"#");
+  t=t.replace(/-$/,"").replace(/7\/b9/i,"7b9").replace(/\/b9/i,"7b9")
+     .replace(/7\/9/i,"9").replace(/\/9$/i,"9").split("/")[0].trim();
+  if(!t) return null;
+  const cl=t.toLowerCase();
+  const k=ACORDES.findIndex(a=>a.cl===cl);
+  if(k>=0) return k;
+  const m=/^([A-Ga-g])([#b]?)(.*)$/.exec(t);
+  if(!m) return null;
+  const letra=m[1].toUpperCase(), alt=m[2], q=m[3].replace(/\s/g,"");
+  const iv=CAL[q]!==undefined?CAL[q]:CAL[q.toLowerCase()];
+  if(!iv) return null;
+  const raiz=((SEMI[LET.indexOf(letra)]+(alt==="#"?1:alt==="b"?-1:0))%12+12)%12;
+  const menor=iv.includes(3);
+  const base=letra+alt.replace("b","♭").replace("#","♯")+(q&&/^(m|min|-)(?!aj)/.test(q)?"m":"");
+  const sup=q.replace(/^(m|min|-)(?!aj)/,"").replace(/^(7M|M7)$/,"maj7").replace(/b/g,"♭").replace(/#/g,"♯");
+  const dist=((raiz-9)%12+12)%12;
+  let g=GRADOS[dist]; if(menor) g=g.toLowerCase();
+  if(iv.includes(6)&&iv.includes(10)) g+="ø"; else if(iv.includes(6)) g+="°";
+  else if(iv.includes(10)) g+="7";
+  ACORDES.push({cl,nom:base,sup,grado:g,raiz,iv});
+  return ACORDES.length-1;
+}
+
+/* ------------------------------------------------------------------
+   CIFRADO CON LETRA. Formato tipo ChordPro: el acorde va entre corchetes
+   justo antes de la sílaba donde entra. Bloques separados por una línea en
+   blanco; la primera línea de cada bloque es el nombre de la sección.
+   Se edita entero desde el botón "editar" y se puede pegar un cifrado de
+   cualquier cancionero.
+
+   La armonía de la estrofa está contrastada entre lacuerda (que la trae en
+   si menor, verso a verso) y la lista de acordes de cifraclub: cada verso es
+   un ii-V-I en un centro distinto — iiø-V7-i en la menor, ii-V7-I en do,
+   ii7-V7-I en fa, y vuelta a la menor. Introducción y coda son convención.
+
+   LA LETRA VA COMO PIE, no completa: pega la que uses en clase con el botón
+   "editar". Lo que importa aquí es dónde cae cada acorde.
+   ------------------------------------------------------------------ */
+const CIFRADO_INICIAL=`Estrofa 1
+[Am9]Gracias a la [Bm7(b5)]vida,    [E7]que me ha dado [Am7/9]tanto     [Am9]
+Me dió dos [G]luceros que cuando los [C7M]abro
+Perfecto dist[Gm7/9]ingo lo negro del blanc[F7M]o
+Y en alto [Bm7(b5)]cielo su fondo [E7]estrell[Am9]ado
+Y en las multi[Bm7(b5)]tudes el hombre, [E7/b9]que yo amo[Am6-]     [G6]   [F7M]    [E7]
+
+Estrofa 2
+[Am6-]Gracias a la [Dm7]vida,       [Bm7(b5)]que [E7]me ha dado [Am9]tanto
+Me ha dado el [G]oído,que en todo su [C7M]ancho
+Graba noche y [G]dia [C7]grillos y [F7M]canarios
+Martillos,turb[Bm7(b5)]inas,ladri[E7]dos,chubas[Am7/9]cos   [Am7]
+Y la voz tan [Dm]tierna [Bm7(b5)]de mi  [E7]bien [Am6-]amado   [G6]   [F7M]    [E7]
+
+Estrofa 3
+[Am9]Gracias a la [Bm7(b5)]vida,que [E7]me ha dado tanto   [Am7/9]      [Am9]
+Me ha dado el [G]sonido y el abecedá[C7M]rio
+Con él las [Gm7/9]palabras que pienso y [F7M]declaro
+Madre,amigo[Bm7(b5)],hermano y luz [E7]alumbr[Am9]ando
+La ruta del [Bm7(b5)]alma del que estoy [E7/b9]amando    [Am6-]     [G6]   [F7M]    [E7]
+
+Estrofa 4
+[Am6-]Gracias a la [Dm7]vida,q[Bm7(b5)]ue me ha [E7]dado tanto   [Am9]
+Me ha dado la [G]marcha de mis pies [C7M]cansados
+Con ellos anduv[G]e ciud[C7]ades y [F7M]charcos
+Playas y desie[Bm7(b5)]rtos,monta[E7]ñas y llan[Am7/9]os
+Y la casa tuya[Dm], tu [Bm7(b5)]calle y tu pati[E7]o      [Am6-]     [G6]   [F7M]    [E7]
+
+Estrofa 5
+[Am9]Gracias a la [Bm7(b5)]vida,que [E7]me ha dado tanto  [Am7/9]      [Am9]
+Me dió el cora[G]zón que agita su [C7M]marco
+Quando miro [Gm7/9]el fruto del cerebro [F7M]humano
+Quando miro el bueno [Bm7(b5)]tan lejos del [E7]malo   [Am9]
+Quando miro el fondo de [Dm]tus [Bm7(b5)]ojos claros [E7]     [Am6-]     [G6]   [F7M]    [E7]
+
+Estrofa 6
+[Am6-]Gracias a la [Dm7]vida,q[Bm7(b5)]ue me ha [E7]dado tanto   [Am9]
+Me ha dado la [G]risa y me ha dado el [C7M]llanto
+Así yo distingo [G]dicha [C7]de quebra[F7M]nto
+Los dos materi[Bm7(b5)]ales que [E7]forman mi [Am7/9]canto
+Y el canto de [Dm]ustede[Bm7(b5)]s que es el [E7]mismo [Am6-]canto   [G6]   [F7M]    [E7]
+Y el canto de [Dm]todos [Bm7(b5)]que es mi prop[E7]io cant[Am6-]o    [G6]   [F7M]    [E7]
+
+Final
+[Am9]Gracias a [Bm7(b5)]la vi    [E7]da,[Am7/9]      [Am9]`;
+
+let SECCIONES=[], iSec=1, editando=false;
+
+function leerCifrado(txt){
+  return txt.split(/\n\s*\n/).map(b=>{
+    const ls=b.split("\n").filter(l=>l.trim()!=="");
+    if(!ls.length) return null;
+    return {n:ls[0].trim(), ls:ls.slice(1).map(parseLinea)};
+  }).filter(Boolean);
+}
+function parseLinea(s){
+  const seg=[], re=/\[([^\]]*)\]/g; let last=0,m,pend=null;
+  while((m=re.exec(s))){
+    const tx=s.slice(last,m.index);
+    if(pend!==null||tx.trim()) seg.push({ac:pend,tx});
+    pend=acordeDe(m[1]); last=re.lastIndex;
+  }
+  const tx=s.slice(last);
+  if(pend!==null||tx.trim()) seg.push({ac:pend,tx});
+  return seg.length?seg:[{ac:null,tx:s}];
+}
+function escribirCifrado(){
+  return SECCIONES.map(sc=>sc.n+"\n"+sc.ls.map(l=>
+    l.map(g=>(g.ac!=null?"["+ACORDES[g.ac].nom.replace("♭","b").replace("♯","#")+
+      ACORDES[g.ac].sup.replace(/♭/g,"b").replace(/♯/g,"#")+"]":"")+g.tx).join("")
+  ).join("\n")).join("\n\n");
+}
+/* El teclado NO lleva un acorde por cifra: lleva el acorde BÁSICO de cada
+   raíz+familia que aparece en el cifrado (Am, Bm♭5, E, G, C, Gm, F, Dm, C dom…).
+   El adorno lo pone el mouse. ACOR2TECLA sirve para resaltar en el cifrado. */
+let TECLADO=[], ACOR2TECLA={};
+function armarTeclado(){
+  TECLADO=[]; ACOR2TECLA={};
+  const vis=new Map();
+  SECCIONES.forEach(sc=>sc.ls.forEach(l=>l.forEach(g=>{
+    if(g.ac==null) return;
+    const a=ACORDES[g.ac], fam=familiaDe(a.iv), id=a.raiz+":"+fam;
+    if(!vis.has(id)){ vis.set(id,TECLADO.length); TECLADO.push({raiz:a.raiz,fam}); }
+    ACOR2TECLA[g.ac]=vis.get(id);
+  })));
+  if(!TECLADO.length) TECLADO=[{raiz:9,fam:"menor"}];
+  TECLADO=TECLADO.slice(0,TECLAS.length);
+  TECLADO.forEach(t=>{ if(transp[idTecla(t)]===undefined) transp[idTecla(t)]=0; });
+}
+
+/* ---------- articulaciones ---------- */
+const ARTS=[
+ {k:"1",n:"tenuto",    modo:"sost"},
+ {k:"2",n:"trémolo",   modo:"rep",  patron:"bloque"},
+ {k:"3",n:"arpegio ↑", modo:"rep",  patron:"sube"},
+ {k:"4",n:"arpegio ↓", modo:"rep",  patron:"baja"},
+ {k:"5",n:"arpegio ↕", modo:"rep",  patron:"vaiven"},
+ {k:"6",n:"aleatorio", modo:"rep",  patron:"azar"},
+ {k:"7",n:"rasgueo",   modo:"sost", roll:0.035},
+ {k:"8",n:"pizzicato", modo:"golpe",roll:0.022},
+ {k:"9",n:"halo",      modo:"sost", pad:true},
+ {k:"0",n:"campanas",  modo:"rep",  patron:"azar", campana:true, disperso:true}
+];
+let iArt=0;
+
+/* ---------- audio ---------- */
+let ctx=null,master=null,comp=null,salida=null,bufSample=null;
+const frec=m=>440*Math.pow(2,(m-69)/12);
+const NOMB=["do","do♯","re","mi♭","mi","fa","fa♯","sol","sol♯","la","si♭","si"];
+function iniAudio(){
+  if(ctx) return;
+  ctx=new (window.AudioContext||window.webkitAudioContext)();
+  master=ctx.createGain(); master.gain.value=.7;
+  comp=ctx.createDynamicsCompressor();
+  comp.threshold.value=-10; comp.knee.value=10; comp.ratio.value=10; comp.attack.value=.003; comp.release.value=.25;
+  salida=ctx.createGain(); salida.gain.value=.82;
+  master.connect(comp); comp.connect(salida); salida.connect(ctx.destination);
+}
+
+/* una nota sostenida, con soltar() */
+function Sonido(midi,t0,vel,timbre){
+  const f=frec(midi), t=Math.max(t0,ctx.currentTime), g=ctx.createGain(), nodos=[];
+  g.connect(master);
+  let rel=.35;
+  if(timbre==="sample"&&bufSample){
+    const s=ctx.createBufferSource(); s.buffer=bufSample;
+    if(loopSample){ s.loop=true; s.loopStart=0; s.loopEnd=bufSample.duration; }
+    s.playbackRate.value=(f/frec(baseSample))*Math.pow(2,centsSample/1200);
+    s.connect(g);
+    /* definición: un pasabanda muy resonante en la fundamental, en paralelo al
+       sonido seco. Hace cantar la altura aunque la muestra sea ruidosa. */
+    if(defSample>0){
+      const bp=ctx.createBiquadFilter(); bp.type="bandpass"; bp.Q.value=30; bp.frequency.value=f;
+      const bp2=ctx.createBiquadFilter(); bp2.type="bandpass"; bp2.Q.value=32; bp2.frequency.value=f*2;
+      const bg=ctx.createGain(); bg.gain.value=defSample*7;
+      const bg2=ctx.createGain(); bg2.gain.value=defSample*3;
+      s.connect(bp); bp.connect(bg); bg.connect(g);
+      s.connect(bp2); bp2.connect(bg2); bg2.connect(g);
+    }
+    s.start(t); nodos.push(s); rel=.25;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel,t+.006);
+  }else if(timbre==="guitarra"){
+    const o=ctx.createOscillator(),o2=ctx.createOscillator(),lp=ctx.createBiquadFilter();
+    o.type="sawtooth";o2.type="triangle";o.frequency.value=f;o2.frequency.value=f*1.005;
+    lp.type="lowpass";lp.Q.value=1.4;lp.frequency.setValueAtTime(3200,t);
+    lp.frequency.exponentialRampToValueAtTime(500,t+1.6);
+    o.connect(lp);o2.connect(lp);lp.connect(g);o.start(t);o2.start(t);nodos.push(o,o2);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel,t+.004);
+    g.gain.exponentialRampToValueAtTime(vel*.14,t+2.2); rel=.25;
+  }else if(timbre==="campana"){
+    const c=ctx.createOscillator(),m=ctx.createOscillator(),mg=ctx.createGain();
+    c.frequency.value=f;m.frequency.value=f*3.47;
+    mg.gain.setValueAtTime(f*7,t); mg.gain.exponentialRampToValueAtTime(f*.02,t+2.6);
+    m.connect(mg);mg.connect(c.frequency);c.connect(g);c.start(t);m.start(t);nodos.push(c,m);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.8,t+.004);
+    g.gain.exponentialRampToValueAtTime(vel*.05,t+3.2); rel=.5;
+  }else if(timbre==="organo"){
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.3,t+.02); rel=.12;
+    [1,2,3,4,6].forEach((h,i)=>{ const o=ctx.createOscillator(),gg=ctx.createGain();
+      o.type="sine";o.frequency.value=f*h;gg.gain.value=[1,.5,.34,.18,.1][i];
+      o.connect(gg);gg.connect(g);o.start(t);nodos.push(o); });
+  }else if(timbre==="coro"){
+    const lfo=ctx.createOscillator(),lg=ctx.createGain();
+    lfo.frequency.value=4.8; lg.gain.value=f*.006; lfo.connect(lg); lfo.start(t); nodos.push(lfo);
+    const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=1100; lp.Q.value=3;
+    lp.connect(g);
+    [1,2,3].forEach((h,i)=>{ const o=ctx.createOscillator(),gg=ctx.createGain();
+      o.type=i?"sine":"triangle";o.frequency.value=f*h;gg.gain.value=[1,.28,.12][i];
+      lg.connect(o.frequency); o.connect(gg);gg.connect(lp);o.start(t);nodos.push(o); });
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.42,t+.22); rel=.6;
+  }else{ /* cuerdas */
+    const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.Q.value=1.1;
+    lp.frequency.setValueAtTime(700,t); lp.frequency.linearRampToValueAtTime(2400,t+.5);
+    lp.connect(g);
+    const o=ctx.createOscillator(),o2=ctx.createOscillator();
+    o.type="sawtooth";o2.type="sawtooth";o.frequency.value=f;o2.frequency.value=f*1.0055;
+    o.connect(lp);o2.connect(lp);o.start(t);o2.start(t);nodos.push(o,o2);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vel*.5,t+.14); rel=.45;
+  }
+  this.soltar=(largo)=>{
+    const n=ctx.currentTime, r=largo||rel;
+    try{ g.gain.cancelScheduledValues(n); g.gain.setValueAtTime(Math.max(.0001,g.gain.value),n);
+         g.gain.exponentialRampToValueAtTime(.0001,n+r); }catch(e){}
+    nodos.forEach(o=>{ try{o.stop(n+r+.05)}catch(e){} });
+  };
+}
+/* nota corta percutida */
+function golpe(midi,t0,dur,vel,timbre){
+  const s=new Sonido(midi,t0,vel,timbre);
+  const esp=Math.max(0,t0-ctx.currentTime)+dur;
+  setTimeout(()=>s.soltar(timbre==="campana"?1.2:.18),esp*1000);
+  return s;
+}
+
+/* ---------- estado ---------- */
+const $=id=>document.getElementById(id);
+const LETRAS=["C","C♯","D","E♭","E","F","F♯","G","G♯","A","B♭","B"];
+let bpm=84, sub=2, octava=0, amplitud=1, timbre="cuerdas", din=.8, pedal=false;
+let baseSample=60, centsSample=0, vocesSample="todas", refSample=.45, loopSample=false, defSample=.4;
+let MAPA={};
+const transp={};                         /* transposición en semitonos, por tecla */
+const activas=new Map(), pedaleadas=[];
+const paso=()=>60/bpm/sub;
+const nombre=m=>LETRAS[((m%12)+12)%12]+(Math.floor(m/12)-1);
+
+/* ------------------------------------------------------------------
+   EL MOUSE COMPLEJIZA
+   Las teclas llevan el acorde BÁSICO (la tríada). El movimiento vertical del
+   mouse recorre una escalera de complejidad: hacia arriba se le van agregando
+   la 6ª, la 7ª, la 9ª y el color de más arriba; hacia abajo se desarma.
+   Cada peldaño sigue sonando con cuatro notas (voces() elige las que definen
+   el acorde), así el arpegio no cambia de largo al complejizar.
+   ------------------------------------------------------------------ */
+const ESCALERA={
+  /* a = el camino normal: la séptima primero, después la novena, después la 11ª/13ª.
+     b = la variante con ⇧ shift, que es donde vive el caso particular de cada
+     familia (la sexta en los acordes mayores y menores, la alteración en los
+     dominantes, la séptima disminuida en el semidisminuido). */
+  menor:{a:[{iv:[0,3,7],          sup:"m"},
+            {iv:[0,3,7,10],       sup:"m7"},
+            {iv:[0,3,7,10,14],    sup:"m9"},
+            {iv:[0,3,7,10,14,17], sup:"m11"}],
+         b:[{iv:[0,3,7],          sup:"m"},
+            {iv:[0,3,7,9],        sup:"m6"},
+            {iv:[0,3,7,9,14],     sup:"m6/9"},
+            {iv:[0,3,7,9,14,17],  sup:"m6/9(11)"}]},
+  mayor:{a:[{iv:[0,4,7],          sup:""},
+            {iv:[0,4,7,11],       sup:"maj7"},
+            {iv:[0,4,7,11,14],    sup:"maj9"},
+            {iv:[0,4,7,11,14,21], sup:"maj13"}],
+         b:[{iv:[0,4,7],          sup:""},
+            {iv:[0,4,7,9],        sup:"6"},
+            {iv:[0,4,7,9,14],     sup:"6/9"},
+            {iv:[0,4,7,9,14,17],  sup:"6/9(11)"}]},
+  dom:  {a:[{iv:[0,4,7],          sup:""},
+            {iv:[0,4,7,10],       sup:"7"},
+            {iv:[0,4,7,10,14],    sup:"9"},
+            {iv:[0,4,7,10,14,21], sup:"13"}],
+         b:[{iv:[0,4,7],          sup:""},
+            {iv:[0,4,7,10,13],    sup:"7♭9"},
+            {iv:[0,4,7,10,15],    sup:"7♯9"},
+            {iv:[0,4,8,10,13],    sup:"7alt"}]},
+  semid:{a:[{iv:[0,3,6],          sup:"dim"},
+            {iv:[0,3,6,10],       sup:"m7♭5"},
+            {iv:[0,3,6,10,14],    sup:"m9♭5"},
+            {iv:[0,3,6,10,14,17], sup:"m11♭5"}],
+         b:[{iv:[0,3,6],          sup:"dim"},
+            {iv:[0,3,6,9],        sup:"°7"},
+            {iv:[0,3,6,9,14],     sup:"°7(9)"},
+            {iv:[0,3,6,9,14,17],  sup:"°7(11)"}]}
+};
+const NIVELES=["tríada","+ 7ª","+ 9ª","+ 11ª/13ª"];
+const NCX=NIVELES.length-1;
+const FAMNOM={menor:"menor",mayor:"mayor",dom:"dominante",semid:"semidism."};
+const PXNIVEL=110;                       /* píxeles de mouse por peldaño */
+let cx=0, cxAcum=0, mouseOn=true, shiftOn=false;
+
+const familiaDe=iv=>iv.includes(6)?"semid":iv.includes(3)?"menor":iv.includes(10)?"dom":"mayor";
+const idTecla=t=>t.raiz+":"+t.fam;
+const NOTA=r=>LETRAS[((r%12)+12)%12];
+function nombreTecla(t,n,sh){
+  const via=(sh===undefined?shiftOn:sh)?"b":"a", esc=ESCALERA[t.fam][via];
+  const p=esc[Math.max(0,Math.min(n===undefined?cx:n,esc.length-1))];
+  const men=p.sup.startsWith("m")&&!p.sup.startsWith("maj");
+  return {nom:NOTA(t.raiz)+(men?"m":""), sup:men?p.sup.slice(1):p.sup, iv:p.iv};
+}
+/* ------------------------------------------------------------------
+   TODOS los acordes suenan con EXACTAMENTE 4 notas, para que el ciclo del
+   arpegio dure lo mismo en cualquier acorde y en cualquier peldaño. Se elige
+   un bajo con la raíz más tres voces arriba, y esas tres se eligen por lo que
+   define al acorde: tercera > séptima > extensiones > quinta > raíz doblada.
+   Las tres voces de arriba viven siempre entre do4 y si4 (las extensiones, una
+   octava más arriba), que es lo que enlaza los acordes sin saltos.
+   ------------------------------------------------------------------ */
+const RELLENO=[12,19];
+const PRI=(i,iv)=>{
+  if(i===12) return 6;                                             /* relleno: raíz 8ª arriba */
+  if(i===19) return 7;                                             /* relleno: quinta 8ª arriba */
+  if(i===3||i===4) return 1;                                       /* la tercera, siempre */
+  if(!(iv.includes(3)||iv.includes(4))&&(i===5||i===2)) return 1;   /* sus: manda la 4ª o la 2ª */
+  if(i===10||i===11||i===9) return 2;                              /* séptima, sexta o 7ª dism. */
+  if(i===6||i>=13) return 3;                                       /* quinta bemol y extensiones */
+  if(i===7) return 4;                                              /* quinta justa */
+  return 5;                                                        /* raíz duplicada arriba */
+};
+function voces(t,n){
+  const iv=nombreTecla(t,n===undefined?cx:n).iv;
+  const arriba=[...iv,...RELLENO].sort((a,b)=>PRI(a,iv)-PRI(b,iv)||a-b).slice(0,3)
+    .map(i=>60+((((t.raiz+i)%12)+12)%12)+(i>=12?12:0));
+  let bajo=45+(((t.raiz-9)%12)+12)%12;
+  if(amplitud===0) bajo+=12;                       /* cerrada: bajo pegado al cuerpo */
+  while(arriba.includes(bajo)) bajo-=12;           /* nunca duplicar al unísono */
+  const v=[bajo,...arriba];
+  if(amplitud===2){                                /* abierta: sube la voz más aguda
+       que no se vaya del registro útil (evita que una novena termine en fa6) */
+    const c=[...arriba].sort((a,b)=>b-a).find(m=>m+12<=84);
+    if(c!==undefined) v[v.indexOf(c)]+=12;
+  }
+  const tr=12*octava+(transp[idTecla(t)]||0);
+  return [...new Set(v)].sort((a,b)=>a-b).map(m=>m+tr);
+}
+/* con sample cargado se puede tocar solo parte del acorde: asi el cambio de
+   altura de la muestra se oye claro en cada acorde */
+function vocesDeSample(t,n){
+  if(timbre!=="sample"||vocesSample==="todas") return n;
+  const tr=12*octava+(transp[idTecla(t)]||0);
+  const raiz=60+(((t.raiz)%12)+12)%12+tr;
+  const quinta=60+(((t.raiz+7)%12)+12)%12+tr;
+  if(vocesSample==="raizb") return [45+(((t.raiz-9)%12)+12)%12+tr];
+  if(vocesSample==="raiz")  return [raiz];
+  if(vocesSample==="raiz5") return [...new Set([raiz,quinta])].sort((a,b)=>a-b);
+  return [n[n.length-1]];
+}
+
+/* ---------- disparo ---------- */
+function notasDe(e){
+  const full=voces(e.t);
+  const arpegia=e.art.modo==="rep"&&e.art.patron!=="bloque";
+  return {full, n:arpegia?full:vocesDeSample(e.t,full)};
+}
+function pulsar(idx){
+  if(activas.has(idx)) return;
+  iniAudio(); if(ctx.state==="suspended") ctx.resume();
+  const t=TECLADO[idx]; if(!t) return;
+  const art=ARTS[iArt], t0=ctx.currentTime+.02;
+  const e={idx,t,art,sonidos:[],ref:[],tSig:t0,i:0};
+  const {full,n}=notasDe(e); e.notas=n; e.full=full;
+  e.amp=din*(art.pad?.62:.8)/Math.max(1,n.length*.78);
+  e.aref=din*.5*refSample/Math.max(1,full.length*.7);
+  if(art.modo==="sost"){
+    n.forEach((m,k)=>{
+      const ta=t0+(art.roll?k*art.roll:0);
+      e.sonidos.push({m,s:new Sonido(m,ta,e.amp,timbre)});
+      if(art.pad) e.sonidos.push({m:m+12,s:new Sonido(m+12,ta+.12,e.amp*.28,timbre)});
+    });
+  }else if(art.modo==="golpe"){
+    n.forEach((m,k)=>golpe(m,t0+k*art.roll,.16,e.amp*1.15,timbre));
+  }
+  /* con sample, el acorde completo se sostiene por debajo con cuerdas: es lo que
+     hace que se oiga QUÉ acorde es, sin perder el color de la muestra */
+  if(timbre==="sample"&&refSample>0)
+    full.forEach((m,k)=>e.ref.push({m,s:new Sonido(m,t0+.01*k,e.aref,"cuerdas")}));
+  activas.set(idx,e);
+  pintarEstado();
+}
+/* al mover el mouse el acorde que está sonando se transforma en vivo: se sueltan
+   las voces que salen y entran las que faltan, sin volver a atacar el acorde */
+function morfarCapa(lista,nuevas,amp,tim,pad){
+  const t=ctx.currentTime+.01;
+  const fuera=lista.filter(v=>!nuevas.includes(v.m));
+  fuera.forEach(v=>v.s.soltar(.3));
+  const queda=lista.filter(v=>nuevas.includes(v.m));
+  nuevas.forEach(m=>{ if(!queda.some(v=>v.m===m)) queda.push({m,s:new Sonido(m,t,amp,tim)}); });
+  return queda;
+}
+function morfar(e){
+  const {full,n}=notasDe(e); e.notas=n; e.full=full;
+  if(e.art.modo==="sost") e.sonidos=morfarCapa(e.sonidos,n,e.amp,timbre);
+  if(e.ref.length) e.ref=morfarCapa(e.ref,full,e.aref,"cuerdas");
+}
+function soltar(idx){
+  const e=activas.get(idx); if(!e) return;
+  activas.delete(idx);
+  if(pedal) pedaleadas.push(e); else apagar(e);
+  pintarEstado();
+}
+function apagar(e){
+  e.sonidos.forEach(v=>v.s.soltar(e.art.pad?2.6:null));
+  e.ref.forEach(v=>v.s.soltar(1.2));
+  e.sonidos=[]; e.ref=[];
+}
+function todoFuera(){
+  activas.forEach(apagar); activas.clear();
+  pedaleadas.splice(0).forEach(apagar);
+  pintarEstado();
+}
+
+/* ---------- eje de complejidad con el mouse ---------- */
+function fijarCx(n){
+  n=Math.max(0,Math.min(NCX,n));
+  if(n===cx) return;
+  cx=n; cxAcum=cx*PXNIVEL;
+  if(ctx){ activas.forEach(morfar); pedaleadas.forEach(morfar); }
+  pintarAcordes(); pintarNivel();
+}
+function fijarShift(v){
+  if(v===shiftOn) return;
+  shiftOn=v;
+  if(ctx){ activas.forEach(morfar); pedaleadas.forEach(morfar); }
+  pintarAcordes(); pintarNivel();
+}
+addEventListener("keydown",e=>fijarShift(e.shiftKey),true);
+addEventListener("keyup",e=>fijarShift(e.shiftKey),true);
+addEventListener("pointermove",e=>{
+  fijarShift(e.shiftKey);
+  if(!mouseOn) return;
+  const dy=e.movementY||0; if(!dy) return;
+  cxAcum=Math.max(-PXNIVEL*.4,Math.min(NCX*PXNIVEL+PXNIVEL*.4,cxAcum-dy));
+  const n=Math.max(0,Math.min(NCX,Math.round(cxAcum/PXNIVEL)));
+  if(n!==cx){ cx=n; if(ctx){ activas.forEach(morfar); pedaleadas.forEach(morfar); }
+    pintarAcordes(); pintarNivel(); }
+});
+function pintarNivel(){
+  const d=$("nivel"); if(!d) return;
+  d.innerHTML=`<span class="et">complejidad</span>`+
+    NIVELES.map((_,i)=>`<i class="${i<=cx?"on":""}"></i>`).join("")+
+    `<b>${NIVELES[cx]}</b>`+
+    `<button id="btnMouse"${mouseOn?' class="on"':''}>mouse ${mouseOn?"activo":"apagado"}</button>`+
+    `<button id="btnCx0">volver a la tríada</button>`+
+    `<span class="ay" style="color:${shiftOn?"var(--acc2)":"var(--dim)"}">⇧ shift ${shiftOn?"— variante activa":"= variante (6ª, alteración…)"}</span>`+
+    `<span class="ay">mover el mouse hacia arriba complejiza el acorde, hacia abajo lo desarma</span>`;
+}
+addEventListener("click",e=>{
+  if(e.target.id==="btnMouse"){ mouseOn=!mouseOn; pintarNivel(); }
+  else if(e.target.id==="btnCx0"){ fijarCx(0); }
+});
+
+/* ---------- secuenciador de articulaciones repetidas ---------- */
+function planificador(){
+  if(!ctx) return;
+  const hor=ctx.currentTime+.14, p=paso();
+  const proc=e=>{
+    if(e.art.modo!=="rep") return;
+    const n=e.notas, N=n.length;
+    let guarda=0;
+    while(e.tSig<hor&&guarda++<40){
+      const pat=e.art.patron;
+      const amp=pat==="bloque"?din*.78/Math.max(1,N*.78):din*.5;
+      if(pat==="bloque") n.forEach(m=>golpe(m,e.tSig,p*.85,amp,timbre));
+      else{
+        let k;
+        if(pat==="sube") k=e.i%N;
+        else if(pat==="baja") k=N-1-(e.i%N);
+        else if(pat==="vaiven"){ const c=2*N-2||1; const j=e.i%c; k=j<N?j:c-j; }
+        else k=Math.floor(Math.random()*N);
+        golpe(n[k],e.tSig,p*.9,amp,timbre);
+        if(e.art.campana&&Math.random()<.25) golpe(n[Math.floor(Math.random()*N)]+12,e.tSig+p*.5,p,amp*.55,"campana");
+      }
+      e.tSig+=e.art.disperso?p*(1+Math.floor(Math.random()*4)):p;
+      e.i++;
+    }
+  };
+  activas.forEach(proc); pedaleadas.forEach(proc);
+}
+
+/* ---------- interfaz ---------- */
+function pintarArts(){
+  $("arts").innerHTML=ARTS.map((a,i)=>
+    `<div class="art${i===iArt?" on":""}" data-a="${i}"><div class="k">${a.k}</div><div class="t">${a.n}</div></div>`).join("");
+}
+function pintarAcordes(){
+  const tarjeta=(t,k)=>{
+    const c=nombreTecla(t,cx), n=voces(t).map(nombre).join(" "), tr=transp[idTecla(t)]||0;
+    const alt=nombreTecla(t,cx,!shiftOn), otro=(alt.nom+alt.sup)!==(c.nom+c.sup)?alt.nom+alt.sup:"";
+    return `<div class="ac" data-c="${k}"><div class="tecla">${TECLAS[k][1]}</div>
+      <div class="nom">${c.nom}${c.sup?(/^[0-9]/.test(c.sup)?`<sup>${c.sup}</sup>`:`<em>${c.sup}</em>`):""}</div>
+      <div class="grado">${FAMNOM[t.fam]}${cx?" · "+NIVELES[cx]:""}</div>
+      <div class="alt">${otro?(shiftOn?"sin ⇧ · ":"⇧ ")+otro:"&nbsp;"}</div>
+      <div class="notas">${n}</div>
+      <div class="tr${tr?" act":""}" title="transposición de esta tecla, en semitonos">
+        <button data-t="${k}" data-d="-1">−</button><b>${tr>0?"+"+tr:tr} st</b>
+        <button data-t="${k}" data-d="1">+</button></div></div>`;};
+  const abajo=TECLADO.slice(0,10), arriba=TECLADO.slice(10,20);
+  const cols=Math.max(abajo.length,arriba.length?10:abajo.length);
+  $("acordes").innerHTML=
+    (arriba.length?`<div class="fila" style="grid-template-columns:repeat(${cols},1fr)">`+
+       arriba.map((t,k)=>tarjeta(t,k+10)).join("")+`</div>`:"")+
+    `<div class="fila" style="grid-template-columns:repeat(${cols},1fr)">`+
+       abajo.map((t,k)=>tarjeta(t,k)).join("")+`</div>`;
+  $("acordes").classList.toggle("apretado",TECLADO.length>10);
+  MAPA={}; TECLADO.forEach((t,k)=>{ if(TECLAS[k]) MAPA[TECLAS[k][0]]=k; });
+  if(MAPA.Semicolon!==undefined) MAPA.Quote=MAPA.Semicolon;
+  document.querySelectorAll(".ac").forEach(d=>{
+    const i=+d.dataset.c;
+    d.classList.toggle("on",activas.has(i));
+    d.classList.toggle("pedal",pedaleadas.some(e=>e.idx===i));
+  });
+}
+const cifra=p=>ACORDES[p].nom+(ACORDES[p].sup||"");
+function pintarEstructura(){
+  const cab=`<div class="cab"><span class="t">cifrado</span>
+    <button id="btnEd">${editando?"aplicar":"editar"}</button>
+    <button id="btnCopiar">copiar</button>
+    <span class="ay">${editando
+      ? "el acorde va entre corchetes justo antes de la sílaba donde entra · línea en blanco = nueva sección · la primera línea de cada bloque es su nombre"
+      : "[ ] cambian de sección · pega tu letra con «editar»"}</span></div>`;
+  if(editando){
+    $("estructura").innerHTML=cab+
+      `<textarea id="ta" spellcheck="false">${escribirCifrado().replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]))}</textarea>`;
+    return;
+  }
+  $("estructura").innerHTML=cab+SECCIONES.map((sc,k)=>
+    `<div class="sec${k===iSec?" act":""}" data-sec="${k}">
+       <div class="nm">${sc.n}</div>
+       ${sc.ls.map(l=>`<div class="ln">`+l.map(g=>
+          `<span class="sg"><span class="ch"${g.ac!=null?` data-pi="${g.ac}"`:""}>${
+             g.ac!=null?cifra(g.ac):""}</span><span class="tx">${
+             (g.tx||" ").replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c])).replace(/ /g,"&nbsp;")}</span></span>`
+        ).join("")+`</div>`).join("")}
+     </div>`).join("");
+}
+function aplicarCifrado(txt){
+  const nuevo=leerCifrado(txt);
+  if(!nuevo.length){ return false; }
+  SECCIONES=nuevo; iSec=Math.max(0,Math.min(iSec,SECCIONES.length-1));
+  todoFuera(); armarTeclado(); pintarAcordes(); pintarEstructura(); pintarEstado();
+  return true;
+}
+function pintarEstado(){
+  document.querySelectorAll(".ac").forEach(d=>{
+    const i=+d.dataset.c;
+    d.classList.toggle("on",activas.has(i));
+    d.classList.toggle("pedal",pedaleadas.some(e=>e.idx===i));
+  });
+  document.querySelectorAll("#estructura .ch[data-pi]").forEach(s=>
+    s.classList.toggle("hi",activas.has(ACOR2TECLA[+s.dataset.pi])));
+  $("info").textContent=`${SECCIONES[iSec]?SECCIONES[iSec].n+" · ":""}${ARTS[iArt].n} · ${NIVELES[cx]} · ${bpm} bpm · registro ${octava>0?"+"+octava:octava} · `+
+    `dinámica ${Math.round(din*100)}%${pedal?" · PEDAL":""}${pedaleadas.length?" · "+pedaleadas.length+" en pedal":""}`;
+}
+
+/* ---------- controles ---------- */
+$("bpm").oninput=e=>{bpm=+e.target.value;$("bpmv").textContent=bpm;pintarEstado();};
+$("sub").onchange=e=>sub=+e.target.value;
+$("oct").onchange=e=>{octava=+e.target.value;pintarAcordes();pintarEstado();};
+$("amp").onchange=e=>{amplitud=+e.target.value;pintarAcordes();};
+$("timbre").onchange=e=>timbre=e.target.value;
+$("vol").oninput=e=>{ if(master) master.gain.setTargetAtTime((+e.target.value)/100,ctx.currentTime,.02); };
+$("btnSmp").onclick=()=>$("fsample").click();
+$("fsample").onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return; iniAudio();
+  try{ bufSample=await ctx.decodeAudioData(await f.arrayBuffer());
+    const o=$("timbre").querySelector('option[value=sample]');
+    o.disabled=false; o.textContent="sample: "+f.name.slice(0,20);
+    $("timbre").value="sample"; timbre="sample"; $("smpctl").classList.remove("hidden");
+    $("smpinfo").textContent="analizando…"; setTimeout(afinarSolo,20);
+  }catch(err){ alert("No pude leer ese audio: "+err.message); }
+};
+/* detecta la altura de la muestra por autocorrelacion normalizada */
+function detectarAltura(buf){
+  const sr=buf.sampleRate, ch=buf.getChannelData(0);
+  const ini=Math.min(Math.floor(sr*.05),Math.max(0,ch.length-1));
+  const N=Math.min(16384,ch.length-ini);
+  if(N<2048) return null;
+  const x=new Float32Array(N); let med=0;
+  for(let i=0;i<N;i++) med+=ch[ini+i]; med/=N;
+  let en=0; for(let i=0;i<N;i++){ x[i]=ch[ini+i]-med; en+=x[i]*x[i]; }
+  if(Math.sqrt(en/N)<1e-4) return null;
+  const lmin=Math.max(2,Math.floor(sr/1600)), lmax=Math.min(Math.floor(sr/45),N-2);
+  const v=new Float32Array(lmax+1); let mejor=0;
+  for(let lag=lmin;lag<=lmax;lag++){
+    let sm=0,e1=0,e2=0;
+    for(let i=0;i+lag<N;i++){ sm+=x[i]*x[i+lag]; e1+=x[i]*x[i]; e2+=x[i+lag]*x[i+lag]; }
+    v[lag]=sm/Math.sqrt(e1*e2+1e-12);
+    if(v[lag]>mejor) mejor=v[lag];
+  }
+  if(mejor<.3) return null;
+  /* primer MAXIMO LOCAL que casi empata con el global: evita el error de octava
+     hacia abajo sin quedarse en el hombro de la curva (eso subia la altura ~6%) */
+  let el=-1;
+  for(let lag=lmin+1;lag<lmax;lag++)
+    if(v[lag]>v[lag-1]&&v[lag]>=v[lag+1]&&v[lag]>=mejor*.9){ el=lag; break; }
+  if(el<0) return null;
+  const a=v[el-1],b0=v[el],c=v[el+1],den=a-2*b0+c;
+  const d=Math.abs(den)>1e-9?Math.max(-1,Math.min(1,(a-c)/(2*den))):0;
+  return sr/(el+d);
+}
+function afinarSolo(){
+  if(!bufSample){ return; }
+  const f=detectarAltura(bufSample);
+  if(!f){ $("smpinfo").textContent="no pude detectar una altura clara en la muestra — ajústala a mano"; return; }
+  const mid=69+12*Math.log2(f/440), red=Math.round(mid);
+  baseSample=Math.max(36,Math.min(84,red));
+  centsSample=Math.max(-100,Math.min(100,Math.round((mid-red)*100)));
+  $("base").value=baseSample; $("cents").value=centsSample; $("centsv").textContent=centsSample;
+  $("smpinfo").textContent=`muestra detectada en ${nombre(baseSample)}${centsSample?(centsSample>0?" +":" ")+centsSample+" cents":""} (${f.toFixed(1)} Hz)`;
+}
+/* afinacion del sample: que nota suena realmente en la muestra */
+$("base").innerHTML=(()=>{ let o=""; for(let m=36;m<=84;m++)
+  o+=`<option value="${m}"${m===60?" selected":""}>${nombre(m)}</option>`; return o; })();
+$("base").onchange=e=>baseSample=+e.target.value;
+$("cents").oninput=e=>{centsSample=+e.target.value;$("centsv").textContent=centsSample;};
+$("vsmp").onchange=e=>vocesSample=e.target.value;
+$("defs").oninput=e=>defSample=(+e.target.value)/100;
+$("refs").oninput=e=>refSample=(+e.target.value)/100;
+$("loops").onchange=e=>loopSample=e.target.checked;
+$("btnAfinar").onclick=afinarSolo;
+$("go").onclick=()=>{ iniAudio(); ctx.resume(); $("splash").classList.add("hidden"); };
+/* ---------- estructura: seleccion y edicion ---------- */
+$("estructura").addEventListener("click",e=>{
+  const bt=e.target.id;
+  if(bt==="btnEd"){
+    if(editando){ const t=$("ta").value; editando=false;
+      if(!aplicarCifrado(t)){ editando=true; pintarEstructura(); alert("El cifrado quedó vacío; revisa el texto."); } }
+    else { editando=true; pintarEstructura(); $("ta").focus(); }
+    return;
+  }
+  if(bt==="btnCopiar"){
+    const txt=editando?$("ta").value:escribirCifrado();
+    navigator.clipboard?.writeText(txt).then(
+      ()=>{ e.target.textContent="copiado ✓"; setTimeout(()=>{ if($("btnCopiar")) $("btnCopiar").textContent="copiar"; },1200); },
+      ()=>prompt("Copia esto:",txt));
+    return;
+  }
+  const sec=e.target.closest(".sec");
+  if(sec&&!editando){ iSec=+sec.dataset.sec; pintarEstructura(); pintarEstado(); }
+});
+
+$("arts").addEventListener("click",e=>{ const d=e.target.closest(".art"); if(d){ iArt=+d.dataset.a; pintarArts(); pintarEstado(); }});
+$("acordes").addEventListener("pointerdown",e=>{
+  const bt=e.target.closest("button[data-t]");
+  if(bt){ e.stopPropagation(); const id=idTecla(TECLADO[+bt.dataset.t]);
+    transp[id]=Math.max(-24,Math.min(24,(transp[id]||0)+ +bt.dataset.d));
+    activas.forEach(morfar); pintarAcordes(); pintarEstado(); return; }
+  const d=e.target.closest(".ac"); if(d){ d.setPointerCapture?.(e.pointerId); pulsar(+d.dataset.c); }});
+$("acordes").addEventListener("pointerup",e=>{ const d=e.target.closest(".ac"); if(d) soltar(+d.dataset.c); });
+$("acordes").addEventListener("pointercancel",e=>{ const d=e.target.closest(".ac"); if(d) soltar(+d.dataset.c); });
+
+/* ---------- teclado ---------- */
+/* MAPA tecla -> índice de acorde; lo rearma pintarAcordes() */
+
+/* ---------- foco ----------
+   Un control se queda con el foco despues de usarlo con el mouse y el teclado
+   del instrumento deja de responder. Pero NO se puede soltar el foco en
+   pointerup: eso cierra el menu nativo de un <select> apenas se abre y el
+   desplegable parpadea. Asi que:
+     - los botones se sueltan en "click" (no tienen menu que estorbar),
+     - los sliders y checkbox en "change" (ya termino la interaccion),
+     - los <select> NO se tocan: los suelta la primera tecla que toques.
+   La red de seguridad de abajo es la que hace el trabajo de verdad. */
+const CTRL="select,button,input[type=range],input[type=checkbox],input[type=file]";
+const soltar1=t=>{ if(t) setTimeout(()=>{ if(document.activeElement===t) t.blur(); },0); };
+addEventListener("click",e=>soltar1(e.target&&e.target.closest?e.target.closest("button"):null),true);
+addEventListener("change",e=>soltar1(e.target&&e.target.closest?e.target.closest("input"):null),true);
+/* si quedo un control enfocado, la primera tecla lo suelta y ademas se procesa:
+   el preventDefault evita que la tecla mueva el <select> por busqueda rapida */
+function foco(e){
+  const a=document.activeElement;
+  if(a&&a!==document.body&&!a.isContentEditable&&a.tagName!=="TEXTAREA"&&a.matches&&a.matches(CTRL)){
+    a.blur(); if(e) e.preventDefault(); return true;
+  }
+  return false;
+}
+addEventListener("keydown",e=>{
+  const ae=document.activeElement;
+  if(ae&&(ae.isContentEditable||ae.tagName==="TEXTAREA")) return;
+  foco(e);
+  if(!$("splash").classList.contains("hidden")){ if(e.code==="Space"||e.code==="Enter"){e.preventDefault();$("go").click();} return; }
+  if(e.repeat&&e.code!=="ArrowUp"&&e.code!=="ArrowDown") return;
+  if(MAPA[e.code]!==undefined){ e.preventDefault(); pulsar(MAPA[e.code]); return; }
+  const d=/^Digit(\d)$/.exec(e.code);
+  if(d){ const n=+d[1]; iArt=(n===0?9:n-1); pintarArts(); pintarEstado(); return; }
+  switch(e.code){
+    case "Space": e.preventDefault(); pedal=true; pintarEstado(); break;
+    case "Escape": todoFuera(); break;
+    case "BracketLeft":  iSec=(iSec-1+SECCIONES.length)%SECCIONES.length; pintarEstructura(); pintarEstado(); break;
+    case "BracketRight": iSec=(iSec+1)%SECCIONES.length; pintarEstructura(); pintarEstado(); break;
+    case "KeyZ": $("oct").value=Math.max(-2,octava-1); $("oct").onchange({target:$("oct")}); break;
+    case "KeyX": $("oct").value=Math.min(2,octava+1);  $("oct").onchange({target:$("oct")}); break;
+    case "KeyC": $("amp").value=Math.max(0,amplitud-1); $("amp").onchange({target:$("amp")}); break;
+    case "KeyV": $("amp").value=Math.min(2,amplitud+1); $("amp").onchange({target:$("amp")}); break;
+    case "ArrowLeft": { const o=[...$("sub").options].map(o=>+o.value); const k=Math.max(0,o.indexOf(sub)-1);
+        $("sub").value=o[k]; sub=o[k]; pintarEstado(); break; }
+    case "ArrowRight":{ const o=[...$("sub").options].map(o=>+o.value); const k=Math.min(o.length-1,o.indexOf(sub)+1);
+        $("sub").value=o[k]; sub=o[k]; pintarEstado(); break; }
+    case "ArrowUp":   e.preventDefault(); din=Math.min(1,din+.05); pintarEstado(); break;
+    case "ArrowDown": e.preventDefault(); din=Math.max(.1,din-.05); pintarEstado(); break;
+  }
+});
+addEventListener("keyup",e=>{
+  if(MAPA[e.code]!==undefined){ soltar(MAPA[e.code]); return; }
+  if(e.code==="Space"){ pedal=false; pedaleadas.splice(0).forEach(apagar); pintarEstado(); }
+});
+addEventListener("blur",()=>{ pedal=false; todoFuera(); });
+
+SECCIONES=leerCifrado(CIFRADO_INICIAL); armarTeclado();
+pintarArts(); pintarAcordes(); pintarEstructura(); pintarNivel(); pintarEstado();
+setInterval(planificador,25);
+</script>
+</body>
+</html>
