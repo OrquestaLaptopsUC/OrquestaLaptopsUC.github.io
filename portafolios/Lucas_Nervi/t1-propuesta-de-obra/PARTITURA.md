@@ -9,7 +9,7 @@ Duración: **7:00** · funciona desde 7 estaciones, escala hasta 12
 
 ## 1. Idea
 
-Cada Voz tiene una fila fija de 7 grados diatónicos (el **color**). En vivo decide dos cosas: cómo lee la fila (P/R/I/RI) y con qué célula rítmica (**talea**) la combina. Altura y ritmo son procesos independientes combinados por isorritmia — como el chelo de Messiaen en *Liturgie de cristal* (color de 5 notas contra talea de 15 duraciones; ver Parte 1). Las células empiezan largas, se acortan al medio, y todas las voces convergen a la misma célula final (4-3-4) — unísono de ritmo, no de altura.
+Cada Voz tiene una fila fija de 7 grados diatónicos (el **color**), generada por un procedimiento constante — el mismo principio que usa Slonimsky en su *Thesaurus* (ver Parte 1). En vivo decide dos cosas: cómo lee la fila (P/R/I/RI) y con qué célula rítmica (**talea**) la combina. Altura y ritmo son procesos independientes combinados por isorritmia (técnica de color + talea). Las células empiezan largas, se acortan al medio, y todas las voces convergen a la misma célula final (4-3-4) — unísono de ritmo, no de altura.
 
 ## 2. Altura
 
@@ -50,7 +50,7 @@ Con 7: Pulso + Armonía + Voz 1–5. Con más: se suman Voz 6–10 (filas k=6, y
 
 ## 5. Notación
 
-Sin partitura convencional: cada estación recibe una tarjeta con su fila fija y el mapa de la forma. `estacion.html` es la partitura en vivo — muestra fila, lectura activa y el índice del ciclo isorrítmico en curso.
+`estacion.html` dibuja un pentagrama real (clave de sol, SVG) con las 7 notas de la fila de la Voz activa, deletreadas según la colección en curso (letra + alteración correcta, no solo números de grado), y resalta con color la que está sonando en ese instante. Debajo, una tira rítmica muestra la célula activa con el grupo en curso resaltado, y arriba un indicador grande muestra la nota, la lectura (P/R/I/RI) y la colección. No hay que leer texto ni memorizar índices: se lee igual que una partitura, actualizada en vivo. Para Armonía, el mismo pentagrama muestra el acorde 1-3-5-7 completo; para Pulso, un círculo grande pulsa en cada corchea.
 
 ## 6. Forma
 
@@ -81,4 +81,4 @@ Estaciones en semicírculo con parlante propio (en fabricación); Pulso y Armon�
 
 ## 10. Notas técnicas
 
-`motor.js` (filas, P/R/I/RI, colecciones, isorritmia) lo comparten `estacion.html` (Web Audio, ejecución en vivo) y `render.js` (Node, sintetiza el mismo motor a un WAV sin dependencias). Tempo de referencia: negra = 96 bpm.
+`motor.js` (filas, P/R/I/RI, colecciones, isorritmia, y `letraYAlteracion`/`posDiatonica` para deletrear notas y ubicarlas en el pentagrama) lo comparten `estacion.html` (Web Audio + partitura SVG en vivo) y `render.js` (Node, sintetiza el mismo motor a un WAV sin dependencias). Tempo de referencia: negra = 96 bpm.

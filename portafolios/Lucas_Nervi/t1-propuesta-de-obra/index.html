@@ -81,21 +81,26 @@ propia fila fija.</p>
 </div>
 
 <div class="card">
-<h3>2. Isorritmia — Messiaen, <i>Quatuor pour la fin du temps</i>, I (1941)</h3>
-<p>El chelo cicla 5 alturas (color) contra 15 duraciones (talea); como no coinciden, la combinación
-altura-duración casi nunca se repite. Es el mecanismo técnico central de TALEA: fila (7 notas) contra
-célula rítmica de largo distinto. Lo que TALEA agrega y Messiaen no usa: una colección de alturas que
-modula en el tiempo.</p>
-<p class="fuente">Fuente: <a href="https://en.wikipedia.org/wiki/Quatuor_pour_la_fin_du_temps" target="_blank" rel="noopener">Wikipedia, "Quatuor pour la fin du temps"</a>.</p>
+<h3>2. <i>Campo</i> — obra del curso, Orquesta de Laptops UC</h3>
+<p>Síntesis FM controlada solo con el mouse: posición y velocidad del cursor son el único gesto.
+Tres movimientos (Retícula, Deriva, Tormenta) con entreactos; "anclajes" que dejan un sonido sosteniéndose
+solo (hasta 4 por ejecutante) y se apagan con fade de 2s; sin red, sincronía por reloj de sistema; termina
+sola con un fade de 3.5s. Es la obra de orquesta de laptops del curso que cubre el requisito de esta
+Parte 1; de aquí TALEA toma directamente el mecanismo de anclaje-evaporación de su Coda (§6) y el formato
+de entrega (un solo HTML, <code>director.html</code>, <code>PARTITURA.md</code>).</p>
+<p class="fuente">Fuente: <code>obras/campo/PARTITURA.md</code> del sitio del curso.</p>
 </div>
 
 <div class="card">
-<h3>3. <i>Twilight</i> — Ge Wang, Stanford Laptop Orchestra (2013)</h3>
-<p>Obra en dos movimientos para SLOrk, escrita en ChucK, partitura y código publicados. Referente
-externo al curso y de orquesta de laptops en red: valida el formato de entrega (estación individual,
-código + partitura publicados) que pide esta tarea. No aporta técnica compositiva directa.</p>
-<p class="fuente">Fuentes: <a href="https://slork.stanford.edu/works/twilight/" target="_blank" rel="noopener">SLOrk, "Twilight (2013)"</a>;
-<a href="https://www.synthtopia.com/content/2014/07/13/the-stanford-laptop-orchestra-twilight/" target="_blank" rel="noopener">Synthtopia</a>.</p>
+<h3>3. <i>Thesaurus of Scales and Melodic Patterns</i> — Nicolas Slonimsky (1947)</h3>
+<p>No es una obra interpretada sino un catálogo de más de 1.300 escalas y patrones melódicos, generados
+sistemáticamente dividiendo la octava en partes iguales y completando por interpolación — el mismo
+principio de "material generado por un procedimiento constante" que TALEA usa para sus filas
+(<code>fila(k)[i] = i·k mod 7</code>). Influyó directamente a John Coltrane y Frank Zappa como fuente de
+material melódico. Se incluye como referente aun sin ser una "obra que suena", porque su técnica de
+generación es la que TALEA aplica a lo diatónico.</p>
+<p class="fuente">Fuentes: <a href="https://en.wikipedia.org/wiki/Nicolas_Slonimsky" target="_blank" rel="noopener">Wikipedia, "Nicolas Slonimsky"</a>;
+<a href="https://github.com/rpalermodrums/slonimsky" target="_blank" rel="noopener">reconstrucción algorítmica del Thesaurus (GitHub)</a>.</p>
 </div>
 
 <h2 id="p2">Parte 2 — Propuesta de obra</h2>
@@ -119,9 +124,11 @@ misma célula (4-3-4), unísono de ritmo con altura libre.</p>
 implementada): <code>/oluc/coleccion</code> y <code>/oluc/seccion</code>, solo informativos.</p>
 
 <p><b>Roles:</b> 7 estaciones = Pulso + Armonía + Voz 1–5; hasta 12 sumando Voz 6–10.
-<b>Notación:</b> tarjeta con fila fija por estación; <a href="estacion.html">estacion.html</a> es la
-partitura en vivo. <b>Riesgos:</b> perder la colección de oído (mitigado con cambios solo en límites de
-sección); que la Convergencia no caiga junta (versión reducida: se extiende B y se salta a la Coda).</p>
+<b>Notación:</b> <a href="estacion.html">estacion.html</a> dibuja un pentagrama real en vivo con las 7
+notas de la fila (coloreadas según la colección activa) y resalta la que suena, más una tira rítmica con
+la célula activa — nada que memorizar, se lee igual que una partitura. <b>Riesgos:</b> perder la
+colección de oído (mitigado con cambios solo en límites de sección); que la Convergencia no caiga junta
+(versión reducida: se extiende B y se salta a la Coda).</p>
 
 <p class="dim">Detalle completo en <a href="PARTITURA.md">PARTITURA.md</a>.</p>
 
@@ -139,7 +146,8 @@ y convergen a 4-3-4 en los últimos 12s.</p>
 <a class="btn alt" href="render.wav">Descargar render.wav ↗</a>
 </div>
 
-<p><b>Entorno:</b> JS puro sin dependencias. <code>estacion.html</code>: Chrome/Firefox, Web Audio API.
+<p><b>Entorno:</b> JS puro sin dependencias. <code>estacion.html</code>: Chrome/Firefox, Web Audio API,
+con pentagrama y tira rítmica dibujados en SVG en vivo (nada que leer en texto: se ve la nota que suena).
 <code>render.js</code>: Node.js, sin paquetes externos.
 <b>Reproducir el render:</b> <code>node render.js</code> (determinista).
 <b>Parámetros:</b> rol, voz/fila, lectura P/R/I/RI, célula, colección, timbre, tempo — ver
@@ -164,7 +172,13 @@ armónicas, el resto [...] podrá hacer variaciones en el timbre [...], inversi�
 retrogradación y retrogradación de la inversión, pero tendrán las melodías fijas."</i> — esta idea (fila
 fija con serialismo diatónico, células tipo clave con arco largo→corto→convergencia, rol armónico
 separado) es la base compositiva completa de TALEA y es del estudiante; la IA la formalizó en un sistema
-implementable y construyó el código y la documentación.</p>
+implementable y construyó el código y la documentación. Iteraciones posteriores del estudiante:
+pedido de reducir y simplificar el texto de esta página y de <code>PARTITURA.md</code>; y pedido de
+reemplazar el referente 3 (originalmente <i>Twilight</i>, Ge Wang/SLOrk) por el <i>Thesaurus of Scales
+and Melodic Patterns</i> de Slonimsky, y de agregar una partitura visual intuitiva para los músicos en
+<code>estacion.html</code> — ambos implementados por la IA (la sustitución de <i>Campo</i> en el
+referente 2, necesaria para seguir cumpliendo el requisito de un referente de orquesta de laptops, fue
+una decisión técnica de la IA al ejecutar el pedido).</p>
 </div>
 
 </main>

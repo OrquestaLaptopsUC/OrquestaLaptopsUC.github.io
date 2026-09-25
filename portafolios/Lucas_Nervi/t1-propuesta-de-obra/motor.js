@@ -76,6 +76,32 @@ const OLUC_TALEA = (function () {
     return 440 * Math.pow(2, (midi - 69) / 12);
   }
 
+  // ---------- nombre de nota (para la partitura visual) ----------
+  // Deriva letra + alteración de un grado en una colección, para poder
+  // dibujarlo en un pentagrama: el alfabeto musical (C D E F G A B) siempre
+  // se recorre en orden a partir de la tónica, sea cual sea su alteración.
+  const LETRAS = ["C", "D", "E", "F", "G", "A", "B"];
+  const LETRA_PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  const TONICA_LETRA = { "-2": "B", "-1": "F", "0": "C", "1": "G", "2": "D" };
+
+  function letraYAlteracion(grado, k) {
+    const tonica = TONICA_LETRA[String(k)];
+    const ti = LETRAS.indexOf(tonica);
+    const letra = LETRAS[(ti + grado - 1 + 7) % 7];
+    const pcReal = gradoAPC(grado, k);
+    let dif = pcReal - LETRA_PC[letra];
+    if (dif > 6) dif -= 12;
+    if (dif < -6) dif += 12;
+    return { letra, alteracion: dif };
+  }
+
+  // posición diatónica relativa a E4 (línea inferior del pentagrama en clave
+  // de sol) — cada paso vale un espacio o línea, sin importar semitonos.
+  function posDiatonica(letra, octava) {
+    const li = LETRAS.indexOf(letra);
+    return octava * 7 + li - (4 * 7 + 2);
+  }
+
   // ---------- talea (células rítmicas, en corcheas) ----------
   // El arco formal de la obra: células largas al comienzo, cortas al medio,
   // convergencia final de todas las voces en 4-3-4 (11 corcheas).
@@ -130,6 +156,8 @@ const OLUC_TALEA = (function () {
     tonicaPC,
     gradoAPC,
     gradoAFrecuencia,
+    letraYAlteracion,
+    posDiatonica,
     TALEAS,
     NOMBRES_COLECCION,
     duracionTalea,

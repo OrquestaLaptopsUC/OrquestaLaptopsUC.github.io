@@ -41,6 +41,15 @@
   #estado b{color:var(--acc)}
   .led{width:11px;height:11px;border-radius:50%;background:#2a323c;display:inline-block;transition:background .05s;margin-right:6px}
   .led.on{background:var(--acc2);box-shadow:0 0 10px var(--acc2)}
+  .granInfo{display:flex;gap:26px;align-items:baseline;flex-wrap:wrap;margin-bottom:10px}
+  .granInfo .item .k{display:block;color:var(--dim);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+  .granInfo .item .v{font-size:26px;font-weight:700;color:var(--acc2)}
+  .granInfo .item .v small{font-size:13px;color:var(--dim);font-weight:400;margin-left:4px}
+  svg.partitura{width:100%;height:180px;display:block;background:#0d1116;border:1px solid var(--line);border-radius:6px}
+  svg.ritmo{width:100%;height:64px;display:block;background:#0d1116;border:1px solid var(--line);border-radius:6px;margin-top:10px}
+  .metroWrap{display:flex;justify-content:center;padding:20px 0}
+  #metroCirc{transition:transform .06s ease-out, fill .06s}
+  #metroCirc.pulso{transform:scale(1.22);fill:var(--acc2)}
   #splash{position:fixed;inset:0;background:rgba(8,10,12,.97);display:flex;align-items:center;
     justify-content:center;z-index:9;padding:20px}
   #splash .box{max-width:680px;padding:26px 30px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
@@ -92,8 +101,16 @@
   <div id="stage">
 
     <div class="bloque" id="panelVoz">
-      <h2>Voz</h2>
-      <div class="fila-botones" style="margin-bottom:10px">
+      <h2>Voz — partitura en vivo</h2>
+      <div class="granInfo">
+        <div class="item"><span class="k">tocando ahora</span><span class="v" id="notaGrande">—</span></div>
+        <div class="item"><span class="k">lectura</span><span class="v" id="lecturaGrande">P</span></div>
+        <div class="item"><span class="k">colección</span><span class="v" id="coleccionGrande" style="font-size:18px">—</span></div>
+      </div>
+      <svg class="partitura" id="pentagrama"></svg>
+      <svg class="ritmo" id="ritmo"></svg>
+
+      <div class="fila-botones" style="margin:14px 0 10px">
         <div class="ctl"><label>voz</label>
           <select id="vozN"></select></div>
         <div class="ctl"><label>octava</label>
@@ -125,8 +142,9 @@
     </div>
 
     <div class="bloque hidden" id="panelArmonia">
-      <h2>Armonía</h2>
-      <div class="fila-botones">
+      <h2>Armonía — acorde en vivo</h2>
+      <svg class="partitura" id="pentagramaArmonia"></svg>
+      <div class="fila-botones" style="margin-top:12px">
         <div class="ctl"><label>colección</label>
           <select id="coleccionArmonia"></select></div>
       </div>
@@ -136,6 +154,10 @@
 
     <div class="bloque hidden" id="panelPulso">
       <h2>Pulso</h2>
+      <div class="metroWrap"><svg width="120" height="120" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="48" fill="#1b2128" stroke="#232a32"/>
+        <circle id="metroCirc" cx="60" cy="60" r="34" fill="#2a323c"/>
+      </svg></div>
       <div class="fila-botones">
         <div class="ctl"><label>vol pulso</label><input type="range" id="volPulso" min="0" max="100" value="55"></div>
       </div>
@@ -209,6 +231,7 @@ function pintaCeldas(contId, lista, tag){
       document.querySelectorAll('#celdasLarga button,#celdasCorta button,#celdasConv button').forEach(x=>x.classList.remove('on'));
       b.classList.add('on');
       celulaActiva = cel;
+      pintaEstado();
     };
     cont.appendChild(b);
   });
@@ -221,6 +244,7 @@ lecturaBtns.forEach(b=>b.onclick=()=>{
   lecturaBtns.forEach(x=>x.classList.remove('on'));
   b.classList.add('on');
   lectura=b.dataset.lectura;
+  pintaEstado();
 });
 
 rolBtns.forEach(b=>b.onclick=()=>{
@@ -229,7 +253,10 @@ rolBtns.forEach(b=>b.onclick=()=>{
   rol=b.dataset.rol;
   Object.entries(paneles).forEach(([k,el])=>el.classList.toggle('hidden', k!==rol));
   panelColeccionVoz.classList.toggle('hidden', rol==='armonia');
+  pintaEstado();
 });
+
+[vozNSel, octavaSel, coleccionVozSel, coleccionArmoniaSel].forEach(sel=>sel.addEventListener('change', pintaEstado));
 document.querySelectorAll('#roles [data-rol]').forEach(b=>{ if(b.dataset.rol==='voz') b.classList.add('on'); });
 
 bpmEl.oninput=()=>{ bpmv.firstChild.textContent=bpmEl.value+' '; };
@@ -248,6 +275,62 @@ function corchea(){ return 60/parseFloat(bpmEl.value)/2; }
 function volMaster(){ return parseFloat(volEl.value)/100; }
 function coleccionVoz(){ return parseInt(coleccionVozSel.value,10); }
 function coleccionArmonia(){ return parseInt(coleccionArmoniaSel.value,10); }
+
+// ---------- partitura visual ----------
+const pentagramaEl=$('pentagrama'), ritmoEl=$('ritmo'), pentagramaArmoniaEl=$('pentagramaArmonia');
+const notaGrandeEl=$('notaGrande'), lecturaGrandeEl=$('lecturaGrande'), coleccionGrandeEl=$('coleccionGrande');
+const metroCirc=$('metroCirc');
+
+function nombreNota(letra,alteracion,octava){
+  return letra + (alteracion>0?'♯':alteracion<0?'♭':'') + octava;
+}
+
+// dibuja un pentagrama en clave de sol con una lista de {letra,alteracion,octava}
+// notas: array; activoIdx: índice resaltado (-1 = ninguno, 'todas' = resaltar todas)
+function dibujaPentagrama(svg, notas, activoIdx){
+  const W = svg.clientWidth || 600, H = 180;
+  const top = 46, sp = 11; // separación entre líneas; cabe C3..B5 sin recortarse
+  const bottom = top + 4*sp; // línea inferior = E4, pos 0
+  const labelY = 158; // fila fija de etiquetas, por debajo del rango práctico de notas
+  let html = '';
+  for(let i=0;i<5;i++){
+    const y = top + i*sp;
+    html += `<line x1="34" y1="${y}" x2="${W-16}" y2="${y}" stroke="#3a4552" stroke-width="1.2"/>`;
+  }
+  html += `<text x="8" y="${top+3*sp}" font-size="30" fill="#8b97a6" font-family="serif">𝄞</text>`;
+  const n = notas.length || 1;
+  const xStep = (W-110)/Math.max(1,n-1);
+  notas.forEach((nt,i)=>{
+    const x = 66 + i*xStep;
+    const pos = M.posDiatonica(nt.letra, nt.octava);
+    const y = bottom - pos*(sp/2);
+    if(pos < 0){ for(let p=-2;p>=pos;p-=2){ const ly=bottom-p*(sp/2); html+=`<line x1="${x-10}" y1="${ly}" x2="${x+10}" y2="${ly}" stroke="#4a5560" stroke-width="1.2"/>`; } }
+    if(pos > 8){ for(let p=10;p<=pos;p+=2){ const ly=bottom-p*(sp/2); html+=`<line x1="${x-10}" y1="${ly}" x2="${x+10}" y2="${ly}" stroke="#4a5560" stroke-width="1.2"/>`; } }
+    const activo = activoIdx==='todas' || i===activoIdx;
+    const fill = activo? '#e8b25a':'#e6ecf4';
+    const r = activo? 7.2:5.6;
+    if(nt.alteracion!==0){
+      html += `<text x="${x-17}" y="${y+5}" font-size="14" fill="${fill}">${nt.alteracion>0?'♯':'♭'}</text>`;
+    }
+    html += `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*0.72}" fill="${fill}" ${activo?'style="filter:drop-shadow(0 0 6px #e8b25a)"':''}/>`;
+    html += `<text x="${x-11}" y="${labelY}" font-size="11" fill="${activo?'#e8b25a':'#8b97a6'}">${nombreNota(nt.letra,nt.alteracion,nt.octava)}</text>`;
+  });
+  svg.innerHTML = html;
+}
+
+function dibujaRitmo(svg, celula, activoIdx){
+  const W = svg.clientWidth || 600, H = 64;
+  const total = celula.reduce((a,b)=>a+b,0) || 1;
+  let x = 8; let html='';
+  celula.forEach((dur,i)=>{
+    const w = (W-16)*(dur/total);
+    const activo = i===activoIdx;
+    html += `<rect x="${x}" y="10" width="${Math.max(2,w-4)}" height="34" rx="6" fill="${activo?'#e8b25a':'#1b2128'}" stroke="#2a323c"/>`;
+    html += `<text x="${x+w/2}" y="32" font-size="14" text-anchor="middle" font-weight="700" fill="${activo?'#1a1204':'#dfe5ec'}">${dur}</text>`;
+    x += w;
+  });
+  svg.innerHTML = html;
+}
 
 function playNota(freq, startTime, dur, gain, pan, timbre){
   const g=ctx.createGain();
@@ -281,7 +364,11 @@ function tick(){
   const now=ctx.currentTime, horizon=now+LOOKAHEAD;
   if(rol==='pulso'){
     const g=(parseFloat(volPulsoEl.value)/100)*volMaster()*0.25;
-    while(stPulso.next<horizon){ playNota(1760,stPulso.next,0.02,g,0,0); stPulso.next+=corchea(); }
+    while(stPulso.next<horizon){
+      playNota(1760,stPulso.next,0.02,g,0,0);
+      setTimeout(flashMetro, Math.max(0,(stPulso.next-now)*1000));
+      stPulso.next+=corchea();
+    }
   } else if(rol==='armonia'){
     const g=0.16*volMaster();
     while(stArmonia.next<horizon){
@@ -315,17 +402,36 @@ function pintaEstado(){
   const N=parseInt(vozNSel.value,10);
   let txt='';
   if(rol==='voz'){
-    txt = 'rol: Voz '+N+' · fila generadora k='+(((N-1)%6)+1)+' · lectura '+lectura+
+    const {k0,octava}=estadoVoz();
+    const base=M.filaGeneradora(k0);
+    const fila=M.leer(base,lectura);
+    const k=coleccionVoz();
+    const notas = fila.map(g=>{ const {letra,alteracion}=M.letraYAlteracion(g,k); return {letra,alteracion,octava}; });
+    const activoIdx = stVoz.ic % fila.length;
+    dibujaPentagrama(pentagramaEl, notas, activoIdx);
+    dibujaRitmo(ritmoEl, celulaActiva, stVoz.it % celulaActiva.length);
+    notaGrandeEl.textContent = nombreNota(notas[activoIdx].letra, notas[activoIdx].alteracion, notas[activoIdx].octava);
+    lecturaGrandeEl.textContent = lectura;
+    coleccionGrandeEl.textContent = k+' · '+M.NOMBRES_COLECCION[String(k)];
+    txt = 'rol: Voz '+N+' · fila generadora k='+k0+' · lectura '+lectura+
       '\ncélula activa: '+celulaActiva.join('+')+' ('+M.duracionTalea(celulaActiva)+' corcheas)'+
       '\nciclo isorrítmico: color['+ (stVoz.ic%7) +'] × talea['+ (stVoz.it%celulaActiva.length) +']'+
-      '\ncolección: '+coleccionVoz()+' — '+M.NOMBRES_COLECCION[String(coleccionVoz())];
+      '\ncolección: '+k+' — '+M.NOMBRES_COLECCION[String(k)];
   } else if(rol==='armonia'){
-    txt = 'rol: Armonía · colección: '+coleccionArmonia()+' — '+M.NOMBRES_COLECCION[String(coleccionArmonia())]+
+    const k=coleccionArmonia();
+    const notas=[1,3,5,7].map(g=>{ const {letra,alteracion}=M.letraYAlteracion(g,k); return {letra,alteracion,octava:3}; });
+    dibujaPentagrama(pentagramaArmoniaEl, notas, 'todas');
+    txt = 'rol: Armonía · colección: '+k+' — '+M.NOMBRES_COLECCION[String(k)]+
       '\nacorde pandiatónico: grados 1-3-5-7';
   } else {
     txt = 'rol: Pulso · negra='+bpmEl.value+' bpm · corchea='+corchea().toFixed(3)+'s';
   }
   estadoTxt.textContent = (running?'ejecutando — ':'detenido — ')+txt;
+}
+
+function flashMetro(){
+  metroCirc.classList.add('pulso');
+  setTimeout(()=>metroCirc.classList.remove('pulso'), Math.min(110, corchea()*1000*0.6));
 }
 
 function iniciar(){
