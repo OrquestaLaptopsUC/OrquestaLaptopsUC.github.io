@@ -55,22 +55,12 @@ function agregaNota(freq, inicioSeg, duracionSeg, gain, pan, timbre) {
   }
 }
 
-// --- pulso: clic breve cada 4 corcheas (compás de 4/4), todo el render.
-// Guía métrica estable contra la que las voces (en talea asimétrica) se
-// desfasan y realinean — como el pulso de batería en Meshuggah. ---
-function generaPulso(tempoQ, gain) {
-  const corchea = 60 / tempoQ / 2;
-  for (let tSeg = 0; tSeg < DURACION; tSeg += 4 * corchea) {
-    agregaNota(1760, tSeg, 0.035, gain, 0.5, 0.08);
-  }
-}
-
-// --- armonía: "master chord" de Slonimsky (dominante 7 sin 5a) sobre la
-// tónica de la colección activa, en octava grave, con crossfade al cambiar ---
+// --- armonía: "master chord" de Slonimsky (dominante 7 sin 5a) sobre el
+// grado activo, en octava grave, con crossfade al cambiar de alteraciones ---
 function generaArmonia(cambios, gain) {
-  // cambios: [{desde,hasta,k}] tramos de tiempo con su colección
+  // cambios: [{desde,hasta,grado,alteraciones}] tramos de tiempo
   for (const tramo of cambios) {
-    const notasAcorde = M.masterChord(tramo.k);
+    const notasAcorde = M.masterChordSobreGrado(tramo.grado, tramo.alteraciones);
     const dur = tramo.hasta - tramo.desde;
     const fadeIn = Math.min(1.2, dur * 0.15);
     const fadeOut = Math.min(1.2, dur * 0.15);
@@ -93,15 +83,15 @@ function generaArmonia(cambios, gain) {
   }
 }
 
-// --- una voz isorrítmica: cicla fila(color) x talea, con colección variable
-// en el tiempo (para reflejar el cambio de armonía a mitad de render) ---
+// --- una voz isorrítmica: cicla fila(color) x talea, con alteraciones
+// variables en el tiempo (para reflejar el cambio del director a mitad de
+// render) ---
 function generaVoz(opts) {
-  const { k0, lectura, celulasPorTramo, tempoQ, inicioSeg, pan, gain, octava, timbre, coleccionPorTiempo } = opts;
+  const { k0, lectura, celulasPorTramo, tempoQ, inicioSeg, pan, gain, octava, timbre, alteracionesPorTiempo } = opts;
   const fila = M.leer(M.filaGeneradora(k0), lectura);
   const corchea = 60 / tempoQ / 2;
   let tSeg = inicioSeg;
   let tramoActual = 0;
-  let eventosGenerados = 0;
   while (tSeg < DURACION) {
     const tramo = celulasPorTramo[Math.min(tramoActual, celulasPorTramo.length - 1)];
     const celula = tramo.celula;
@@ -111,8 +101,8 @@ function generaVoz(opts) {
     for (const ev of evs) {
       const durSeg = ev.duracionCorcheas * corchea;
       if (tSeg >= finTramo || tSeg >= DURACION) break;
-      const kActual = coleccionPorTiempo(tSeg);
-      const freq = M.gradoAFrecuencia(ev.grado, kActual, octava);
+      const altActual = alteracionesPorTiempo(tSeg);
+      const freq = M.gradoAFrecuencia(ev.grado, altActual, octava);
       agregaNota(freq, tSeg, durSeg * 0.92, gain, pan, timbre);
       tSeg += durSeg;
     }
@@ -126,23 +116,25 @@ function generaVoz(opts) {
 }
 
 // ================= partitura del render (60s) =================
-// 0–4s    entra Armonía (colección 0) y Pulso
-// 4–28s   Sección A: las 4 voces entran escalonadas, células largas, k=0
-// 28–48s  Sección B: Armonía sube a colección +1 (Sol mayor), voces pasan a células cortas
+// Sin Pulso: el tiempo se sostiene de oído, guiado por Armonía.
+// 0–4s    entra Armonía (todo natural)
+// 4–28s   Sección A: las 4 voces entran escalonadas, células largas, natural
+// 28–48s  Sección B: el director activa Fa# — voces pasan a células cortas
 // 48–60s  Convergencia: las 4 voces convergen a la célula 4-3-4 (11 corcheas)
 
 const TEMPO_Q = 96; // negra = 96 bpm
 
-function coleccionPorTiempo(tSeg) {
-  return tSeg < 28 ? 0 : 1;
-}
+const ALT_NATURAL = M.alteracionesPorDefecto();
+const ALT_CON_FA_SOSTENIDO = Object.assign({}, ALT_NATURAL, { F: 1 });
 
-generaPulso(TEMPO_Q, 0.05);
+function alteracionesPorTiempo(tSeg) {
+  return tSeg < 28 ? ALT_NATURAL : ALT_CON_FA_SOSTENIDO;
+}
 
 generaArmonia(
   [
-    { desde: 0, hasta: 28, k: 0 },
-    { desde: 28, hasta: 60, k: 1 },
+    { desde: 0, hasta: 28, grado: 1, alteraciones: ALT_NATURAL },
+    { desde: 28, hasta: 60, grado: 5, alteraciones: ALT_CON_FA_SOSTENIDO },
   ],
   0.05
 );
@@ -160,7 +152,7 @@ generaVoz({
   gain: 0.16,
   octava: 4,
   timbre: 0.15,
-  coleccionPorTiempo,
+  alteracionesPorTiempo,
   celulasPorTramo: [
     { celula: L_[0], hasta: 28 },
     { celula: C_[0], hasta: 48 },
@@ -177,7 +169,7 @@ generaVoz({
   gain: 0.15,
   octava: 4,
   timbre: 0.35,
-  coleccionPorTiempo,
+  alteracionesPorTiempo,
   celulasPorTramo: [
     { celula: L_[1], hasta: 28 },
     { celula: C_[1], hasta: 48 },
@@ -194,7 +186,7 @@ generaVoz({
   gain: 0.15,
   octava: 5,
   timbre: 0.05,
-  coleccionPorTiempo,
+  alteracionesPorTiempo,
   celulasPorTramo: [
     { celula: L_[2], hasta: 28 },
     { celula: C_[2], hasta: 48 },
@@ -211,7 +203,7 @@ generaVoz({
   gain: 0.14,
   octava: 3,
   timbre: 0.5,
-  coleccionPorTiempo,
+  alteracionesPorTiempo,
   celulasPorTramo: [
     { celula: L_[0], hasta: 28 },
     { celula: C_[0], hasta: 48 },

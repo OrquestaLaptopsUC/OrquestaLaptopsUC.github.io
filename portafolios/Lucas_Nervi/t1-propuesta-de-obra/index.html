@@ -71,10 +71,13 @@
 
 <div class="card">
 <h3>1. <i>In C</i> — Terry Riley (1964)</h3>
-<p>53 patrones, cada intérprete avanza a su ritmo, un pulso compartido ancla el tempo, sin director.
-De aquí TALEA toma el rol de <b>Pulso</b> y la regla "nadie se adelanta" (aplicada a células en vez de
-patrones). Lo que no toma: en <i>In C</i> el material es común a todos; en TALEA cada Voz tiene su
-propia fila fija.</p>
+<p>53 patrones, cada intérprete avanza a su ritmo; ni un director ni una referencia central obligan al
+conjunto, solo la escucha mutua y un pulso compartido (un intérprete lo sostiene). De aquí TALEA toma la
+regla "nadie se adelanta" (aplicada a células rítmicas en vez de patrones: nadie cambia de célula a
+mitad de ciclo) y la idea de que el ensamble se mantiene junto por escucha, no por un rol dedicado —
+TALEA fue más lejos y descartó incluso el pulso audible de <i>In C</i>: son las Melodías las que
+sostienen su tempo, y el director quien marca los puntos de reencuentro reales, al cambiar una nota. Lo
+que no toma: en <i>In C</i> el material es común a todos; en TALEA cada Melodía tiene su propia fila fija.</p>
 <p class="fuente">Fuentes: <code>obras/in-c/</code> del sitio del curso; Library of Congress,
 <a href="https://www.loc.gov/static/programs/national-recording-preservation-board/documents/In-C_Carl.pdf" target="_blank" rel="noopener">National Recording Registry</a>;
 <a href="https://en.wikipedia.org/wiki/In_C" target="_blank" rel="noopener">Wikipedia</a>.</p>
@@ -111,53 +114,66 @@ semicorcheas en "Bleed", 2008) que se repiten en loop sobre una batería estable
 la célula no es múltiplo del compás, riff y compás se desalinean progresivamente y solo vuelven a
 coincidir después de varios compases — tensión rítmica que se resuelve por pura repetición, no por
 cambio de material.</p>
-<p><b>Qué es aplicable.</b> Es el modelo exacto del nuevo rol de <b>Pulso</b> en TALEA: marca cada 4
-corcheas (un compás de 4/4) de forma inalterable, mientras las células de talea (16, 14, 10, 8, 5, 7, 11
-corcheas) —ninguna múltiplo de 4— se desfasan y realinean contra ese compás, igual que los riffs de
-Meshuggah contra su batería. Lo que TALEA no toma: Meshuggah nunca cambia de colección de alturas; TALEA
-sí, vía Armonía.</p>
+<p><b>Qué es aplicable.</b> Motivó una versión anterior de TALEA que tenía una estación <b>Pulso</b> fija
+marcando cada 4 corcheas, contra la que las células de talea (16, 14, 10, 8, 5, 7, 11 corcheas —ninguna
+múltiplo de 4) se desfasaban y realineaban, igual que los riffs de Meshuggah contra su batería estable.
+En la versión actual esa estación se eliminó: ya no hay una guía métrica única y audible. Lo que queda de
+Meshuggah es la asimetría deliberada de las células mismas —el mismo tipo de agrupación impar que nunca
+"calza" con un compás redondo— y la idea de que la tensión rítmica no se resuelve cambiando el material,
+sino por repetición y, en TALEA, por el cambio de nota del director. Lo que TALEA no toma: Meshuggah
+nunca cambia de alturas disponibles; TALEA sí, vía el brazalete del director.</p>
 <p class="fuente">Fuentes: <a href="https://www.premierguitar.com/obsessive-progressive-how-to-decode-advanced-polymeters" target="_blank" rel="noopener">Premier Guitar, "Decoding Advanced Polymeters"</a>;
 <a href="https://drumstickler.substack.com/p/ligature-marks-complete-polymeter" target="_blank" rel="noopener">Drumstickler, análisis de polimetría en Meshuggah</a>.</p>
 </div>
 
 <h2 id="p2">Parte 2 — Propuesta de obra</h2>
 
-<p><b>TALEA.</b> Cada Voz tiene una fila diatónica fija de 7 grados (el <i>color</i>, análoga a una fila
-dodecafónica de intervalo constante). En vivo decide su lectura (P/R/I/RI) y su célula rítmica
-(<i>talea</i>) — combinadas por isorritmia. Una estación <b>Armonía</b> gobierna qué colección diatónica
-colorea las filas y sostiene el <i>master chord</i> de Slonimsky (dominante 7 sin 5a) sobre su tónica.
-Una estación <b>Pulso</b> marca cada 4 corcheas, compás de 4/4 fijo contra el que las células (ninguna
-múltiplo de 4) se desfasan y realinean, como la polimetría de Meshuggah. Arco formal: células largas →
-cortas → convergencia final de todas las voces a la misma célula (4-3-4), unísono de ritmo con altura
-libre.</p>
+<p><b>TALEA.</b> Cada Melodía tiene una fila diatónica fija de 7 grados (el <i>color</i>, análoga a una
+fila dodecafónica de intervalo constante). En vivo decide su lectura (P/R/I/RI) y su célula rítmica
+(<i>talea</i>) — combinadas por isorritmia. No hay tónica ni colección preestablecida: el <b>director</b>
+enciende o apaga, nota por nota, sostenidos y bemoles en un <b>brazalete</b> visual circular
+(<code>director.html</code>); cuando cambia una nota, todas las estaciones conectadas recolorean su
+material al instante. <b>Armonía</b> sostiene el <i>master chord</i> de Slonimsky (dominante 7 sin 5a)
+de uno de los 7 grados —Slonimsky tabula un master chord por grado, aquí hay 7 para elegir. No hay
+Pulso: el tiempo se sostiene de oído, y el punto de reencuentro real es cada vez que el director cambia
+una nota — la misma tensión-resolución rítmica de la polimetría de Meshuggah, pero resuelta por el
+material en vez de por una batería. Arco formal: células largas → cortas → convergencia final de todas
+las voces a la misma célula (4-3-4).</p>
 
 <table>
 <tr><th>sección</th><th>tiempo</th><th>qué ocurre</th></tr>
-<tr><td>A</td><td>0:00–2:30</td><td>entradas escalonadas, talea larga, colección 0</td></tr>
-<tr><td>B</td><td>2:30–5:00</td><td>colección +1, talea corta</td></tr>
+<tr><td>A</td><td>0:00–2:30</td><td>entradas escalonadas, talea larga, todo natural</td></tr>
+<tr><td>B</td><td>2:30–5:00</td><td>el director activa 1–2 alteraciones, talea corta</td></tr>
 <tr><td>C</td><td>5:00–6:30</td><td>convergencia a 4-3-4</td></tr>
 <tr><td>Coda</td><td>6:30–7:00</td><td>cada voz ancla y se apaga</td></tr>
 </table>
 
-<p><b>Coordinación:</b> sin red, Pulso da el tempo y el director cua las secciones (de palabra o con
-<a href="director.html">director.html</a>); colección reconocida de oído. Con red (opcional, no
-implementada): <code>/oluc/coleccion</code> y <code>/oluc/seccion</code>, solo informativos.</p>
+<p><b>Coordinación:</b> sin red entre laptops físicas, todo se sostiene de oído y por el director
+(<a href="director.html">director.html</a>: brazalete, tempo, cues de sección). Dentro de un mismo
+navegador sí hay sincronización real: <code>director.html</code> y <code>estacion.html</code> se
+comunican por <code>BroadcastChannel</code>, así que cambiar una nota en el brazalete recolorea al
+instante todas las pestañas de estación abiertas — pero eso no viaja entre doce laptops distintas; para
+el ensamble real la misma información se anuncia de palabra/gesto o se extendería por OSC
+(<code>/oluc/alteracion</code>, opcional, no implementada). Detalle honesto de esta limitación en
+<a href="PARTITURA.md#7-estrategia-de-coordinación">PARTITURA.md §7</a>.</p>
 
-<p><b>Roles:</b> 7 estaciones = Pulso + Armonía + Voz 1–5; hasta 12 sumando Voz 6–10.
+<p><b>Roles:</b> 7 estaciones = Armonía + Melodía 1–6, más el director (no suena, solo controla).
 <b>Notación:</b> <a href="estacion.html">estacion.html</a> dibuja un pentagrama real en vivo con las 7
-notas de la fila (coloreadas según la colección activa) y resalta la que suena, más una tira rítmica con
-la célula activa — nada que memorizar, se lee igual que una partitura. <b>Riesgos:</b> perder la
-colección de oído (mitigado con cambios solo en límites de sección); que la Convergencia no caiga junta
-(versión reducida: se extiende B y se salta a la Coda).</p>
+notas de la fila (deletreadas según las alteraciones activas, incluidos dobles sostenidos/bemoles si
+hace falta) y resalta la que suena, más una tira rítmica con la célula activa. <b>Riesgos:</b> perder el
+tempo compartido sin Pulso (mitigado acordando el tempo antes de tocar); que <code>BroadcastChannel</code>
+no sirva para el ensamble real de laptops distintas (documentado, cae a viva voz); que la Convergencia
+no caiga junta (versión reducida: se extiende B y se salta a la Coda).</p>
 
 <p class="dim">Detalle completo en <a href="PARTITURA.md">PARTITURA.md</a>.</p>
 
 <h2 id="p3">Parte 3 — Material sonoro</h2>
 
 <div class="card">
-<p><span class="badge">FUNCIONAL</span> Render de 60s: Armonía (master chord, colección 0→+1 a los 28s),
-Pulso (clic cada 4 corcheas), y 4 Voces (k=1,2,3,4; lecturas P/R/I/RI) que entran escalonadas, pasan de
-célula larga a corta a los 28s y convergen a 4-3-4 en los últimos 12s.</p>
+<p><span class="badge">FUNCIONAL</span> Render de 60s: Armonía (master chord, grado 1→5 y el director activa
+Fa♯ a los 28s), y 4 Melodías (k=1,2,3,4; lecturas P/R/I/RI) que entran escalonadas, pasan de célula larga
+a corta a los 28s y convergen a 4-3-4 en los últimos 12s. Sin Pulso: el render demuestra exactamente el
+motor que tocarían las estaciones reales.</p>
 <audio controls src="render.wav"></audio>
 <a class="btn" href="estacion.html">Abrir estacion.html ↗</a>
 <a class="btn alt" href="director.html">Abrir director.html ↗</a>
@@ -166,13 +182,16 @@ célula larga a corta a los 28s y convergen a 4-3-4 en los últimos 12s.</p>
 <a class="btn alt" href="render.wav">Descargar render.wav ↗</a>
 </div>
 
-<p><b>Entorno:</b> JS puro sin dependencias. <code>estacion.html</code>: Chrome/Firefox, Web Audio API,
-con pentagrama y tira rítmica dibujados en SVG en vivo (nada que leer en texto: se ve la nota que suena).
+<p><b>Entorno:</b> JS puro sin dependencias. <code>estacion.html</code> y <code>director.html</code>:
+Chrome/Firefox, Web Audio API + <code>BroadcastChannel</code>, con pentagrama, brazalete y tira rítmica
+dibujados en SVG en vivo (nada que leer en texto: se ve la nota que suena y se ve qué alteró el director).
 <code>render.js</code>: Node.js, sin paquetes externos.
 <b>Reproducir el render:</b> <code>node render.js</code> (determinista).
-<b>Parámetros:</b> rol, voz/fila, lectura P/R/I/RI, célula, colección, timbre, tempo — ver
-<code>estacion.html</code>. <b>Rol en la obra:</b> reducción de un minuto de la Parte 2 completa, con el
-motor y material reales (no una simulación aparte).</p>
+<b>Parámetros:</b> rol, voz/fila, lectura P/R/I/RI, célula, grado (Armonía), timbre, tempo — ver
+<code>estacion.html</code>; alteraciones por nota y tempo — ver <code>director.html</code>.
+<b>Rol en la obra:</b> reducción de un minuto de la Parte 2 completa, con el motor y material reales (no
+una simulación aparte). Para ver la sincronización real en acción: abrir <code>director.html</code> y
+<code>estacion.html</code> en dos pestañas del mismo navegador y tocar el brazalete.</p>
 
 <h2 id="ia">Declaración de uso de IA</h2>
 <div class="card declara">
@@ -204,7 +223,21 @@ Meshuggah como referente 4, y de que "la armonización la haga con los mastercho
 [...] acordes dominantes sin quinta" — ambas ideas (el pulso polimétrico y el uso de los master chords)
 son del estudiante; la IA verificó ambos referentes, implementó el cambio de tempo del Pulso y la función
 <code>masterChord</code> en <code>motor.js</code>, y actualizó <code>estacion.html</code>,
-<code>render.js</code> y la documentación en consecuencia.</p>
+<code>render.js</code> y la documentación en consecuencia. Última iteración, la más grande: el pedido del
+estudiante de "eliminar el pulso. solo quedará la armonía y melodía [...] modificar el rol del director
+[...] que pueda alterar las notas con sostenidos y bemoles, que todos los laptops cambien su patrón según
+las notas que decida el director [...] un display visual de brazalete en el que apriete las notas para
+activar o desactivar los [toggles]", seguido de instrucciones puntuales sobre cómo mantener el tiempo sin
+Pulso (de oído), cómo propagar el cambio de notas ("implementar sincronización real entre pestañas"), y
+cómo debía responder Armonía ("masterchords diatónicos, uno por cada grado, siete opciones [...] cuando el
+director cambia las notas disponibles, las notas de los acordes cambian"). Todas estas decisiones son del
+estudiante; la IA rediseñó <code>motor.js</code> (reemplazó el sistema de colecciones por alteraciones
+nota-a-nota y generalizó el master chord a cualquier grado), eliminó el rol Pulso de
+<code>estacion.html</code>, construyó el brazalete circular en <code>director.html</code>, implementó la
+sincronización real vía <code>BroadcastChannel</code> (documentando honestamente que solo funciona dentro
+de un mismo navegador, no entre laptops físicas distintas), y actualizó <code>render.js</code> y toda la
+documentación. Se verificó en navegador que la sincronización entre pestañas funciona antes de esta
+entrega.</p>
 </div>
 
 </main>

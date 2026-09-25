@@ -2,10 +2,10 @@
 // Orquesta de Laptops UC · IEE2003 · T1: Propuesta de obra · Lucas Nervi
 //
 // Lógica pura (sin audio): filas diatónicas generadoras, operaciones seriales
-// P/R/I/RI, colecciones diatónicas móviles y combinación isorrítmica (color x talea).
-// La usan por igual estacion.html (ejecución en vivo, Web Audio) y render.js
-// (render offline a WAV), para que el render suene exactamente lo que este
-// motor genera.
+// P/R/I/RI, un conjunto de alteraciones editable nota a nota (lo controla el
+// director) y la combinación isorrítmica (color x talea). La usan por igual
+// estacion.html (ejecución en vivo, Web Audio), director.html (el brazalete
+// de alteraciones) y render.js (render offline a WAV).
 
 const OLUC_TALEA = (function () {
 
@@ -48,51 +48,41 @@ const OLUC_TALEA = (function () {
     throw new Error("modo desconocido: " + modo);
   }
 
-  // ---------- colecciones diatónicas móviles ----------
-  // k = pasos en el círculo de quintas respecto de Do mayor (k=0).
-  // tónica (clase de altura) = (7*k) mod 12. Escala mayor sobre esa tónica.
-  const INTERVALOS_MAYOR = [0, 2, 4, 5, 7, 9, 11];
-  const NOMBRES_COLECCION = {
-    "-2": "Sib mayor / Sol menor (2b)",
-    "-1": "Fa mayor / Re menor (1b)",
-    "0": "Do mayor / La menor (natural)",
-    "1": "Sol mayor / Mi menor (1#)",
-    "2": "Re mayor / Si menor (2#)",
-  };
+  // ---------- alteraciones (el conjunto de notas disponible) ----------
+  // El director controla, nota a nota, si C D E F G A B suenan naturales,
+  // sostenidas o bemoles. No hay "tónica": el grado i siempre es la nota
+  // natural i-ésima (1=C, 2=D, ... 7=B), alterada según este objeto.
+  // { C:0, D:0, E:0, F:0, G:0, A:0, B:0 } — valores en {-1, 0, 1}.
+  const LETRAS = ["C", "D", "E", "F", "G", "A", "B"];
+  const LETRA_PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 
-  function tonicaPC(k) {
-    return (((7 * k) % 12) + 12) % 12;
+  function alteracionesPorDefecto() {
+    return { C: 0, D: 0, E: 0, F: 0, G: 0, A: 0, B: 0 };
   }
 
-  function gradoAPC(grado, k) {
-    const tonica = tonicaPC(k);
-    return (tonica + INTERVALOS_MAYOR[grado - 1]) % 12;
+  function gradoALetra(grado) {
+    return LETRAS[(grado - 1 + 700) % 7];
   }
 
-  // octava 4 = la que contiene el Do central (C4 = MIDI 60)
-  function gradoAFrecuencia(grado, k, octava) {
-    const pc = gradoAPC(grado, k);
-    const midi = 12 * (octava + 1) + pc;
+  function gradoALetraYAlteracion(grado, alteraciones) {
+    const letra = gradoALetra(grado);
+    return { letra, alteracion: alteraciones[letra] || 0 };
+  }
+
+  function gradoAPC(grado, alteraciones) {
+    const letra = gradoALetra(grado);
+    const alt = alteraciones[letra] || 0;
+    return ((LETRA_PC[letra] + alt) % 12 + 12) % 12;
+  }
+
+  function notaAFrecuencia(letra, alteracion, octava) {
+    const midi = 12 * (octava + 1) + LETRA_PC[letra] + alteracion;
     return 440 * Math.pow(2, (midi - 69) / 12);
   }
 
-  // ---------- nombre de nota (para la partitura visual) ----------
-  // Deriva letra + alteración de un grado en una colección, para poder
-  // dibujarlo en un pentagrama: el alfabeto musical (C D E F G A B) siempre
-  // se recorre en orden a partir de la tónica, sea cual sea su alteración.
-  const LETRAS = ["C", "D", "E", "F", "G", "A", "B"];
-  const LETRA_PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
-  const TONICA_LETRA = { "-2": "B", "-1": "F", "0": "C", "1": "G", "2": "D" };
-
-  function letraYAlteracion(grado, k) {
-    const tonica = TONICA_LETRA[String(k)];
-    const ti = LETRAS.indexOf(tonica);
-    const letra = LETRAS[(ti + grado - 1 + 7) % 7];
-    const pcReal = gradoAPC(grado, k);
-    let dif = pcReal - LETRA_PC[letra];
-    if (dif > 6) dif -= 12;
-    if (dif < -6) dif += 12;
-    return { letra, alteracion: dif };
+  function gradoAFrecuencia(grado, alteraciones, octava) {
+    const { letra, alteracion } = gradoALetraYAlteracion(grado, alteraciones);
+    return notaAFrecuencia(letra, alteracion, octava);
   }
 
   // posición diatónica relativa a E4 (línea inferior del pentagrama en clave
@@ -102,19 +92,14 @@ const OLUC_TALEA = (function () {
     return octava * 7 + li - (4 * 7 + 2);
   }
 
-  function notaAFrecuencia(letra, alteracion, octava) {
-    const midi = 12 * (octava + 1) + LETRA_PC[letra] + alteracion;
-    return 440 * Math.pow(2, (midi - 69) / 12);
-  }
-
-  // nota cromática a `semitonos` de la tónica de la colección k, deletreada
-  // `letraOffset` letras musicales por encima de la tónica (0=unísono,
-  // 2=tercera, 6=séptima...). Permite notas fuera de la colección diatónica.
-  function notaCromatica(k, letraOffset, semitonos) {
-    const tonica = TONICA_LETRA[String(k)];
-    const ti = LETRAS.indexOf(tonica);
-    const letra = LETRAS[(ti + letraOffset + 700) % 7];
-    const raizPC = tonicaPC(k);
+  // nota cromática a `semitonos` de la raíz dada por `grado` (dentro de las
+  // alteraciones activas), deletreada `letraOffset` letras musicales por
+  // encima de la letra de esa raíz (0=unísono, 2=3a, 6=7a...). Permite notas
+  // fuera del conjunto de 7 que definió el director.
+  function notaCromaticaDesdeGrado(grado, alteraciones, letraOffset, semitonos) {
+    const raizIdx = (grado - 1 + 700) % 7;
+    const letra = LETRAS[(raizIdx + letraOffset + 700) % 7];
+    const raizPC = gradoAPC(grado, alteraciones);
     const pcObjetivo = ((raizPC + semitonos) % 12 + 12) % 12;
     let dif = pcObjetivo - LETRA_PC[letra];
     if (dif > 6) dif -= 12;
@@ -123,12 +108,16 @@ const OLUC_TALEA = (function () {
   }
 
   // "Master Chord" de Slonimsky: acorde dominante 7 sin quinta (fundamental,
-  // 3a mayor, 7a menor), usado para armonizar — Thesaurus of Scales and
-  // Melodic Patterns (1947). Independiente del modo de la colección: siempre
-  // tiene color de dominante, deliberadamente ajeno a la escala diatónica
-  // de las Voces.
-  function masterChord(k) {
-    return [notaCromatica(k, 0, 0), notaCromatica(k, 2, 4), notaCromatica(k, 6, 10)];
+  // 3a mayor, 7a menor) — Thesaurus of Scales and Melodic Patterns (1947),
+  // donde Slonimsky tabula un Master Chord para armonizar cada grado de una
+  // escala. Aquí: uno por cada uno de los 7 grados, sobre las alteraciones
+  // activas en ese momento (las define el director).
+  function masterChordSobreGrado(grado, alteraciones) {
+    return [
+      notaCromaticaDesdeGrado(grado, alteraciones, 0, 0),
+      notaCromaticaDesdeGrado(grado, alteraciones, 2, 4),
+      notaCromaticaDesdeGrado(grado, alteraciones, 6, 10),
+    ];
   }
 
   // ---------- talea (células rítmicas, en corcheas) ----------
@@ -157,8 +146,7 @@ const OLUC_TALEA = (function () {
   // Genera n eventos isorrítmicos ciclando la fila (color, largo 7) contra la
   // célula rítmica (talea, largo variable) de forma independiente: cada una
   // avanza a su propio paso y solo vuelven a coincidir en la combinación de
-  // origen cada mcm(7, talea.length) eventos. Es el mecanismo isorrítmico
-  // (color x talea) de la Parte 1, aplicado a una melodía en vez de a acordes.
+  // origen cada mcm(7, talea.length) eventos.
   function generarEventos(row, celula, n) {
     const eventos = [];
     let ic = 0,
@@ -182,19 +170,19 @@ const OLUC_TALEA = (function () {
     inversion,
     retrogradacionInversion,
     leer,
-    tonicaPC,
+    LETRAS,
+    alteracionesPorDefecto,
+    gradoALetra,
+    gradoALetraYAlteracion,
     gradoAPC,
     gradoAFrecuencia,
-    letraYAlteracion,
-    posDiatonica,
     notaAFrecuencia,
-    notaCromatica,
-    masterChord,
+    notaCromaticaDesdeGrado,
+    masterChordSobreGrado,
+    posDiatonica,
     TALEAS,
-    NOMBRES_COLECCION,
     duracionTalea,
     generarEventos,
-    INTERVALOS_MAYOR,
   };
 })();
 
