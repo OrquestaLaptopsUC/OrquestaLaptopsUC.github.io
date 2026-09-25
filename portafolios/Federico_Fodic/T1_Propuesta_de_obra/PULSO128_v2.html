@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PULSO 128 · Club distribuido</title>
+<style>
+:root{
+  --bg:#090c10; --panel:#11161d; --panel2:#151c24; --line:#283441;
+  --tx:#eef3f7; --dim:#94a1ae; --acc:#65e1c0; --acc2:#ffca69; --pink:#e885c9;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+main{max-width:1180px;margin:0 auto;padding:24px}
+h1{margin:0;letter-spacing:.18em;font-size:26px}
+.sub{color:var(--dim);margin:7px 0 20px;line-height:1.45}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px}
+.roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}
+button,select{background:#18212b;color:var(--tx);border:1px solid var(--line);padding:9px 11px;border-radius:7px;font:inherit;cursor:pointer}
+button:hover,select:hover{border-color:var(--acc)}
+button.on{background:var(--acc);color:#06110d;border-color:var(--acc);font-weight:700}
+button.primary{background:var(--acc2);color:#201501;border-color:var(--acc2);font-weight:700}
+button.scene.on{background:var(--pink);border-color:var(--pink);color:#1a0715}
+.layer,.pad,.role{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px}
+.layer b,.role b{display:block;margin-bottom:4px}
+small,.status,.note{color:var(--dim)}
+.kbd{display:inline-block;border:1px solid var(--line);border-bottom-width:3px;border-radius:4px;padding:1px 6px;background:#1b2530;color:var(--tx)}
+.big{font-size:25px;color:var(--acc)}
+.meter{height:9px;background:#1a232d;border-radius:12px;overflow:hidden;margin-top:11px}.meter i{display:block;height:100%;width:0;background:var(--acc)}
+label{color:var(--dim);font-size:12px} input[type=range]{width:190px}
+.pad{display:flex;justify-content:space-between;gap:8px;align-items:center}.pad span{font-size:12px}.pad button{min-width:58px}
+h2{font-size:14px;letter-spacing:.12em;color:var(--acc2);margin:0 0 10px}
+hr{border:none;border-top:1px solid var(--line);margin:14px 0}
+#stepLights{display:grid;grid-template-columns:repeat(16,1fr);gap:4px;margin-top:10px}.step{height:7px;border-radius:10px;background:#202b36}.step.on{background:var(--acc2)}
+.sceneInfo{border-left:3px solid var(--pink);padding-left:10px;color:var(--dim);line-height:1.5}
+@media(max-width:700px){main{padding:14px}.big{font-size:20px}}
+</style>
+</head>
+<body>
+<main>
+  <h1>PULSO 128</h1>
+  <div class="sub">club distribuido · tech house a 128 BPM · cruces con jazz, funk, pop y color tropical · prototipo para Orquesta de Laptops UC</div>
+
+  <section class="card">
+    <div class="row">
+      <button class="primary" id="start">INICIAR MOTOR</button>
+      <button id="stop">DETENER</button>
+      <span class="big">128 BPM</span>
+      <span class="status" id="status">audio detenido</span>
+    </div>
+    <div id="stepLights"></div>
+    <div class="meter"><i id="prog"></i></div>
+  </section>
+
+  <section class="card">
+    <h2>ESCENA / COLOR MUSICAL</h2>
+    <div class="row">
+      <button class="scene on" data-scene="tech">TECH HOUSE</button>
+      <button class="scene" data-scene="jazz">JAZZ + FUNK</button>
+      <button class="scene" data-scene="tropical">TROPICAL</button>
+      <button class="scene" data-scene="digital">DIGITAL / GLITCH</button>
+    </div>
+    <p class="sceneInfo" id="sceneInfo">Groove seco: kick en negras, bajo sincopado, hats a contratiempo y acordes cortos. Sirve como columna vertebral de la obra.</p>
+  </section>
+
+  <section class="card">
+    <h2>7 ROLES DEL ENSAMBLE</h2>
+    <div class="roles" id="roles"></div>
+    <p class="note">Teclas <span class="kbd">1–7</span>: activar/desactivar cada rol. En la obra real cada laptop controlaría principalmente uno de estos roles.</p>
+  </section>
+
+  <section class="card">
+    <h2>BIBLIOTECA DE TIMBRES / ONE-SHOTS</h2>
+    <div class="grid" id="pads"></div>
+    <p class="note">Estos sonidos se pueden tocar manualmente encima del groove. La biblioteca no usa archivos externos: todos los timbres se sintetizan con Web Audio API.</p>
+  </section>
+
+  <section class="card">
+    <h2>CONTROL GLOBAL</h2>
+    <div class="row">
+      <label>brillo <input id="brightness" type="range" min="700" max="12000" value="5200" step="100"></label>
+      <label>intensidad <input id="intensity" type="range" min="0.35" max="1.15" value="0.78" step="0.05"></label>
+      <label>ambiente <input id="space" type="range" min="0" max="0.65" value="0.22" step="0.05"></label>
+      <button id="fill">FILL <span class="kbd">espacio</span></button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>IDEA DE USO EN LA OBRA</h2>
+    <p class="note">La obra parte desde un pulso común y va agregando capas. El material de club se mezcla con timbres menos previsibles: Rhodes y acordes jazzeados, órgano funk, arpa sintética, marimba tropical, congas, burbujeos y glitches. La intención no es copiar una pista de DJ ya terminada, sino que el groove aparezca porque siete intérpretes toman decisiones en tiempo real dentro de reglas simples.</p>
+  </section>
+</main>
+<script>
+const BPM=128, beat=60/BPM, stepDur=beat/4;
+let ctx=null, timer=null, nextStep=0, stepIndex=0, running=false;
+let master, comp, toneBus, wet, delay, feedback;
+let scene='tech';
+const layers={pulse:true,perc:true,hats:true,bass:true,harmony:true,melody:true,fx:true};
+const $=q=>document.querySelector(q);
+const MIDI=m=>440*Math.pow(2,(m-69)/12);
+
+const ROLE_DATA=[
+ ['pulse','1','Kick / pulso','reloj audible del ensamble'],
+ ['perc','2','Percusión','clap, conga, bongo, cowbell'],
+ ['hats','3','Hats / shaker','movimiento y energía'],
+ ['bass','4','Bajo','tech-house con variación funk'],
+ ['harmony','5','Armonía','Rhodes, órgano y stabs jazz-pop'],
+ ['melody','6','Melodía','arpa, marimba y pluck'],
+ ['fx','7','FX digital','burbujas, chirps, glitches y risers']
+];
+const PAD_DATA=[
+ ['A','Piano house','piano'],['S','Rhodes jazz','rhodes'],['D','Órgano funk','organ'],['F','Brass stab','brass'],
+ ['G','Arpa sintética','harp'],['H','Marimba tropical','marimba'],['J','Synth pluck','pluck'],['K','Cowbell','cowbell'],
+ ['Z','Conga','conga'],['X','Bongo','bongo'],['C','Shaker','shaker'],['V','Clap','clap'],
+ ['B','Burbuja','bubble'],['N','Chirp','chirp'],['M','Glitch','glitch'],[',','Riser','riser']
+];
+const sceneText={
+ tech:'Groove seco: kick en negras, bajo sincopado, hats a contratiempo y acordes cortos. Sirve como columna vertebral de la obra.',
+ jazz:'El groove sigue a 128 BPM, pero aparecen Rhodes, acordes con 7ª/9ª, órgano y pequeñas síncopas de bajo con carácter funk.',
+ tropical:'Congas, bongos, shaker y marimba/harpa dan un color más luminoso sin abandonar la base tech-house.',
+ digital:'Se reduce lo instrumental y aumenta el carácter computacional: chirps, burbujas, glitches, ruido filtrado y silencios abruptos.'
+};
+
+function buildUI(){
+  const roles=$('#roles');
+  ROLE_DATA.forEach(([id,key,name,desc])=>{
+    const d=document.createElement('div'); d.className='role';
+    d.innerHTML=`<b>${key} · ${name}</b><small>${desc}</small><br><button class="on" data-layer="${id}">activo</button>`;
+    roles.appendChild(d);
+  });
+  const pads=$('#pads');
+  PAD_DATA.forEach(([key,name,id])=>{
+    const d=document.createElement('div'); d.className='pad';
+    d.innerHTML=`<span><b>${name}</b><br><small>tecla ${key}</small></span><button data-pad="${id}">${key}</button>`;
+    pads.appendChild(d);
+  });
+  const lights=$('#stepLights');
+  for(let i=0;i<16;i++){const x=document.createElement('i');x.className='step';lights.appendChild(x)}
+}
+buildUI();
+
+function ensureAudio(){
+  if(ctx) return;
+  ctx=new (window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive'});
+  master=ctx.createGain(); master.gain.value=+$('#intensity').value;
+  comp=ctx.createDynamicsCompressor(); comp.threshold.value=-10; comp.knee.value=8; comp.ratio.value=4; comp.attack.value=.004; comp.release.value=.18;
+  toneBus=ctx.createBiquadFilter(); toneBus.type='lowpass'; toneBus.frequency.value=+$('#brightness').value; toneBus.Q.value=.55;
+  wet=ctx.createGain(); wet.gain.value=+$('#space').value;
+  delay=ctx.createDelay(.8); delay.delayTime.value=.185; feedback=ctx.createGain(); feedback.gain.value=.24;
+  delay.connect(feedback).connect(delay); delay.connect(wet).connect(comp);
+  toneBus.connect(comp); master.connect(comp); comp.connect(ctx.destination);
+}
+function panner(v=0){const p=ctx.createStereoPanner?ctx.createStereoPanner():ctx.createGain(); if(p.pan)p.pan.value=v; return p}
+function connect(node, bus=master, send=.0){node.connect(bus); if(send>0){const s=ctx.createGain();s.gain.value=send;node.connect(s).connect(delay)}}
+function envGain(t,a=0.01,d=.2,amp=.2){const g=ctx.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.0002,amp),t+a);g.gain.exponentialRampToValueAtTime(.0001,t+a+d);return g}
+function noiseBuffer(d=.2){const b=ctx.createBuffer(1,Math.floor(ctx.sampleRate*d),ctx.sampleRate),x=b.getChannelData(0);for(let i=0;i<x.length;i++)x[i]=Math.random()*2-1;return b}
+function oscHit(t,f,type='sine',dur=.2,amp=.1,bus=master,pan=0,send=0){const o=ctx.createOscillator(),g=envGain(t,.006,dur,amp),p=panner(pan);o.type=type;o.frequency.value=f;o.connect(g).connect(p);connect(p,bus,send);o.start(t);o.stop(t+dur+.05)}
+
+function kick(t,a=.8){const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(170,t);o.frequency.exponentialRampToValueAtTime(48,t+.17);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(a,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.38);o.connect(g);connect(g,master,0);o.start(t);o.stop(t+.42)}
+function clap(t,a=.2){[0,.018,.042].forEach((d,i)=>{const s=ctx.createBufferSource(),bp=ctx.createBiquadFilter(),g=ctx.createGain();s.buffer=noiseBuffer(.12);bp.type='bandpass';bp.frequency.value=1450+250*i;bp.Q.value=.8;g.gain.setValueAtTime(a*(1-i*.16),t+d);g.gain.exponentialRampToValueAtTime(.0001,t+d+.09);s.connect(bp).connect(g);connect(g,master,.1);s.start(t+d)})}
+function hat(t,a=.08,open=false,pan=.2){const s=ctx.createBufferSource(),hp=ctx.createBiquadFilter(),g=ctx.createGain(),p=panner(pan);s.buffer=noiseBuffer(open?.26:.07);hp.type='highpass';hp.frequency.value=7200;g.gain.setValueAtTime(a,t);g.gain.exponentialRampToValueAtTime(.0001,t+(open?.22:.055));s.connect(hp).connect(g).connect(p);connect(p,master,.04);s.start(t)}
+function shaker(t,a=.05,pan=-.25){const s=ctx.createBufferSource(),bp=ctx.createBiquadFilter(),g=ctx.createGain(),p=panner(pan);s.buffer=noiseBuffer(.08);bp.type='bandpass';bp.frequency.value=5200;bp.Q.value=1.5;g.gain.setValueAtTime(a,t);g.gain.exponentialRampToValueAtTime(.0001,t+.07);s.connect(bp).connect(g).connect(p);connect(p,master,.08);s.start(t)}
+function conga(t,hi=false,a=.12,pan=-.2){const f=hi?225:165;const o=ctx.createOscillator(),g=envGain(t,.003,.19,a);o.type='sine';o.frequency.setValueAtTime(f*1.22,t);o.frequency.exponentialRampToValueAtTime(f,t+.05);o.connect(g);const p=panner(pan);g.connect(p);connect(p,master,.08);o.start(t);o.stop(t+.24)}
+function bongo(t,a=.10,pan=.2){conga(t,true,a,pan);oscHit(t+0.012,430,'triangle',.08,a*.25,master,pan,.05)}
+function cowbell(t,a=.07,pan=.28){[540,800].forEach((f,i)=>oscHit(t,f,'square',.08,a*(i?.45:.65),master,pan,.05))}
+function bass(t,m=41,a=.18){const o=ctx.createOscillator(),o2=ctx.createOscillator(),f=ctx.createBiquadFilter(),g=envGain(t,.006,.26,a);o.type='sawtooth';o2.type='square';o.frequency.value=MIDI(m);o2.frequency.value=MIDI(m)/2;f.type='lowpass';f.frequency.setValueAtTime(420,t);f.frequency.exponentialRampToValueAtTime(120,t+.24);f.Q.value=2.5;o.connect(f);o2.connect(f);f.connect(g);connect(g,toneBus,.02);o.start(t);o2.start(t);o.stop(t+.3);o2.stop(t+.3)}
+function chord(t,midis,kind='house',a=.055,dur=.35){midis.forEach((m,i)=>{const o=ctx.createOscillator(),g=envGain(t,.012,dur,a/(1+i*.08)),p=panner((i-(midis.length-1)/2)*.12);o.type=kind==='rhodes'?'sine':(i%2?'triangle':'sawtooth');o.frequency.value=MIDI(m);o.connect(g).connect(p);connect(p,toneBus,kind==='rhodes'?.18:.08);o.start(t);o.stop(t+dur+.08);if(kind==='rhodes')oscHit(t,MIDI(m)*2,'sine',dur*.8,a*.16,toneBus,(i-(midis.length-1)/2)*.12,.12)})}
+function piano(t,m=72,a=.12){[1,2,3].forEach((r,i)=>oscHit(t,MIDI(m)*r,i===0?'triangle':'sine',.18/(i+1),a*(i===0?.75:.16/(i)),toneBus,0,.08))}
+function rhodes(t,m=65,a=.12){oscHit(t,MIDI(m),'sine',.55,a*.72,toneBus,-.05,.2);oscHit(t,MIDI(m)*2.01,'sine',.32,a*.24,toneBus,.05,.17)}
+function organ(t,m=60,a=.10){[1,2,3,4].forEach((r,i)=>oscHit(t,MIDI(m)*r,'sine',.5,a*[.5,.22,.13,.08][i],toneBus,0,.12))}
+function brass(t,midis=[60,64,67],a=.05){midis.forEach((m,i)=>{const o=ctx.createOscillator(),f=ctx.createBiquadFilter(),g=envGain(t,.01,.20,a);o.type='sawtooth';o.frequency.value=MIDI(m);f.type='lowpass';f.frequency.setValueAtTime(1800,t);f.frequency.exponentialRampToValueAtTime(650,t+.18);o.connect(f).connect(g);connect(g,toneBus,.06);o.start(t);o.stop(t+.25)})}
+function harp(t,m=72,a=.1,pan=.15){[1,2,3,4].forEach((r,i)=>oscHit(t,MIDI(m)*r,'triangle',.45/(1+i*.15),a*[.62,.19,.10,.06][i],toneBus,pan,.24))}
+function marimba(t,m=72,a=.11,pan=-.12){[1,3.98].forEach((r,i)=>oscHit(t,MIDI(m)*r,'sine',i?.12:.34,a*(i?.18:.75),toneBus,pan,.12))}
+function pluck(t,m=72,a=.09,pan=.1){const o=ctx.createOscillator(),f=ctx.createBiquadFilter(),g=envGain(t,.003,.16,a);o.type='square';o.frequency.value=MIDI(m);f.type='lowpass';f.frequency.setValueAtTime(4200,t);f.frequency.exponentialRampToValueAtTime(900,t+.15);o.connect(f).connect(g);connect(g,toneBus,.18);o.start(t);o.stop(t+.2)}
+function bubble(t,base=330,a=.07,pan=0){const o=ctx.createOscillator(),g=envGain(t,.01,.28,a),p=panner(pan);o.type='sine';o.frequency.setValueAtTime(base,t);o.frequency.exponentialRampToValueAtTime(base*3.2,t+.27);o.connect(g).connect(p);connect(p,master,.28);o.start(t);o.stop(t+.34)}
+function chirp(t,a=.05,pan=.3){const o=ctx.createOscillator(),g=envGain(t,.002,.10,a),p=panner(pan);o.type='triangle';o.frequency.setValueAtTime(1600,t);o.frequency.exponentialRampToValueAtTime(260,t+.11);o.connect(g).connect(p);connect(p,master,.2);o.start(t);o.stop(t+.14)}
+function glitch(t,a=.06){for(let i=0;i<5;i++)setTimeout(()=>{if(!ctx)return;oscHit(ctx.currentTime,120+Math.random()*1500,Math.random()>.5?'square':'sawtooth',.035,a*.45,master,Math.random()*1.6-.8,.08)},i*22)}
+function riser(t,a=.045){const s=ctx.createBufferSource(),bp=ctx.createBiquadFilter(),g=ctx.createGain();s.buffer=noiseBuffer(1.0);bp.type='bandpass';bp.frequency.setValueAtTime(500,t);bp.frequency.exponentialRampToValueAtTime(8000,t+.9);bp.Q.value=.8;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(a,t+.75);g.gain.exponentialRampToValueAtTime(.0001,t+.95);s.connect(bp).connect(g);connect(g,master,.2);s.start(t);s.stop(t+1)}
+
+const CHORDS=[
+ [53,56,60,63,67],   // Fm9
+ [49,53,56,60,63],   // Dbmaj9
+ [44,48,51,55,58],   // Abmaj9
+ [51,55,58,61,65]    // Eb9
+];
+const ROOTS=[41,37,44,39];
+const BASS_PAT=[0,null,0,7,null,0,3,null,0,null,7,3,null,0,null,10];
+const MEL=[72,75,77,80,79,75,72,70];
+
+function schedule(s,t){
+  const pos=s%16, bar=Math.floor(s/16), prog=bar%4, intensity=+$('#intensity').value;
+  if(layers.pulse && pos%4===0)kick(t,.70*intensity);
+  if(layers.hats){if(pos%4===2)hat(t,.08*intensity,pos===14,.28);if(scene==='tropical'&&pos%2===1)shaker(t,.025*intensity,-.25)}
+  if(layers.perc){if(pos===4||pos===12)clap(t,.15*intensity);if(scene==='tropical'&&(pos===3||pos===11))conga(t,pos===11,.07*intensity,-.3);if(scene==='jazz'&&pos===15)cowbell(t,.04*intensity,.3)}
+  if(layers.bass && BASS_PAT[pos]!==null){let add=BASS_PAT[pos]; if(scene==='jazz'&&pos===15)add=10;bass(t,ROOTS[prog]+add,.15*intensity)}
+  if(layers.harmony){
+    if(scene==='tech'&&(pos===2||pos===10))chord(t,CHORDS[prog],'house',.042*intensity,.28);
+    if(scene==='jazz'&&(pos===2||pos===6||pos===10||pos===14))chord(t,CHORDS[prog],'rhodes',.038*intensity,.25);
+    if(scene==='tropical'&&(pos===0||pos===8))organ(t,CHORDS[prog][1],.055*intensity);
+    if(scene==='digital'&&pos===10)brass(t,CHORDS[prog].slice(0,3),.035*intensity);
+  }
+  if(layers.melody){
+    if(scene==='jazz'&&(pos===7||pos===15))rhodes(t,MEL[(bar+pos)%MEL.length]-12,.07*intensity);
+    if(scene==='tropical'&&(pos===3||pos===7||pos===11||pos===15))marimba(t,MEL[(bar*2+pos)%MEL.length],.07*intensity,(pos<8?-.15:.15));
+    if(scene==='tech'&&pos===15)pluck(t,MEL[bar%MEL.length],.05*intensity,.18);
+    if(scene==='digital'&&(pos===5||pos===13))harp(t,MEL[(bar+3)%MEL.length]+12,.05*intensity,.2);
+  }
+  if(layers.fx){
+    if(scene==='digital'&&[3,7,11,15].includes(pos))chirp(t,.04*intensity,(pos%8<4?-.45:.45));
+    if((scene==='tech'||scene==='tropical')&&pos===6&&bar%2===1)bubble(t,260+Math.random()*420,.045*intensity,Math.random()*1.2-.6);
+  }
+}
+function scheduler(){
+  if(!ctx)return;
+  while(nextStep<ctx.currentTime+.12){schedule(stepIndex,nextStep);visualStep(stepIndex%16);nextStep+=stepDur;stepIndex++}
+}
+function visualStep(pos){requestAnimationFrame(()=>{document.querySelectorAll('.step').forEach((e,i)=>e.classList.toggle('on',i===pos));$('#prog').style.width=((pos+1)/16*100)+'%'})}
+function start(){ensureAudio();ctx.resume();if(running)return;running=true;nextStep=ctx.currentTime+.05;stepIndex=0;timer=setInterval(scheduler,25);$('#status').textContent='motor activo · escena '+scene.toUpperCase()}
+function stop(){running=false;if(timer)clearInterval(timer);timer=null;$('#status').textContent='audio detenido';document.querySelectorAll('.step').forEach(e=>e.classList.remove('on'));$('#prog').style.width='0%'}
+
+function manual(id){ensureAudio();ctx.resume();const t=ctx.currentTime+.01;switch(id){
+ case'piano':piano(t,72,.12);piano(t+.07,76,.08);break;case'rhodes':rhodes(t,65,.12);break;case'organ':organ(t,60,.10);break;case'brass':brass(t,[60,63,67],.055);break;
+ case'harp':harp(t,79,.11,.1);break;case'marimba':marimba(t,74,.12,-.1);break;case'pluck':pluck(t,77,.11,.15);break;case'cowbell':cowbell(t,.09,.25);break;
+ case'conga':conga(t,false,.13,-.2);break;case'bongo':bongo(t,.12,.2);break;case'shaker':shaker(t,.08,-.2);break;case'clap':clap(t,.22);break;
+ case'bubble':bubble(t,360,.10,.2);break;case'chirp':chirp(t,.08,-.25);break;case'glitch':glitch(t,.09);break;case'riser':riser(t,.06);break;}}
+function fill(){ensureAudio();ctx.resume();const t=ctx.currentTime+.01;for(let i=0;i<8;i++){hat(t+i*stepDur/2,.055,false,(i%2?-.35:.35));if(i===2||i===5)conga(t+i*stepDur/2,i===5,.08,(i%2?-.3:.3))}bubble(t+.05,280,.08,-.2);chirp(t+.35,.055,.3)}
+
+document.addEventListener('click',e=>{
+ if(e.target.id==='start')start(); if(e.target.id==='stop')stop(); if(e.target.id==='fill')fill();
+ if(e.target.dataset.layer){const id=e.target.dataset.layer;layers[id]=!layers[id];e.target.classList.toggle('on',layers[id]);e.target.textContent=layers[id]?'activo':'silencio'}
+ if(e.target.dataset.pad)manual(e.target.dataset.pad);
+ if(e.target.dataset.scene){scene=e.target.dataset.scene;document.querySelectorAll('.scene').forEach(b=>b.classList.toggle('on',b.dataset.scene===scene));$('#sceneInfo').textContent=sceneText[scene];if(running)$('#status').textContent='motor activo · escena '+scene.toUpperCase()}
+});
+$('#brightness').oninput=e=>{if(toneBus)toneBus.frequency.setTargetAtTime(+e.target.value,ctx.currentTime,.03)};
+$('#intensity').oninput=e=>{if(master)master.gain.setTargetAtTime(+e.target.value,ctx.currentTime,.03)};
+$('#space').oninput=e=>{if(wet)wet.gain.setTargetAtTime(+e.target.value,ctx.currentTime,.03)};
+document.addEventListener('keydown',e=>{
+ if(e.repeat)return; const k=e.key.toLowerCase();
+ const n=parseInt(k); if(n>=1&&n<=7){const id=ROLE_DATA[n-1][0],btn=document.querySelector(`[data-layer="${id}"]`);layers[id]=!layers[id];btn.classList.toggle('on',layers[id]);btn.textContent=layers[id]?'activo':'silencio';return}
+ if(e.code==='Space'){e.preventDefault();fill();return}
+ const found=PAD_DATA.find(x=>x[0].toLowerCase()===k);if(found)manual(found[2]);
+});
+window.addEventListener('beforeunload',()=>{if(ctx)ctx.close()});
+</script>
+</body>
+</html>
