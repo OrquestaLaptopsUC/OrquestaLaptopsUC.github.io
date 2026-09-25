@@ -160,7 +160,9 @@ el ensamble real la misma información se anuncia de palabra/gesto o se extender
 <p><b>Roles:</b> 7 estaciones = Armonía + Melodía 1–6, más el director (no suena, solo controla).
 <b>Notación:</b> <a href="estacion.html">estacion.html</a> dibuja un pentagrama real en vivo con las 7
 notas de la fila (deletreadas según las alteraciones activas, incluidos dobles sostenidos/bemoles si
-hace falta) y resalta la que suena, más una tira rítmica con la célula activa. <b>Riesgos:</b> perder el
+hace falta) y resalta la que suena, más una tira rítmica con la célula activa; en Armonía, el grado del
+master chord se elige con siete botones que muestran de entrada las notas del acorde resultante, no un
+menú de texto. <b>Riesgos:</b> perder el
 tempo compartido sin Pulso (mitigado acordando el tempo antes de tocar); que <code>BroadcastChannel</code>
 no sirva para el ensamble real de laptops distintas (documentado, cae a viva voz); que la Convergencia
 no caiga junta (versión reducida: se extiende B y se salta a la Coda).</p>
@@ -237,7 +239,9 @@ nota-a-nota y generalizó el master chord a cualquier grado), eliminó el rol Pu
 sincronización real vía <code>BroadcastChannel</code> (documentando honestamente que solo funciona dentro
 de un mismo navegador, no entre laptops físicas distintas), y actualizó <code>render.js</code> y toda la
 documentación. Se verificó en navegador que la sincronización entre pestañas funciona antes de esta
-entrega.</p>
+entrega. Ajuste final: el estudiante pidió reemplazar el selector de texto del grado de Armonía por "algo
+más visual"; la IA lo cambió por siete botones que muestran las notas de cada master chord en vivo, misma
+lógica que los botones de célula/lectura ya usados en Melodía.</p>
 </div>
 
 </main>

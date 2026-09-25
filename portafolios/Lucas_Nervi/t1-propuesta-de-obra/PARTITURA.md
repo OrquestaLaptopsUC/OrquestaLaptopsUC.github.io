@@ -54,7 +54,7 @@ No hay Pulso. El tiempo se sostiene de oído: cada Melodía corre su propia suce
 
 ## 5. Notación
 
-`estacion.html` dibuja un pentagrama real (clave de sol, SVG) con las 7 notas de la fila de la Melodía activa, deletreadas según las alteraciones en curso (letra + sostenido/bemol/doble — no solo números de grado), y resalta con color la que está sonando en ese instante. Debajo, una tira rítmica muestra la célula activa con el grupo en curso resaltado. Para Armonía, el mismo pentagrama muestra el master chord completo (fundamental, 3a mayor, 7a menor) del grado elegido.
+`estacion.html` dibuja un pentagrama real (clave de sol, SVG) con las 7 notas de la fila de la Melodía activa, deletreadas según las alteraciones en curso (letra + sostenido/bemol/doble — no solo números de grado), y resalta con color la que está sonando en ese instante. Debajo, una tira rítmica muestra la célula activa con el grupo en curso resaltado. Para Armonía, el mismo pentagrama muestra el master chord completo (fundamental, 3a mayor, 7a menor) del grado elegido, y el grado se elige con siete botones (uno por cada nota C–B) que muestran de entrada las tres notas del acorde resultante — nada de leer "grado 4" y adivinar qué suena: se ve.
 
 `director.html` tiene el **brazalete**: un anillo de 7 letras (C D E F G A B), cada una con dos cuentas — ♯ y ♭, mutuamente excluyentes — que el director enciende o apaga con un clic. No hay que leer texto ni memorizar índices en ninguna de las tres pantallas: todo se lee visualmente y se actualiza en vivo.
 

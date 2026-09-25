@@ -61,6 +61,10 @@
   .altBtn.bem{background:#161f2a;border-color:#3a6a8a;color:#7fb8e8}
   #syncTag{font-size:10.5px;padding:2px 8px;border-radius:20px;border:1px solid var(--line);color:var(--dim)}
   #syncTag.on{color:var(--ok);border-color:var(--ok)}
+  .gradoBtn{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:78px;padding:10px 8px}
+  .gradoBtn .raiz{font-size:20px;font-weight:800}
+  .gradoBtn .notas{font-size:10px;color:var(--dim);letter-spacing:.02em}
+  .gradoBtn.on .notas{color:#3a2e10}
 </style>
 </head>
 <body>
@@ -149,10 +153,8 @@
     <div class="bloque hidden" id="panelArmonia">
       <h2>Armonía — master chord en vivo</h2>
       <svg class="partitura" id="pentagramaArmonia"></svg>
-      <div class="fila-botones" style="margin-top:12px">
-        <div class="ctl"><label>grado (1–7)</label>
-          <select id="gradoArmonia"></select></div>
-      </div>
+      <label style="display:block;margin-top:12px">grado — elige el master chord</label>
+      <div class="fila-botones" id="gradosArmonia" style="margin-top:6px"></div>
       <p style="color:var(--dim);font-size:11.5px;margin-top:8px">Sostén el <b>master chord</b> de Slonimsky
       (dominante 7 sin 5a: fundamental, 3a mayor, 7a menor) construido sobre el grado elegido, con las
       alteraciones activas. Slonimsky tabula un master chord por cada grado de la escala — aquí hay 7
@@ -187,17 +189,33 @@ const rolBtns=[$('rolArmonia'),$('rolVoz')];
 const paneles={armonia:$('panelArmonia'), voz:$('panelVoz')};
 const vozNSel=$('vozN'), octavaSel=$('octava'), panEl=$('pan'), timbreEl=$('timbre');
 const lecturaBtns=[...document.querySelectorAll('#lecturas button')];
-const gradoArmoniaSel=$('gradoArmonia');
+const gradosArmoniaEl=$('gradosArmonia');
 const alteracionesEl=$('alteraciones');
 
 let rol='voz';
 let lectura='P';
 let celulaActiva=M.TALEAS.larga[0];
 let alt = M.alteracionesPorDefecto();
+let gradoArmonia=1;
 
 // ---------- llena selects ----------
 for(let n=1;n<=10;n++){ const o=document.createElement('option'); o.value=n; o.textContent='Melodía '+n; vozNSel.appendChild(o); }
-for(let g=1;g<=7;g++){ const o=document.createElement('option'); o.value=g; o.textContent='Grado '+g+' ('+M.gradoALetra(g)+')'; gradoArmoniaSel.appendChild(o); }
+
+// ---------- selector visual de grado (Armonía): un botón por grado, con el
+// nombre de la raíz y las notas del master chord resultante, actualizado en
+// vivo con las alteraciones del director ----------
+function pintaGradosArmonia(){
+  gradosArmoniaEl.innerHTML='';
+  for(let g=1; g<=7; g++){
+    const notas = M.masterChordSobreGrado(g, alt);
+    const b=document.createElement('button');
+    b.className='gradoBtn'+(g===gradoArmonia?' on':'');
+    b.innerHTML = `<span class="raiz">${notas[0].letra}${simboloAlt(notas[0].alteracion)}</span>
+      <span class="notas">${notas.map(n=>n.letra+simboloAlt(n.alteracion)).join(' · ')}</span>`;
+    b.onclick=()=>{ gradoArmonia=g; pintaGradosArmonia(); pintaEstado(); };
+    gradosArmoniaEl.appendChild(b);
+  }
+}
 
 // ---------- brazalete local (solo lectura si hay director; editable si no) ----------
 function pintaAlteraciones(){
@@ -215,6 +233,7 @@ function pintaAlteraciones(){
     };
     alteracionesEl.appendChild(b);
   });
+  pintaGradosArmonia();
 }
 pintaAlteraciones();
 
@@ -253,7 +272,7 @@ rolBtns.forEach(b=>b.onclick=()=>{
   pintaEstado();
 });
 
-[vozNSel, octavaSel, gradoArmoniaSel].forEach(sel=>sel.addEventListener('change', pintaEstado));
+[vozNSel, octavaSel].forEach(sel=>sel.addEventListener('change', pintaEstado));
 
 bpmEl.oninput=()=>{ bpmv.firstChild.textContent=bpmEl.value+' '; };
 
@@ -384,8 +403,7 @@ function tick(){
   if(rol==='armonia'){
     const g=0.16*volMaster();
     while(stArmonia.next<horizon){
-      const grado=parseInt(gradoArmoniaSel.value,10);
-      M.masterChordSobreGrado(grado,alt).forEach((nt,i)=>{
+      M.masterChordSobreGrado(gradoArmonia,alt).forEach((nt,i)=>{
         const freq=M.notaAFrecuencia(nt.letra,nt.alteracion,3);
         playNota(freq,stArmonia.next,0.62,g*(0.75+0.25*((i%2)?1:0.6)),0,0.15);
       });
@@ -426,10 +444,9 @@ function pintaEstado(){
       '\ncélula activa: '+celulaActiva.join('+')+' ('+M.duracionTalea(celulaActiva)+' corcheas)'+
       '\nciclo isorrítmico: color['+ (stVoz.ic%7) +'] × talea['+ (stVoz.it%celulaActiva.length) +']';
   } else if(rol==='armonia'){
-    const grado=parseInt(gradoArmoniaSel.value,10);
-    const notas=M.masterChordSobreGrado(grado,alt).map(nt=>({letra:nt.letra,alteracion:nt.alteracion,octava:3}));
+    const notas=M.masterChordSobreGrado(gradoArmonia,alt).map(nt=>({letra:nt.letra,alteracion:nt.alteracion,octava:3}));
     dibujaPentagrama(pentagramaArmoniaEl, notas, 'todas');
-    txt = 'rol: Armonía · grado: '+grado+' ('+M.gradoALetra(grado)+')'+
+    txt = 'rol: Armonía · grado: '+gradoArmonia+' ('+M.gradoALetra(gradoArmonia)+')'+
       '\nmaster chord (Slonimsky): dominante 7 sin 5a — '+notas.map(n=>nombreNota(n.letra,n.alteracion,n.octava)).join(' · ');
   }
   estadoTxt.textContent = (running?'ejecutando — ':'detenido — ')+txt;
@@ -471,9 +488,8 @@ window.addEventListener('keydown', (e)=>{
   }
   if(e.key==='ArrowUp' || e.key==='ArrowDown'){
     if(rol==='armonia'){
-      let idx=gradoArmoniaSel.selectedIndex + (e.key==='ArrowUp'?1:-1);
-      idx=Math.max(0,Math.min(gradoArmoniaSel.options.length-1,idx));
-      gradoArmoniaSel.selectedIndex=idx;
+      gradoArmonia = Math.max(1,Math.min(7, gradoArmonia + (e.key==='ArrowUp'?1:-1)));
+      pintaGradosArmonia();
       pintaEstado();
     }
   }
