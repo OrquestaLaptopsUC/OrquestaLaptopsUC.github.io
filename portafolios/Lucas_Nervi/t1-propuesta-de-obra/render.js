@@ -55,25 +55,27 @@ function agregaNota(freq, inicioSeg, duracionSeg, gain, pan, timbre) {
   }
 }
 
-// --- pulso: clic breve en cada corchea, todo el render ---
+// --- pulso: clic breve cada 4 corcheas (compás de 4/4), todo el render.
+// Guía métrica estable contra la que las voces (en talea asimétrica) se
+// desfasan y realinean — como el pulso de batería en Meshuggah. ---
 function generaPulso(tempoQ, gain) {
   const corchea = 60 / tempoQ / 2;
-  for (let tSeg = 0; tSeg < DURACION; tSeg += corchea) {
-    agregaNota(1760, tSeg, 0.02, gain, 0.5, 0);
+  for (let tSeg = 0; tSeg < DURACION; tSeg += 4 * corchea) {
+    agregaNota(1760, tSeg, 0.035, gain, 0.5, 0.08);
   }
 }
 
-// --- armonía: acorde pandiatónico sostenido (grados 1,3,5,7) de la
-// colección activa, en octava grave, con crossfade al cambiar de colección ---
+// --- armonía: "master chord" de Slonimsky (dominante 7 sin 5a) sobre la
+// tónica de la colección activa, en octava grave, con crossfade al cambiar ---
 function generaArmonia(cambios, gain) {
   // cambios: [{desde,hasta,k}] tramos de tiempo con su colección
   for (const tramo of cambios) {
-    const gradosAcorde = [1, 3, 5, 7];
+    const notasAcorde = M.masterChord(tramo.k);
     const dur = tramo.hasta - tramo.desde;
     const fadeIn = Math.min(1.2, dur * 0.15);
     const fadeOut = Math.min(1.2, dur * 0.15);
-    gradosAcorde.forEach((grado, gi) => {
-      const freq = M.gradoAFrecuencia(grado, tramo.k, 3);
+    notasAcorde.forEach((nt, gi) => {
+      const freq = M.notaAFrecuencia(nt.letra, nt.alteracion, 3);
       // partimos el sostenido en notas cortas encadenadas para poder
       // aplicar envolvente de entrada/salida con agregaNota
       const pasos = Math.max(4, Math.floor(dur / 0.6));

@@ -102,6 +102,35 @@ const OLUC_TALEA = (function () {
     return octava * 7 + li - (4 * 7 + 2);
   }
 
+  function notaAFrecuencia(letra, alteracion, octava) {
+    const midi = 12 * (octava + 1) + LETRA_PC[letra] + alteracion;
+    return 440 * Math.pow(2, (midi - 69) / 12);
+  }
+
+  // nota cromática a `semitonos` de la tónica de la colección k, deletreada
+  // `letraOffset` letras musicales por encima de la tónica (0=unísono,
+  // 2=tercera, 6=séptima...). Permite notas fuera de la colección diatónica.
+  function notaCromatica(k, letraOffset, semitonos) {
+    const tonica = TONICA_LETRA[String(k)];
+    const ti = LETRAS.indexOf(tonica);
+    const letra = LETRAS[(ti + letraOffset + 700) % 7];
+    const raizPC = tonicaPC(k);
+    const pcObjetivo = ((raizPC + semitonos) % 12 + 12) % 12;
+    let dif = pcObjetivo - LETRA_PC[letra];
+    if (dif > 6) dif -= 12;
+    if (dif < -6) dif += 12;
+    return { letra, alteracion: dif };
+  }
+
+  // "Master Chord" de Slonimsky: acorde dominante 7 sin quinta (fundamental,
+  // 3a mayor, 7a menor), usado para armonizar — Thesaurus of Scales and
+  // Melodic Patterns (1947). Independiente del modo de la colección: siempre
+  // tiene color de dominante, deliberadamente ajeno a la escala diatónica
+  // de las Voces.
+  function masterChord(k) {
+    return [notaCromatica(k, 0, 0), notaCromatica(k, 2, 4), notaCromatica(k, 6, 10)];
+  }
+
   // ---------- talea (células rítmicas, en corcheas) ----------
   // El arco formal de la obra: células largas al comienzo, cortas al medio,
   // convergencia final de todas las voces en 4-3-4 (11 corcheas).
@@ -158,6 +187,9 @@ const OLUC_TALEA = (function () {
     gradoAFrecuencia,
     letraYAlteracion,
     posDiatonica,
+    notaAFrecuencia,
+    notaCromatica,
+    masterChord,
     TALEAS,
     NOMBRES_COLECCION,
     duracionTalea,

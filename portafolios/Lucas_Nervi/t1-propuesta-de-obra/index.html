@@ -100,7 +100,24 @@ principio de "material generado por un procedimiento constante" que TALEA usa pa
 material melódico. Se incluye como referente aun sin ser una "obra que suena", porque su técnica de
 generación es la que TALEA aplica a lo diatónico.</p>
 <p class="fuente">Fuentes: <a href="https://en.wikipedia.org/wiki/Nicolas_Slonimsky" target="_blank" rel="noopener">Wikipedia, "Nicolas Slonimsky"</a>;
-<a href="https://github.com/rpalermodrums/slonimsky" target="_blank" rel="noopener">reconstrucción algorítmica del Thesaurus (GitHub)</a>.</p>
+<a href="https://github.com/rpalermodrums/slonimsky" target="_blank" rel="noopener">reconstrucción algorítmica del Thesaurus (GitHub)</a>;
+<a href="https://forum.pianoworld.com/ubbthreads.php/topics/349689/master-chords-in-slonimskys-thesaurus.html" target="_blank" rel="noopener">foro Piano World, "Master Chords in Slonimsky's Thesaurus"</a>.</p>
+</div>
+
+<div class="card">
+<h3>4. Meshuggah — polimetría (desde <i>Destroy Erase Improve</i>, 1995, en adelante)</h3>
+<p>La banda construye riffs en agrupaciones impares de semicorcheas (por ejemplo, células de 3 y luego 5
+semicorcheas en "Bleed", 2008) que se repiten en loop sobre una batería estable en 4/4. Como el largo de
+la célula no es múltiplo del compás, riff y compás se desalinean progresivamente y solo vuelven a
+coincidir después de varios compases — tensión rítmica que se resuelve por pura repetición, no por
+cambio de material.</p>
+<p><b>Qué es aplicable.</b> Es el modelo exacto del nuevo rol de <b>Pulso</b> en TALEA: marca cada 4
+corcheas (un compás de 4/4) de forma inalterable, mientras las células de talea (16, 14, 10, 8, 5, 7, 11
+corcheas) —ninguna múltiplo de 4— se desfasan y realinean contra ese compás, igual que los riffs de
+Meshuggah contra su batería. Lo que TALEA no toma: Meshuggah nunca cambia de colección de alturas; TALEA
+sí, vía Armonía.</p>
+<p class="fuente">Fuentes: <a href="https://www.premierguitar.com/obsessive-progressive-how-to-decode-advanced-polymeters" target="_blank" rel="noopener">Premier Guitar, "Decoding Advanced Polymeters"</a>;
+<a href="https://drumstickler.substack.com/p/ligature-marks-complete-polymeter" target="_blank" rel="noopener">Drumstickler, análisis de polimetría en Meshuggah</a>.</p>
 </div>
 
 <h2 id="p2">Parte 2 — Propuesta de obra</h2>
@@ -108,8 +125,11 @@ generación es la que TALEA aplica a lo diatónico.</p>
 <p><b>TALEA.</b> Cada Voz tiene una fila diatónica fija de 7 grados (el <i>color</i>, análoga a una fila
 dodecafónica de intervalo constante). En vivo decide su lectura (P/R/I/RI) y su célula rítmica
 (<i>talea</i>) — combinadas por isorritmia. Una estación <b>Armonía</b> gobierna qué colección diatónica
-colorea las filas. Arco formal: células largas → cortas → convergencia final de todas las voces a la
-misma célula (4-3-4), unísono de ritmo con altura libre.</p>
+colorea las filas y sostiene el <i>master chord</i> de Slonimsky (dominante 7 sin 5a) sobre su tónica.
+Una estación <b>Pulso</b> marca cada 4 corcheas, compás de 4/4 fijo contra el que las células (ninguna
+múltiplo de 4) se desfasan y realinean, como la polimetría de Meshuggah. Arco formal: células largas →
+cortas → convergencia final de todas las voces a la misma célula (4-3-4), unísono de ritmo con altura
+libre.</p>
 
 <table>
 <tr><th>sección</th><th>tiempo</th><th>qué ocurre</th></tr>
@@ -135,9 +155,9 @@ colección de oído (mitigado con cambios solo en límites de sección); que la 
 <h2 id="p3">Parte 3 — Material sonoro</h2>
 
 <div class="card">
-<p><span class="badge">FUNCIONAL</span> Render de 60s: Armonía (colección 0→+1 a los 28s), Pulso, y
-4 Voces (k=1,2,3,4; lecturas P/R/I/RI) que entran escalonadas, pasan de célula larga a corta a los 28s
-y convergen a 4-3-4 en los últimos 12s.</p>
+<p><span class="badge">FUNCIONAL</span> Render de 60s: Armonía (master chord, colección 0→+1 a los 28s),
+Pulso (clic cada 4 corcheas), y 4 Voces (k=1,2,3,4; lecturas P/R/I/RI) que entran escalonadas, pasan de
+célula larga a corta a los 28s y convergen a 4-3-4 en los últimos 12s.</p>
 <audio controls src="render.wav"></audio>
 <a class="btn" href="estacion.html">Abrir estacion.html ↗</a>
 <a class="btn alt" href="director.html">Abrir director.html ↗</a>
@@ -173,12 +193,18 @@ retrogradación y retrogradación de la inversión, pero tendrán las melodías 
 fija con serialismo diatónico, células tipo clave con arco largo→corto→convergencia, rol armónico
 separado) es la base compositiva completa de TALEA y es del estudiante; la IA la formalizó en un sistema
 implementable y construyó el código y la documentación. Iteraciones posteriores del estudiante:
-pedido de reducir y simplificar el texto de esta página y de <code>PARTITURA.md</code>; y pedido de
+pedido de reducir y simplificar el texto de esta página y de <code>PARTITURA.md</code>; pedido de
 reemplazar el referente 3 (originalmente <i>Twilight</i>, Ge Wang/SLOrk) por el <i>Thesaurus of Scales
 and Melodic Patterns</i> de Slonimsky, y de agregar una partitura visual intuitiva para los músicos en
-<code>estacion.html</code> — ambos implementados por la IA (la sustitución de <i>Campo</i> en el
-referente 2, necesaria para seguir cumpliendo el requisito de un referente de orquesta de laptops, fue
-una decisión técnica de la IA al ejecutar el pedido).</p>
+<code>estacion.html</code> (la sustitución de <i>Campo</i> en el referente 2, necesaria para seguir
+cumpliendo el requisito de un referente de orquesta de laptops, fue una decisión técnica de la IA al
+ejecutar el pedido); y, por último, el pedido explícito del estudiante de que "el pulso sea cada 4
+corcheas, cosa de ir llevando una guía que haga de 4 cuartos, tal como lo hace Meshuggah", agregando a
+Meshuggah como referente 4, y de que "la armonización la haga con los masterchords que propone [Slonimsky]
+[...] acordes dominantes sin quinta" — ambas ideas (el pulso polimétrico y el uso de los master chords)
+son del estudiante; la IA verificó ambos referentes, implementó el cambio de tempo del Pulso y la función
+<code>masterChord</code> en <code>motor.js</code>, y actualizó <code>estacion.html</code>,
+<code>render.js</code> y la documentación en consecuencia.</p>
 </div>
 
 </main>

@@ -11,6 +11,8 @@ Duración: **7:00** · funciona desde 7 estaciones, escala hasta 12
 
 Cada Voz tiene una fila fija de 7 grados diatónicos (el **color**), generada por un procedimiento constante — el mismo principio que usa Slonimsky en su *Thesaurus* (ver Parte 1). En vivo decide dos cosas: cómo lee la fila (P/R/I/RI) y con qué célula rítmica (**talea**) la combina. Altura y ritmo son procesos independientes combinados por isorritmia (técnica de color + talea). Las células empiezan largas, se acortan al medio, y todas las voces convergen a la misma célula final (4-3-4) — unísono de ritmo, no de altura.
 
+Todo esto suena contra una guía métrica fija: el **Pulso** marca cada 4 corcheas (el compás de 4/4), estable de principio a fin. Como ninguna talea (16, 14, 10, 8, 5, 7, 11 corcheas) es múltiplo limpio de 4, cada Voz entra y sale de fase con ese compás y solo vuelve a coincidir con él cada cierto número de ciclos — la misma lógica polimétrica de Meshuggah: un pulso de batería estable en 4/4 contra riffs armados en agrupaciones impares que se desalinean y realinean con el compás (ver Parte 1).
+
 ## 2. Altura
 
 **Filas generadoras**, una por Voz: `fila(k)[i] = (i·k mod 7) + 1`
@@ -42,15 +44,15 @@ Isorritmia: evento *n* = `fila[n mod 7]` con duración `talea[n mod talea.length
 
 | rol | cuántas | decide en vivo |
 |---|---|---|
-| Pulso | 1 | mantiene la corchea audible |
-| Armonía | 1 | qué colección está activa, cuándo modular |
+| Pulso | 1 | mantiene el clic cada 4 corcheas (compás de 4/4) |
+| Armonía | 1 | qué colección está activa, cuándo modular; sostiene el master chord |
 | Voz | 5 → 10 | lectura (P/R/I/RI), célula, timbre |
 
 Con 7: Pulso + Armonía + Voz 1–5. Con más: se suman Voz 6–10 (filas k=6, y repetición de k=1–4 en otra octava/timbre).
 
 ## 5. Notación
 
-`estacion.html` dibuja un pentagrama real (clave de sol, SVG) con las 7 notas de la fila de la Voz activa, deletreadas según la colección en curso (letra + alteración correcta, no solo números de grado), y resalta con color la que está sonando en ese instante. Debajo, una tira rítmica muestra la célula activa con el grupo en curso resaltado, y arriba un indicador grande muestra la nota, la lectura (P/R/I/RI) y la colección. No hay que leer texto ni memorizar índices: se lee igual que una partitura, actualizada en vivo. Para Armonía, el mismo pentagrama muestra el acorde 1-3-5-7 completo; para Pulso, un círculo grande pulsa en cada corchea.
+`estacion.html` dibuja un pentagrama real (clave de sol, SVG) con las 7 notas de la fila de la Voz activa, deletreadas según la colección en curso (letra + alteración correcta, no solo números de grado), y resalta con color la que está sonando en ese instante. Debajo, una tira rítmica muestra la célula activa con el grupo en curso resaltado, y arriba un indicador grande muestra la nota, la lectura (P/R/I/RI) y la colección. No hay que leer texto ni memorizar índices: se lee igual que una partitura, actualizada en vivo. Para Armonía, el mismo pentagrama muestra el master chord completo (fundamental, 3a mayor, 7a menor); para Pulso, un círculo grande pulsa cada 4 corcheas.
 
 ## 6. Forma
 
@@ -81,4 +83,4 @@ Estaciones en semicírculo con parlante propio (en fabricación); Pulso y Armon�
 
 ## 10. Notas técnicas
 
-`motor.js` (filas, P/R/I/RI, colecciones, isorritmia, y `letraYAlteracion`/`posDiatonica` para deletrear notas y ubicarlas en el pentagrama) lo comparten `estacion.html` (Web Audio + partitura SVG en vivo) y `render.js` (Node, sintetiza el mismo motor a un WAV sin dependencias). Tempo de referencia: negra = 96 bpm.
+`motor.js` (filas, P/R/I/RI, colecciones, isorritmia, `letraYAlteracion`/`posDiatonica` para el pentagrama, y `masterChord`/`notaCromatica` para el acorde de Armonía) lo comparten `estacion.html` (Web Audio + partitura SVG en vivo) y `render.js` (Node, sintetiza el mismo motor a un WAV sin dependencias). Tempo de referencia: negra = 96 bpm; Pulso marca cada 4 corcheas.
