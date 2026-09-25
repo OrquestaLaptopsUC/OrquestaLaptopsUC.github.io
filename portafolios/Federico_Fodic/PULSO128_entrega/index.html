@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PULSO 128 — T1 Propuesta de obra</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#121923;
+      --panel2:#0f151e;
+      --line:#263244;
+      --tx:#edf2f7;
+      --dim:#9aa9bc;
+      --acc:#5ee6c5;
+      --warn:#ffcb6b;
+      --link:#8bdcff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--tx);
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      line-height:1.6;
+    }
+    main{max-width:980px;margin:0 auto;padding:34px 22px 70px}
+    h1,h2,h3{line-height:1.2}
+    h1{font-size:42px;margin:0 0 8px}
+    h2{margin-top:42px;border-bottom:1px solid var(--line);padding-bottom:8px}
+    h3{margin-top:26px}
+    p,li{color:#d7dee8}
+    .sub{color:var(--dim);font-size:17px;margin-bottom:24px}
+    .card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:20px;
+      margin:18px 0;
+    }
+    .hero{
+      background:linear-gradient(135deg,#121923,#101722);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:26px;
+      margin-bottom:28px;
+    }
+    .tag{
+      display:inline-block;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:5px 10px;
+      margin:3px 5px 3px 0;
+      color:var(--dim);
+      font-size:13px;
+    }
+    a{color:var(--link)}
+    .button{
+      display:inline-block;
+      text-decoration:none;
+      color:#06110e;
+      background:var(--acc);
+      border-radius:9px;
+      padding:11px 15px;
+      font-weight:700;
+      margin:5px 8px 5px 0;
+    }
+    .button.secondary{
+      background:var(--warn);
+      color:#211700;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin:18px 0;
+      font-size:14px;
+    }
+    th,td{
+      border:1px solid var(--line);
+      padding:10px;
+      text-align:left;
+      vertical-align:top;
+    }
+    th{background:var(--panel2)}
+    audio{width:100%;margin-top:10px}
+    blockquote{
+      border-left:4px solid var(--acc);
+      margin:16px 0;
+      padding:8px 16px;
+      background:var(--panel2);
+      color:#dfe8f1;
+    }
+    code{
+      background:var(--panel2);
+      padding:2px 6px;
+      border-radius:5px;
+    }
+    .small{font-size:14px;color:var(--dim)}
+  </style>
+</head>
+<body>
+<main>
+
+  <section class="hero">
+    <h1>PULSO 128</h1>
+    <div class="sub">T1 — Propuesta de obra para Orquesta de Laptops UC</div>
+    <span class="tag">House</span>
+    <span class="tag">128 BPM</span>
+    <span class="tag">7+ laptops</span>
+    <span class="tag">Web Audio API</span>
+    <p>
+      <strong>PULSO 128</strong> es una obra para orquesta de laptops basada en un pulso de house a 128 BPM.
+      La idea es repartir entre varios intérpretes una estructura que normalmente se escucha muy precisa y repetitiva.
+      Cada computador controla una parte distinta: kick, percusión, hi-hat, bajo, acordes, arpegios o efectos digitales.
+    </p>
+    <p>
+      La obra parte ordenada, después se va desarmando y dejando más libertad a los intérpretes, y finalmente vuelve a sincronizarse.
+      Me interesa trabajar con algo que hemos vivido en clases: a veces el grupo se coordina muy bien y otras veces se empieza a desplazar.
+      En vez de tratar ese desfase solamente como un error, la propuesta lo usa como parte de la forma de la obra.
+    </p>
+    <a class="button" href="pulso128.html" target="_blank">Abrir instrumento</a>
+    <a class="button secondary" href="T1_Pulso_128.md" target="_blank">Ver archivo de propuesta</a>
+  </section>
+
+  <section class="card">
+    <h2 style="margin-top:0">Material sonoro</h2>
+    <p>
+      El prototipo está hecho en HTML y JavaScript con Web Audio API. No utiliza archivos de audio externos.
+      Genera seis capas: kick, clap/percusión, hi-hat, bajo, acordes y efectos digitales.
+    </p>
+    <audio controls src="pulso128_demo_45s.wav">
+      Tu navegador no soporta reproducción de audio.
+    </audio>
+    <p class="small">Render de 45 segundos generado con la lógica de síntesis del prototipo.</p>
+  </section>
+
+  <h2>Parte 1 — Contexto y referentes</h2>
+
+  <h3>1. NUBE — Orquesta de Laptops UC</h3>
+  <p>
+    NUBE es una obra para ocho voces de laptop que construye una textura colectiva a partir de síntesis granular.
+    Cada intérprete produce pequeños granos sonoros y recibe instrucciones ligeramente distintas.
+  </p>
+  <p>
+    Funciona mediante una interfaz web y no depende de una red local entre computadores. De esta obra tomo la idea de que cada laptop tenga
+    un rol distinto y que el resultado completo aparezca al escuchar a todos juntos. También tomo el interés por sonidos claramente digitales.
+  </p>
+  <p>
+    Lo que no tomaría como elemento principal es la síntesis granular, porque PULSO 128 necesita ataques rítmicos más claros.
+  </p>
+  <p class="small">
+    Fuente consultada:
+    <a href="https://raw.githubusercontent.com/OrquestaLaptopsUC/OrquestaLaptopsUC.github.io/main/obras/nube/index.html" target="_blank">código e interfaz de NUBE</a>
+  </p>
+
+  <h3>2. In C — Terry Riley / realización web OLUC</h3>
+  <p>
+    In C está construida a partir de patrones musicales pequeños que los intérpretes repiten y van abandonando de manera independiente.
+    Esto genera una estructura común, pero deja libertad para decidir cuánto tiempo permanecer en cada patrón.
+  </p>
+  <p>
+    De In C tomo principalmente esa libertad controlada. En PULSO 128 existe un pulso común, pero cada intérprete puede decidir cuándo hacer
+    una variación, un fill, aumentar intensidad o dejar espacio.
+  </p>
+  <p class="small">
+    Fuente consultada:
+    <a href="https://raw.githubusercontent.com/OrquestaLaptopsUC/OrquestaLaptopsUC.github.io/main/obras/in-c/index.html" target="_blank">realización web de In C usada por OLUC</a>
+  </p>
+
+  <h3>3. Twilight — Ge Wang / Stanford Laptop Orchestra</h3>
+  <p>
+    Twilight es una obra para laptop orchestra en la que los computadores son interpretados activamente y los músicos responden a señales
+    del director. La obra divide a los intérpretes en grupos y utiliza interfaces gestuales para modificar el sonido.
+  </p>
+  <p>
+    De Twilight tomo la idea de que la laptop funcione como instrumento en vivo y no solo como reproductor, además de la coordinación humana.
+    No usaría GameTrak porque no es una interfaz garantizada para nuestro curso.
+  </p>
+  <p class="small">
+    Fuente consultada:
+    <a href="https://slork.stanford.edu/works/twilight/" target="_blank">Stanford Laptop Orchestra — Twilight</a>
+  </p>
+
+  <h2>Parte 2 — Propuesta de obra</h2>
+
+  <h3>1. Idea</h3>
+  <p>
+    PULSO 128 propone construir una pieza de house en vivo entre siete o más laptops. Ningún computador contiene la obra completa:
+    cada integrante controla una capa del groove. La pieza pasa por momentos de coordinación, libertad, desfase y reencuentro.
+  </p>
+
+  <h3>2. Estructura formal</h3>
+  <table>
+    <tr><th>Sección</th><th>Tiempo</th><th>Qué sucede</th></tr>
+    <tr><td>I. Encendido</td><td>0:00–0:30</td><td>Comienza solo el kick. Aparecen sonidos digitales cortos y burbujeos.</td></tr>
+    <tr><td>II. Construcción</td><td>0:30–1:30</td><td>Entran progresivamente hi-hat, percusión, bajo y acordes.</td></tr>
+    <tr><td>III. Groove</td><td>1:30–2:30</td><td>Suena el ensamble completo. Se permiten pequeñas variaciones y fills.</td></tr>
+    <tr><td>IV. Desfase</td><td>2:30–3:30</td><td>Se reduce el kick y aumenta la libertad. Aparecen glitches y texturas digitales.</td></tr>
+    <tr><td>V. Reencuentro</td><td>3:30–5:00</td><td>El kick vuelve solo y el director hace una cuenta de cuatro tiempos para reordenar el grupo.</td></tr>
+    <tr><td>VI. Apagado</td><td>5:00–6:00</td><td>Las capas desaparecen una por una hasta quedar un último pulso.</td></tr>
+  </table>
+
+  <h3>3. Coordinación</h3>
+  <p>
+    La obra está diseñada para funcionar sin red local. La estación 1 mantiene un kick en negras a 128 BPM y sirve como referencia auditiva.
+    Los cambios grandes de sección se indican con señales del director y una cuenta de cuatro tiempos.
+  </p>
+
+  <h3>4. Roles por estación</h3>
+  <ul>
+    <li><strong>Estación 1:</strong> kick / pulso.</li>
+    <li><strong>Estación 2:</strong> clap y percusión.</li>
+    <li><strong>Estación 3:</strong> hi-hat y ruido filtrado.</li>
+    <li><strong>Estación 4:</strong> bajo sintetizado.</li>
+    <li><strong>Estación 5:</strong> acordes y pad.</li>
+    <li><strong>Estación 6:</strong> arpegio / pluck.</li>
+    <li><strong>Estación 7:</strong> efectos digitales, burbujeos, chirps y glitches.</li>
+  </ul>
+  <p>
+    Si existen estaciones 8–12, pueden duplicar funciones con materiales distintos o agregar nuevas capas espaciales.
+  </p>
+
+  <h3>5. Notación e instrucciones</h3>
+  <p>
+    Cada intérprete tendría una interfaz con nombre de rol, sección actual, contador de tiempo, acciones permitidas,
+    teclas disponibles e intensidad aproximada.
+  </p>
+  <blockquote>
+    Durante 8 compases haz intervenciones cortas. Deja espacios de silencio. En los siguientes 8 compases aumenta la densidad.
+    Cuando aparezca la señal REENCUENTRO, deja de tocar y espera cuatro tiempos antes de volver a entrar.
+  </blockquote>
+
+  <h3>6. Sonido en la sala</h3>
+  <p>
+    Cada estación utiliza su propio sistema de parlantes. Las capas quedan físicamente separadas para que el público pueda identificar
+    de dónde aparece cada parte del groove. Las estaciones con funciones parecidas se ubicarían alejadas entre sí para generar movimiento espacial.
+  </p>
+
+  <h3>7. Riesgos y versión reducida</h3>
+  <ul>
+    <li><strong>Pérdida de sincronización:</strong> el kick funciona como reloj audible y el director puede hacer nuevas cuentas de cuatro tiempos.</li>
+    <li><strong>Falla de una estación:</strong> otro computador puede activar temporalmente ese rol.</li>
+    <li><strong>Exceso de sonido:</strong> cada sección limita qué variaciones están permitidas.</li>
+  </ul>
+  <p>
+    La versión reducida funciona con cuatro funciones principales: kick, bajo, acordes y efectos.
+  </p>
+
+  <h2>Parte 3 — Material sonoro</h2>
+  <p>
+    El material desarrollado es <code>pulso128.html</code>, una aplicación web en HTML y JavaScript con Web Audio API.
+    El tempo se mantiene fijo en 128 BPM. Las teclas 1 a 6 activan o desactivan las capas y la barra espaciadora ejecuta un fill.
+    Los controles de brillo e intensidad modifican el timbre y el nivel general.
+  </p>
+
+  <h3>Cómo abrirlo</h3>
+  <ol>
+    <li>Abrir <code>pulso128.html</code> en Chrome, Safari o Firefox.</li>
+    <li>Presionar <strong>INICIAR 128 BPM</strong>.</li>
+    <li>Usar las teclas 1 a 6 para activar o desactivar capas.</li>
+    <li>Usar la barra espaciadora para ejecutar un fill.</li>
+    <li>Modificar brillo e intensidad con los controles de la interfaz.</li>
+  </ol>
+
+  <h3>Papel dentro de la obra</h3>
+  <p>
+    El prototipo demuestra la estética general de PULSO 128 y los roles principales de ritmo, bajo, acordes y efectos.
+    En la obra final estas funciones se repartirían entre distintos intérpretes.
+  </p>
+
+  <h2>Declaración de uso de IA</h2>
+  <p>
+    Para esta tarea utilicé <strong>ChatGPT (OpenAI)</strong> como apoyo para organizar la propuesta, investigar y contrastar referentes,
+    estructurar la forma de la obra y desarrollar una primera versión del instrumento web en JavaScript/Web Audio API.
+    También se utilizó IA para documentar el funcionamiento del código y apoyar la generación del material sonoro de prueba.
+  </p>
+  <p>
+    Las decisiones principales —trabajar con house a 128 BPM, repartir las capas entre distintas laptops, incorporar sonidos digitales
+    y usar momentos de sincronización y desfase— fueron definidas a partir de mis intereses y de las experiencias realizadas durante el curso.
+  </p>
+
+  <h3>Prompt relevante</h3>
+  <blockquote>
+    Quiero crear una propuesta para Orquesta de Laptops basada en música electrónica house a 128 BPM. En el curso hemos trabajado con In C,
+    Nube, Campo y Gracias a la Vida, usando interfaces web donde cada computador tiene un rol distinto. Me interesa mantener la libertad de
+    interpretación que hemos usado en clases, pero combinarla con un groove de house y sonidos más computacionales como burbujeos, glitches
+    y síntesis. Ayúdame a estructurar la obra, elegir referentes y crear un prototipo sonoro funcional en HTML y JavaScript.
+  </blockquote>
+
+</main>
+</body>
+</html>
