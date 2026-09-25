@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotorSynth | Experimental Instrument</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #09090b; /* zinc-950 */
+            color: #e4e4e7; /* zinc-200 */
+            overflow: hidden;
+            user-select: none;
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Custom Scrollbar for a premium look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #18181b; /* zinc-900 */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3f3f46; /* zinc-700 */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #52525b; /* zinc-600 */
+        }
+
+        /* Number Input Styling (remove arrows) */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+
+        .playing-glow {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
+            border-color: #818cf8 !important;
+        }
+        
+        .timeline-bg {
+            background-image: linear-gradient(to right, #18181b 1px, transparent 1px);
+            background-size: 40px 100%;
+        }
+
+        .drag-over {
+            border-color: #e4e4e7 !important;
+            transform: scale(1.02);
+        }
+        
+        /* Ensure queue items appear above loop enclosures */
+        .qitem-card {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Loop drag handle active state */
+        .loop-drag-active {
+            background-color: #f97316 !important;
+            width: 8px !important;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col text-sm">
+
+    <!-- Header -->
+    <header class="p-4 bg-zinc-900 border-b border-zinc-800 flex justify-between items-center z-10 shadow-md">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded bg-indigo-600 flex items-center justify-center text-white font-bold">M</div>
+            <h1 class="text-xl font-bold tracking-widest text-zinc-100">MOTORSYNTH</h1>
+            <div class="ml-4 flex gap-2">
+                <canvas id="visualizer" width="128" height="32" class="w-32 h-8 rounded bg-zinc-950 border border-zinc-800" title="Waveform"></canvas>
+                <canvas id="freq-visualizer" width="128" height="32" class="w-32 h-8 rounded bg-zinc-950 border border-zinc-800" title="Freq (Blue) / RPM (Green) & Time"></canvas>
+            </div>
+        </div>
+        <div class="flex gap-4 text-xs font-mono text-zinc-400 bg-zinc-950 px-4 py-2 rounded-lg border border-zinc-800 shadow-inner">
+            <span class="flex items-center gap-1"><kbd class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300">1-9</kbd> Preset</span>
+            <span class="flex items-center gap-1"><kbd class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300">A</kbd> Add</span>
+            <span class="flex items-center gap-1"><kbd class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300">L</kbd> Loop</span>
+            <span class="flex items-center gap-1"><kbd class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300">Enter</kbd> Preview</span>
+            <span class="flex items-center gap-1"><kbd class="bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300">D</kbd> Play Next</span>
+        </div>
+    </header>
+
+    <!-- Catalogue -->
+    <div class="bg-zinc-900 border-b border-zinc-800 p-4 shrink-0 shadow-md z-10">
+        <h2 class="text-xs font-bold text-zinc-500 mb-3 tracking-widest">CATALOGUE</h2>
+        <div id="catalogue" class="flex gap-4 overflow-x-auto pb-2">
+            <!-- Catalogue items injected here -->
+        </div>
+    </div>
+
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- Timeline Workspace -->
+        <div class="flex-1 flex flex-col bg-zinc-950 relative">
+            <div class="absolute inset-0 timeline-bg opacity-20 pointer-events-none"></div>
+            
+            <div class="p-4 text-xs font-bold text-zinc-600 tracking-widest absolute top-0 left-0 z-10">QUEUE TIMELINE</div>
+            
+            <!-- Queue Container -->
+            <div id="timeline-container" class="flex-1 overflow-x-auto overflow-y-auto p-4 flex flex-col gap-8 relative">
+                <!-- Tracks injected here -->
+                <div id="queue-empty" class="text-zinc-600 font-mono italic mx-auto mt-8">Press 'A' to add a motor or 'L' to add a loop.</div>
+            </div>
+
+            <!-- Transport Controls -->
+            <div class="shrink-0 p-4 bg-zinc-900 border-t border-zinc-800 flex justify-between items-center z-10 shadow-[0_-10px_20px_rgba(0,0,0,0.3)]">
+                <div class="text-xs font-mono text-zinc-500" id="transport-status">IDLE</div>
+                <div class="flex gap-3">
+                    <button id="btn-reset" class="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded font-bold transition flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"></path></svg> Reset
+                    </button>
+                    <button id="btn-stop" class="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded font-bold transition flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"></rect></svg> Stop
+                    </button>
+                    <button id="btn-play" class="px-8 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded font-bold transition shadow-[0_0_15px_rgba(79,70,229,0.4)] flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg> Play Queue
+                    </button>
+                    <button id="btn-next" class="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded font-bold transition flex items-center gap-2" title="Hotkey: D">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path></svg> Next
+                    </button>
+                </div>
+                <button id="btn-clear" class="text-xs text-red-500 hover:text-red-400 font-mono transition">Clear Queue</button>
+            </div>
+        </div>
+
+        <!-- Inspector -->
+        <div class="w-80 bg-zinc-900 border-l border-zinc-800 flex flex-col shrink-0 z-10 shadow-xl">
+            <div class="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-800/50">
+                <h2 class="font-bold text-zinc-200 tracking-widest">INSPECTOR</h2>
+                <span id="inspector-badge" class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-400">Preset</span>
+            </div>
+            <div id="inspector-content" class="p-5 flex-1 overflow-y-auto space-y-6">
+                <!-- Inputs rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- TEMPLATES -->
+    <template id="tpl-motor-inputs">
+        <div class="space-y-5">
+            <div class="border-b border-zinc-800 pb-2 mb-2">
+                <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1" id="insp-motor-name">Motor Name</h3>
+                <p class="text-xs text-zinc-500" id="insp-motor-desc">Description</p>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- Base Freq -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs text-zinc-400">
+                        <label>Start Base (Hum)</label>
+                        <div class="flex items-center gap-1"><input type="number" id="num-startBase" step="0.1" class="w-20 bg-zinc-950 border border-zinc-800 rounded px-1 py-0.5 text-right text-zinc-200 font-mono focus:border-indigo-500 outline-none"> <span class="text-zinc-600">Hz</span></div>
+                    </div>
+                    <input type="range" id="rng-startBase" min="20" max="1000" step="0.1" class="w-full accent-indigo-500 cursor-pointer">
+                </div>
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs text-zinc-400">
+                        <label>Final Base (Hum)</label>
+                        <div class="flex items-center gap-1"><input type="number" id="num-finalBase" step="0.1" class="w-20 bg-zinc-950 border border-zinc-800 rounded px-1 py-0.5 text-right text-zinc-200 font-mono focus:border-indigo-500 outline-none"> <span class="text-zinc-600">Hz</span></div>
+                    </div>
+                    <input type="range" id="rng-finalBase" min="20" max="1000" step="0.1" class="w-full accent-indigo-500 cursor-pointer">
+                </div>
+
+                <!-- Oscillation -->
+                <div class="space-y-1 mt-6">
+                    <div class="flex justify-between text-xs text-zinc-400">
+                        <label>Start Oscillation</label>
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-1"><input type="number" id="num-startOscBpm" step="1" class="w-16 bg-zinc-950 border border-zinc-800 rounded px-1 py-0.5 text-right text-zinc-200 font-mono focus:border-indigo-500 outline-none" title="Beats per minute"> <span class="text-zinc-600 text-[10px]">BPM</span></div>
+                            <div class="flex items-center gap-1"><input type="number" id="num-startOsc" step="0.01" class="w-16 bg-zinc-950 border border-zinc-800 rounded px-1 py-0.5 text-right text-zinc-200 font-mono focus:border-indigo-500 outline-none"> <span class="text-zinc-600 text-[10px]">Hz</span></div>
+                        </div>
+                    </div>
+                    <input type="range" id="rng-startOsc" min="0.1" max="100" step="0.01" class="w-full accent-indigo-500 cursor-pointer">
+                </div>
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs text-zinc-400">
+                        <label>Final Oscillation</label>
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-1"><input type="number" id="num-finalOscBpm" step="1" class="w-16 bg-zinc-950 border border-zinc-800 rounded px-1 py-0.5 text-right text-zinc-200 font-mono focus:border-indigo-500 outline-none" title="Beats per minute"> <span class="text-zinc-600 text-[10px]">BPM</span></div>
+                            <div class="flex items-center gap-1"><input type="number" id="num-finalOsc" step="0.01" class="w-16 bg-zinc-950 border border-zinc-800 rounded px-1 py-0.5 text-right text-zinc-200 font-mono focus:border-indigo-500 outline-none"> <span class="text-zinc-600 text-[10px]">Hz</span></div>
+                        </div>
+                    </div>
+                    <input type="range" id="rng-finalOsc" min="0.1" max="100" step="0.01" class="w-full accent-indigo-500 cursor-pointer">
+                </div>
+
+                <!-- Physics -->
+                <div class="space-y-1 mt-6 pt-4 border-t border-zinc-800/50">
+                    <div class="flex justify-between text-xs text-zinc-400">
+                        <label>Mass (Inertia)</label>
+                        <input type="number" id="num-mass" step="0.05" class="w-20 bg-zinc-950 border border-zinc-800 rounded px-1 py-0.5 text-right text-zinc-200 font-mono focus:border-indigo-500 outline-none">
+                    </div>
+                    <input type="range" id="rng-mass" min="0.05" max="10" step="0.05" class="w-full accent-indigo-500 cursor-pointer">
+                </div>
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs text-zinc-400">
+                        <label>Time (Duration)</label>
+                        <div class="flex items-center gap-1"><input type="number" id="num-time" step="0.1" class="w-20 bg-zinc-950 border border-zinc-800 rounded px-1 py-0.5 text-right text-zinc-200 font-mono focus:border-indigo-500 outline-none"> <span class="text-zinc-600">s</span></div>
+                    </div>
+                    <input type="range" id="rng-time" min="0.1" max="20" step="0.1" class="w-full accent-indigo-500 cursor-pointer">
+                </div>
+            </div>
+            
+            <div id="queue-actions-motor" class="pt-6 hidden flex gap-2">
+                <button id="btn-del-motor" class="w-full py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded transition text-xs font-bold border border-red-900/50">Remove from Queue</button>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-loop-inputs">
+        <div class="space-y-5">
+            <div class="border-b border-zinc-800 pb-2 mb-2 flex items-center gap-2 text-orange-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <h3 class="text-xs font-bold uppercase tracking-widest">Loop Block</h3>
+            </div>
+            <p class="text-xs text-zinc-500 mb-4">Repeats the previous sequence of blocks.</p>
+            
+            <div class="space-y-4">
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs text-zinc-400">
+                        <label>Span (Previous Blocks)</label>
+                        <div class="flex items-center gap-1"><input type="number" id="num-span" class="w-16 bg-zinc-950 border border-zinc-800 rounded px-1 py-0.5 text-right text-zinc-200 font-mono focus:border-orange-500 outline-none"> <span class="text-zinc-600">blk</span></div>
+                    </div>
+                    <input type="range" id="rng-span" min="1" max="20" step="1" class="w-full accent-orange-500 cursor-pointer">
+                </div>
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs text-zinc-400">
+                        <label>Loop Count</label>
+                        <div class="flex items-center gap-1"><input type="number" id="num-count" class="w-16 bg-zinc-950 border border-zinc-800 rounded px-1 py-0.5 text-right text-zinc-200 font-mono focus:border-orange-500 outline-none"> <span class="text-zinc-600">x</span></div>
+                    </div>
+                    <input type="range" id="rng-count" min="1" max="20" step="1" class="w-full accent-orange-500 cursor-pointer">
+                </div>
+            </div>
+
+            <div id="queue-actions-loop" class="pt-6 hidden flex gap-2">
+                <button id="btn-del-loop" class="w-full py-2 bg-red-900/30 hover:bg-red-900/50 text-red-400 rounded transition text-xs font-bold border border-red-900/50">Remove Loop</button>
+            </div>
+            
+            <style>
+                .loop-range::-webkit-slider-thumb { background: #f97316; box-shadow: 0 0 10px rgba(249, 115, 22, 0.5); }
+            </style>
+        </div>
+    </template>
+
+    <script>
+        // --- DATA & STATE ---
+        const PRESETS = [
+            { id: 1, name: "Induction AC", desc: "Standard 60Hz hum, fast chug", startBase: 60, finalBase: 60, startOsc: 1.5, finalOsc: 30, mass: 2.5, time: 4.0 },
+            { id: 2, name: "Heavy Turbine", desc: "Deep rumble, slow spin up", startBase: 30, finalBase: 90, startOsc: 0.2, finalOsc: 15, mass: 6.0, time: 8.0 },
+            { id: 3, name: "Servo Swarm", desc: "High pitched robotics", startBase: 400, finalBase: 800, startOsc: 10, finalOsc: 60, mass: 0.5, time: 1.5 },
+            { id: 4, name: "Failing Drill", desc: "Erratic shutdown down-pitch", startBase: 150, finalBase: 20, startOsc: 40, finalOsc: 1, mass: 1.0, time: 3.0 },
+            { id: 5, name: "Elevator Winch", desc: "Grinding load strain", startBase: 50, finalBase: 70, startOsc: 5, finalOsc: 10, mass: 3.0, time: 5.0 },
+            { id: 6, name: "EV Inverter", desc: "Smooth electric car whine", startBase: 300, finalBase: 900, startOsc: 0.1, finalOsc: 5, mass: 4.0, time: 5.0 },
+            { id: 7, name: "Laser Blaster", desc: "Rapid pew-pew pitch drop", startBase: 1000, finalBase: 80, startOsc: 40, finalOsc: 5, mass: 0.05, time: 0.4 },
+            { id: 8, name: "MRI Sequence", desc: "Intense magnetic knocking", startBase: 70, finalBase: 70, startOsc: 15, finalOsc: 15, mass: 0.1, time: 3.0 },
+            { id: 9, name: "Mech Siren", desc: "Doppler drop with rotor chop", startBase: 900, finalBase: 650, startOsc: 3.5, finalOsc: 3.5, mass: 3.0, time: 6.0 },
+            { id: 10, name: "Stall Alarm", desc: "Plane emergency choppy tone", startBase: 440, finalBase: 440, startOsc: 6, finalOsc: 6, mass: 0.1, time: 2.0 },
+            { id: 11, name: "ICU Monitor", desc: "Sterile short high-pitch beep", startBase: 850, finalBase: 850, startOsc: 0.1, finalOsc: 0.1, mass: 0.05, time: 0.15 },
+            { id: 12, name: "Ventilator", desc: "Rhythmic air pump breathing", startBase: 40, finalBase: 45, startOsc: 0.3, finalOsc: 0.3, mass: 1.5, time: 3.5 }
+        ];
+
+        let tracks = [
+            { id: 'track-0', items: [] }
+        ];
+        let activeTrackIndex = 0;
+        
+        let playhead = 0;
+        let isPlaying = false;
+        let loopCounters = {}; // { queueItemId: currentCount }
+        let playbackTimeoutId = null;
+
+        // Editor State
+        let editorType = 'motor'; // 'motor' or 'loop'
+        let editorSource = 'preset'; // 'preset' or 'queue'
+        let selectedQueueIds = []; 
+        let editorParams = { ...PRESETS[0] };
+        
+        // Clipboard & Actions State
+        let clipboardQueue = [];
+        let deleteTimeoutId = null;
+
+        // Playback Sync State
+        let currentMotorStartTime = 0;
+        let currentMotorDuration = 0;
+        let currentMotorParams = null;
+        let currentPlayingId = null;
+
+        // --- DOM ELEMENTS ---
+        const catalogueEl = document.getElementById('catalogue');
+        const timelineContainerEl = document.getElementById('timeline-container');
+        const inspectorContentEl = document.getElementById('inspector-content');
+        const inspectorBadgeEl = document.getElementById('inspector-badge');
+        const transportStatusEl = document.getElementById('transport-status');
+
+        // --- WEB AUDIO API ENGINE ---
+        let audioCtx;
+        let masterGain;
+        let noiseBuffer;
+        let analyser;
+        let activeNodes = [];
+        let isAudioInit = false;
+        let animationFrameId;
+
+        // Visualizer State
+        let analyserDataArray;
+        let analyserBufferLength;
+
+        function createWhiteNoise(ctx) {
+            const bufferSize = ctx.sampleRate * 2; // 2 seconds
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const output = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+            return buffer;
+        }
+
+        function initAudio() {
+            if (isAudioInit && audioCtx.state !== 'suspended') return;
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+                
+                // Master Compressor to prevent clipping
+                const compressor = audioCtx.createDynamicsCompressor();
+                compressor.threshold.value = -10;
+                compressor.knee.value = 10;
+                compressor.ratio.value = 4;
+                compressor.attack.value = 0.05;
+                compressor.release.value = 0.1;
+
+                masterGain = audioCtx.createGain();
+                masterGain.gain.value = 0.8;
+                
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 256;
+                
+                masterGain.connect(compressor);
+                compressor.connect(analyser);
+                analyser.connect(audioCtx.destination);
+
+                analyserBufferLength = analyser.frequencyBinCount;
+                analyserDataArray = new Uint8Array(analyserBufferLength);
+
+                noiseBuffer = createWhiteNoise(audioCtx);
+                requestAnimationFrame(renderVisualizersFrame);
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            isAudioInit = true;
+        }
+
+        function renderVisualizersFrame() {
+            animationFrameId = requestAnimationFrame(renderVisualizersFrame);
+            
+            // 1. Waveform Visualizer
+            const canvasWave = document.getElementById('visualizer');
+            if (canvasWave && analyser) {
+                const ctxWave = canvasWave.getContext('2d');
+                const width = canvasWave.width;
+                const height = canvasWave.height;
+                
+                analyser.getByteTimeDomainData(analyserDataArray);
+                
+                ctxWave.fillStyle = '#09090b';
+                ctxWave.fillRect(0, 0, width, height);
+                
+                ctxWave.lineWidth = 2;
+                ctxWave.strokeStyle = '#818cf8'; // indigo-400
+                ctxWave.beginPath();
+                
+                const sliceWidth = width * 1.0 / analyserBufferLength;
+                let x = 0;
+                
+                for(let i = 0; i < analyserBufferLength; i++) {
+                    const v = analyserDataArray[i] / 128.0;
+                    const y = v * height/2;
+                    
+                    if(i === 0) ctxWave.moveTo(x, y);
+                    else ctxWave.lineTo(x, y);
+                    
+                    x += sliceWidth;
+                }
+                ctxWave.lineTo(canvasWave.width, canvasWave.height/2);
+                ctxWave.stroke();
+            }
+
+            // 2. Freq/Time Visualizer
+            const canvasFreq = document.getElementById('freq-visualizer');
+            if (canvasFreq) {
+                const ctxFreq = canvasFreq.getContext('2d');
+                const w = canvasFreq.width;
+                const h = canvasFreq.height;
+                
+                ctxFreq.fillStyle = '#09090b';
+                ctxFreq.fillRect(0, 0, w, h);
+                
+                if (isPlaying && currentMotorParams && audioCtx) {
+                    const now = audioCtx.currentTime;
+                    let p = 0;
+                    if (currentMotorDuration > 0) {
+                        p = (now - currentMotorStartTime) / currentMotorDuration;
+                        p = Math.max(0, Math.min(1, p));
+                    }
+                    
+                    // Time Progress Background
+                    ctxFreq.fillStyle = '#18181b'; // zinc-900
+                    ctxFreq.fillRect(0, 0, w * p, h);
+                    
+                    // Base Freq Line (Blue) - map 0 to 1000Hz
+                    const yBase1 = h - Math.min(1, currentMotorParams.startBase / 1000) * h;
+                    const yBase2 = h - Math.min(1, currentMotorParams.finalBase / 1000) * h;
+                    ctxFreq.beginPath();
+                    ctxFreq.strokeStyle = '#6366f1'; // indigo-500
+                    ctxFreq.lineWidth = 2;
+                    ctxFreq.moveTo(0, yBase1);
+                    ctxFreq.lineTo(w, yBase2);
+                    ctxFreq.stroke();
+                    
+                    // Osc Freq Line (Emerald) - map 0 to 100Hz
+                    const yOsc1 = h - Math.min(1, currentMotorParams.startOsc / 100) * h;
+                    const yOsc2 = h - Math.min(1, currentMotorParams.finalOsc / 100) * h;
+                    ctxFreq.beginPath();
+                    ctxFreq.strokeStyle = '#10b981'; // emerald-500
+                    ctxFreq.lineWidth = 2;
+                    ctxFreq.moveTo(0, yOsc1);
+                    ctxFreq.lineTo(w, yOsc2);
+                    ctxFreq.stroke();
+
+                    // Current Playhead Position Line
+                    ctxFreq.beginPath();
+                    ctxFreq.strokeStyle = '#e4e4e7';
+                    ctxFreq.lineWidth = 1;
+                    ctxFreq.moveTo(w * p, 0);
+                    ctxFreq.lineTo(w * p, h);
+                    ctxFreq.stroke();
+
+                    // 3. Update Queue Block Progress Bar UI
+                    if (currentPlayingId) {
+                        const progressEl = document.getElementById(`progress-${currentPlayingId}`);
+                        if (progressEl) {
+                            progressEl.style.width = `${p * 100}%`;
+                        }
+                    }
+                }
+            }
+        }
+
+        function stopCurrentSound() {
+            if (activeNodes.length > 0) {
+                const stopTime = audioCtx.currentTime;
+                // find instance gain and fade out fast
+                activeNodes.forEach(n => {
+                    if (n instanceof GainNode && n._isInstanceGain) {
+                        n.gain.cancelScheduledValues(stopTime);
+                        n.gain.setValueAtTime(n.gain.value, stopTime);
+                        n.gain.linearRampToValueAtTime(0, stopTime + 0.05);
+                    }
+                });
+                
+                const nodesToStop = [...activeNodes];
+                setTimeout(() => {
+                    nodesToStop.forEach(n => {
+                        try { if (n.stop) n.stop(); } catch(e){}
+                    });
+                }, 100);
+                activeNodes = [];
+            }
+            
+            // Reset block progress visuals
+            if (currentPlayingId) {
+                const progressEl = document.getElementById(`progress-${currentPlayingId}`);
+                if (progressEl) progressEl.style.width = '0%';
+            }
+        }
+
+        function playMotorSound(params, itemId) {
+            initAudio();
+            stopCurrentSound();
+
+            const t0 = audioCtx.currentTime;
+            const duration = Math.max(0.1, params.time);
+            
+            currentMotorStartTime = t0;
+            currentMotorDuration = duration;
+            currentMotorParams = params;
+            currentPlayingId = itemId;
+
+            // timeConstant dictates how fast it approaches target. 
+            // In 1 timeConstant it reaches ~63% of target.
+            const timeConstant = Math.max(0.01, params.mass); 
+
+            // Per-note envelope to prevent clicks
+            const instanceGain = audioCtx.createGain();
+            instanceGain._isInstanceGain = true;
+            instanceGain.gain.value = 0;
+            instanceGain.gain.linearRampToValueAtTime(1, t0 + 0.05);
+            instanceGain.connect(masterGain);
+
+            // --- 1. HUM (Base Frequencies) ---
+            // Fundamental (Sine)
+            const hum1 = audioCtx.createOscillator();
+            hum1.type = 'sine';
+            hum1.frequency.value = params.startBase;
+            hum1.frequency.setTargetAtTime(params.finalBase, t0, timeConstant);
+            const gain1 = audioCtx.createGain(); gain1.gain.value = 0.6;
+            hum1.connect(gain1); gain1.connect(instanceGain);
+
+            // 2nd Harmonic (Triangle for slightly gritty hum)
+            const hum2 = audioCtx.createOscillator();
+            hum2.type = 'triangle';
+            hum2.frequency.value = params.startBase * 2;
+            hum2.frequency.setTargetAtTime(params.finalBase * 2, t0, timeConstant);
+            const gain2 = audioCtx.createGain(); gain2.gain.value = 0.25;
+            hum2.connect(gain2); gain2.connect(instanceGain);
+
+            // 3rd Harmonic (Sawtooth for mechanical buzz)
+            const hum3 = audioCtx.createOscillator();
+            hum3.type = 'sawtooth';
+            hum3.frequency.value = params.startBase * 3;
+            hum3.frequency.setTargetAtTime(params.finalBase * 3, t0, timeConstant);
+            const gain3 = audioCtx.createGain(); gain3.gain.value = 0.08;
+            hum3.connect(gain3); gain3.connect(instanceGain);
+
+            // --- 2. TURN NOISE (Chugging) ---
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = noiseBuffer;
+            noise.loop = true;
+
+            const noiseFilter = audioCtx.createBiquadFilter();
+            noiseFilter.type = 'bandpass';
+            noiseFilter.frequency.value = Math.min(20000, params.startBase * 12);
+            noiseFilter.frequency.setTargetAtTime(Math.min(20000, params.finalBase * 12), t0, timeConstant);
+            noiseFilter.Q.value = 2.0;
+
+            const noiseEnvelope = audioCtx.createGain();
+            noiseEnvelope.gain.value = 0;
+
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseEnvelope);
+            noiseEnvelope.connect(instanceGain);
+
+            // LFO to modulate noise volume (simulating rotation mechanism)
+            const lfo = audioCtx.createOscillator();
+            lfo.type = 'sawtooth'; // Sawtooth creates a sharp drop, simulating physical latch/catch
+            lfo.frequency.value = params.startOsc;
+            lfo.frequency.setTargetAtTime(params.finalOsc, t0, timeConstant);
+
+            // Scale LFO (-1 to 1) to (0 to 1) for gain envelope
+            const lfoScale = audioCtx.createGain();
+            lfoScale.gain.value = 0.5;
+            lfo.connect(lfoScale);
+            const lfoOffset = audioCtx.createConstantSource();
+            lfoOffset.offset.value = 0.5;
+
+            lfoScale.connect(noiseEnvelope.gain);
+            lfoOffset.connect(noiseEnvelope.gain);
+
+            // Start all generators
+            hum1.start(t0); hum2.start(t0); hum3.start(t0);
+            noise.start(t0); lfo.start(t0); lfoOffset.start(t0);
+
+            activeNodes = [hum1, hum2, hum3, noise, lfo, lfoOffset, instanceGain, lfoScale, noiseFilter];
+
+            // Schedule stop
+            const stopTime = t0 + duration;
+            instanceGain.gain.setValueAtTime(1, stopTime - 0.05);
+            instanceGain.gain.linearRampToValueAtTime(0, stopTime);
+
+            activeNodes.forEach(n => {
+                if (n.stop) n.stop(stopTime);
+            });
+
+            // Cleanup ref
+            setTimeout(() => {
+                // If it hasn't been overwritten by a new sound
+                if (activeNodes.includes(hum1)) {
+                    activeNodes = [];
+                }
+            }, (duration + 0.1) * 1000);
+        }
+
+        function generateId() {
+            return Math.random().toString(36).substr(2, 9);
+        }
+        
+        function findItemLocation(id) {
+            for (let t = 0; t < tracks.length; t++) {
+                const idx = tracks[t].items.findIndex(q => q.id === id);
+                if (idx !== -1) return { trackIndex: t, itemIndex: idx, item: tracks[t].items[idx] };
+            }
+            return null;
+        }
+
+        function addToQueue(type = 'motor') {
+            const id = generateId();
+            let newItem = null;
+            if (type === 'motor') {
+                newItem = {
+                    id,
+                    type: 'motor',
+                    params: JSON.parse(JSON.stringify(editorParams)) // deep copy
+                };
+            } else if (type === 'loop') {
+                newItem = {
+                    id,
+                    type: 'loop',
+                    params: { span: 4, count: 2 }
+                };
+            }
+            
+            if (!tracks[activeTrackIndex]) {
+                 tracks[activeTrackIndex] = { id: `track-${activeTrackIndex}`, items: [] };
+            }
+            tracks[activeTrackIndex].items.push(newItem);
+            
+            selectedQueueIds = [id];
+            updateInspectorFromSelection();
+            
+            // Scroll to end of active track
+            setTimeout(() => {
+                const trackRow = document.getElementById(`track-row-${activeTrackIndex}`);
+                if (trackRow) trackRow.scrollLeft = trackRow.scrollWidth;
+            }, 50);
+        }
+
+        function removeSelectedFromQueue() {
+            if (selectedQueueIds.length === 0) return;
+            
+            tracks.forEach(track => {
+                track.items = track.items.filter(q => !selectedQueueIds.includes(q.id));
+            });
+            
+            // Cleanup empty tracks if they aren't the only one
+            tracks = tracks.filter((t, i) => t.items.length > 0 || i === activeTrackIndex || tracks.length === 1);
+
+            selectedQueueIds = [];
+            selectPreset(PRESETS[0]);
+            renderQueue();
+        }
+
+        function processPlayNext() {
+            const currentTrack = tracks[activeTrackIndex];
+            if (!currentTrack || playhead >= currentTrack.items.length) {
+                stopPlayback();
+                return;
+            }
+
+            // Ensure previous blocks have progress reset when skipping forward/backward
+            document.querySelectorAll('.qitem-progress').forEach(el => el.style.width = '0%');
+
+            const item = currentTrack.items[playhead];
+            renderQueue(); // update visuals to show active playhead
+            
+            // Auto scroll to active item and center it visually
+            const activeEl = document.getElementById(`qitem-${item.id}`);
+            if (activeEl) {
+                activeEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            }
+
+            if (item.type === 'motor') {
+                transportStatusEl.innerText = `PLAYING T${activeTrackIndex+1} [${playhead + 1}/${currentTrack.items.length}]`;
+                
+                playMotorSound(item.params, item.id);
+                
+                playbackTimeoutId = setTimeout(() => {
+                    if (isPlaying) {
+                        playhead++;
+                        processPlayNext();
+                    }
+                }, item.params.time * 1000);
+
+            } else if (item.type === 'loop') {
+                const { span, count } = item.params;
+                
+                if (loopCounters[item.id] === undefined) {
+                    loopCounters[item.id] = 0;
+                }
+
+                if (loopCounters[item.id] < count) {
+                    loopCounters[item.id]++;
+                    transportStatusEl.innerText = `LOOPING [${loopCounters[item.id]}/${count}]`;
+                    
+                    // Jump back
+                    playhead = Math.max(0, playhead - span);
+                    
+                    // Small delay to visually register the jump
+                    playbackTimeoutId = setTimeout(() => {
+                        if (isPlaying) processPlayNext();
+                    }, 10);
+
+                } else {
+                    // Loop finished
+                    loopCounters[item.id] = 0; // reset for next pass
+                    playhead++;
+                    processPlayNext();
+                }
+            }
+        }
+
+        function startPlayback() {
+            initAudio();
+            const currentTrack = tracks[activeTrackIndex];
+            if (!currentTrack || currentTrack.items.length === 0) return;
+            isPlaying = true;
+            if (playhead >= currentTrack.items.length) playhead = 0;
+            processPlayNext();
+        }
+
+        function stopPlayback() {
+            isPlaying = false;
+            clearTimeout(playbackTimeoutId);
+            stopCurrentSound();
+            currentMotorParams = null;
+            currentPlayingId = null;
+            loopCounters = {};
+            transportStatusEl.innerText = 'STOPPED';
+            renderQueue();
+            
+            // Clear all progress bars
+            document.querySelectorAll('.qitem-progress').forEach(el => el.style.width = '0%');
+        }
+
+        function resetPlayback() {
+             playhead = 0;
+             if (isPlaying) {
+                 stopCurrentSound();
+                 clearTimeout(playbackTimeoutId);
+                 processPlayNext();
+             } else {
+                 renderQueue();
+             }
+        }
+
+        function playNextManually() {
+            initAudio();
+            const currentTrack = tracks[activeTrackIndex];
+            if (!currentTrack || currentTrack.items.length === 0) return;
+            
+            clearTimeout(playbackTimeoutId);
+            stopCurrentSound();
+            
+            if (!isPlaying) {
+                isPlaying = true;
+            } else {
+                playhead++;
+            }
+            processPlayNext();
+        }
+
+        let draggedItemId = null;
+        let dragSourceTrackIdx = null;
+
+        function renderQueue() {
+            const emptyMsg = document.getElementById('queue-empty');
+            
+            let totalItems = 0;
+            tracks.forEach(t => totalItems += t.items.length);
+
+            if (totalItems === 0) {
+                if(!emptyMsg) {
+                    timelineContainerEl.innerHTML = `<div id="queue-empty" class="text-zinc-600 font-mono italic mx-auto mt-8">Press 'A' to add a motor or 'L' to add a loop.</div>`;
+                } else {
+                    emptyMsg.style.display = 'block';
+                }
+                return;
+            } else {
+                if(emptyMsg) emptyMsg.style.display = 'none';
+            }
+
+            timelineContainerEl.innerHTML = '';
+            
+            tracks.forEach((track, trackIndex) => {
+                const trackRowWrapper = document.createElement('div');
+                trackRowWrapper.className = `flex gap-4 relative min-h-[160px] p-4 transition-all duration-300 rounded-xl border ${trackIndex === activeTrackIndex ? 'border-zinc-700 bg-zinc-900/50 shadow-lg' : 'border-transparent opacity-60'}`;
+                trackRowWrapper.id = `track-row-wrapper-${trackIndex}`;
+                
+                // Track Label
+                const trackLabel = document.createElement('div');
+                trackLabel.className = 'absolute -top-3 left-4 text-[10px] font-bold tracking-widest bg-zinc-950 px-2 rounded-full border ' + (trackIndex === activeTrackIndex ? 'text-indigo-400 border-indigo-500/50' : 'text-zinc-600 border-zinc-800');
+                trackLabel.innerText = `TRACK ${trackIndex + 1} ${trackIndex === activeTrackIndex ? '(ACTIVE)' : ''}`;
+                
+                // Click to activate track
+                trackRowWrapper.onclick = (e) => {
+                    // Only change if clicking empty space in the track, not items
+                    if(e.target === trackRowWrapper || e.target.id === `track-row-${trackIndex}`) {
+                         if (activeTrackIndex !== trackIndex) {
+                             activeTrackIndex = trackIndex;
+                             if(isPlaying) {
+                                 stopPlayback(); // Stop playback if switching tracks while playing
+                             }
+                             renderQueue();
+                         }
+                    }
+                }
+
+                const trackRow = document.createElement('div');
+                trackRow.id = `track-row-${trackIndex}`;
+                trackRow.className = 'flex items-center gap-4 flex-1 overflow-x-auto relative min-w-[200px] z-10 pt-4';
+                
+                // Dropzone for empty tracks or ends of tracks
+                trackRow.ondragover = (e) => { e.preventDefault(); trackRowWrapper.classList.add('border-zinc-500'); };
+                trackRow.ondragleave = () => { trackRowWrapper.classList.remove('border-zinc-500'); };
+                trackRow.ondrop = (e) => {
+                    e.preventDefault();
+                    trackRowWrapper.classList.remove('border-zinc-500');
+                    if (!draggedItemId) return;
+                    
+                    // Allow dropping at the end of a track if dropped directly on the container
+                    if (e.target === trackRow || e.target === trackRowWrapper) {
+                         moveItemTo(draggedItemId, trackIndex, track.items.length);
+                    }
+                };
+
+                track.items.forEach((item, index) => {
+                    const isActivePlayhead = isPlaying && index === playhead && trackIndex === activeTrackIndex;
+                    const isSelectedEditor = editorSource === 'queue' && selectedQueueIds.includes(item.id);
+                    
+                    const el = document.createElement('div');
+                    el.id = `qitem-${item.id}`;
+                    el.draggable = true;
+                    
+                    el.ondragstart = (e) => {
+                        draggedItemId = item.id;
+                        dragSourceTrackIdx = trackIndex;
+                        e.dataTransfer.effectAllowed = 'move';
+                        el.style.opacity = '0.5';
+                    };
+                    el.ondragend = () => { el.style.opacity = '1'; draggedItemId = null; dragSourceTrackIdx = null; };
+                    el.ondragover = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation(); // prevent dropping on container
+                        if (draggedItemId !== item.id) el.classList.add('drag-over');
+                    };
+                    el.ondragleave = () => { el.classList.remove('drag-over'); };
+                    el.ondrop = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation(); // prevent dropping on container
+                        el.classList.remove('drag-over');
+                        if (!draggedItemId || draggedItemId === item.id) return;
+                        
+                        moveItemTo(draggedItemId, trackIndex, index);
+                    };
+
+                    el.onclick = (e) => {
+                         // Select item and activate its track
+                         if (activeTrackIndex !== trackIndex) {
+                             activeTrackIndex = trackIndex;
+                             if(isPlaying) stopPlayback();
+                         }
+                         selectQueueItem(item.id, e);
+                    };
+                    
+                    if (item.type === 'motor') {
+                        el.className = `qitem-card shrink-0 w-32 h-32 rounded-lg border flex flex-col justify-between p-3 cursor-pointer transition relative overflow-hidden
+                            ${isSelectedEditor ? 'border-indigo-400 bg-indigo-900/20' : 'border-zinc-700 bg-zinc-800 hover:border-zinc-500'}
+                            ${isActivePlayhead ? 'playing-glow bg-indigo-800 z-20 scale-105' : ''}`;
+                        
+                        el.innerHTML = `
+                            <div id="progress-${item.id}" class="qitem-progress absolute left-0 top-0 bottom-0 bg-indigo-400/20 w-0 transition-none z-0 pointer-events-none"></div>
+                            <div class="flex justify-between items-start relative z-10">
+                                <span class="text-xs font-bold text-zinc-300">#${index+1}</span>
+                                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+                            </div>
+                            <div class="mt-auto relative z-10">
+                                <div class="text-[10px] text-indigo-300 font-mono flex justify-between">
+                                    <span>${item.params.startBase}Hz</span>
+                                    <span>&rarr;</span>
+                                    <span>${item.params.finalBase}Hz</span>
+                                </div>
+                                <div class="text-[10px] text-zinc-500 font-mono mt-1 flex justify-between">
+                                    <span>${item.params.time}s</span>
+                                    <span>m:${item.params.mass}</span>
+                                </div>
+                            </div>
+                        `;
+                    } else if (item.type === 'loop') {
+                        const loopCount = loopCounters[item.id] || 0;
+                        const isLoopingActive = isActivePlayhead;
+
+                        el.className = `qitem-card shrink-0 w-24 h-32 rounded-lg border flex flex-col justify-between p-3 cursor-pointer transition relative overflow-hidden
+                            ${isSelectedEditor ? 'border-orange-400 bg-orange-900/20' : 'border-zinc-700 bg-zinc-800 hover:border-zinc-500'}
+                            ${isLoopingActive ? 'shadow-[0_0_20px_rgba(249,115,22,0.6)] border-orange-400 bg-orange-800 z-20 scale-105' : ''}`;
+                        
+                        el.innerHTML = `
+                            <div class="flex justify-between items-start text-orange-400 relative z-10">
+                                <span class="text-xs font-bold">#${index+1}</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            </div>
+                            <div class="mt-auto text-center relative z-10">
+                                <div class="text-xs font-bold text-zinc-200">Loop</div>
+                                <div class="text-[10px] text-orange-300 font-mono mt-1">
+                                    &larr; ${item.params.span} blk
+                                </div>
+                                <div class="text-[10px] text-zinc-400 font-mono">
+                                    ${loopCount} / ${item.params.count} x
+                                </div>
+                            </div>
+                        `;
+                    }
+                    trackRow.appendChild(el);
+                });
+                
+                trackRowWrapper.appendChild(trackLabel);
+                trackRowWrapper.appendChild(trackRow);
+                timelineContainerEl.appendChild(trackRowWrapper);
+                
+                // Render loops for this track
+                renderLoopBoxesForTrack(track, trackRow, trackIndex);
+            });
+            
+            // Clean up empty tracks, ensuring at least one remains
+            const nonEmptyTracks = tracks.filter((t, i) => t.items.length > 0 || i === activeTrackIndex);
+            if(nonEmptyTracks.length === 0) {
+                tracks = [{ id: 'track-0', items: [] }];
+                activeTrackIndex = 0;
+            } else if (tracks.length !== nonEmptyTracks.length) {
+                 tracks = nonEmptyTracks;
+                 if(activeTrackIndex >= tracks.length) activeTrackIndex = tracks.length - 1;
+                 renderQueue(); // Re-render to fix indices
+            }
+        }
+
+        function moveItemTo(itemId, targetTrackIdx, targetItemIdx) {
+             const loc = findItemLocation(itemId);
+             if (!loc) return;
+             
+             // Remove from old
+             const movedItem = tracks[loc.trackIndex].items.splice(loc.itemIndex, 1)[0];
+             
+             // Ensure target track exists
+             if (!tracks[targetTrackIdx]) {
+                  tracks[targetTrackIdx] = { id: `track-${targetTrackIdx}`, items: [] };
+             }
+             
+             // Insert at new
+             tracks[targetTrackIdx].items.splice(targetItemIdx, 0, movedItem);
+             
+             // Adjust playhead if we messed with active track while playing
+             if (isPlaying && loc.trackIndex === activeTrackIndex) {
+                 if (loc.itemIndex === playhead && targetTrackIdx !== activeTrackIndex) stopPlayback(); // moved currently playing to another track
+                 else if (loc.trackIndex === targetTrackIdx) {
+                      // moved within same track
+                      if (loc.itemIndex === playhead) playhead = targetItemIdx;
+                      else if (loc.itemIndex < playhead && targetItemIdx >= playhead) playhead--;
+                      else if (loc.itemIndex > playhead && targetItemIdx <= playhead) playhead++;
+                 } else {
+                     // moved out of track
+                     if(loc.itemIndex < playhead) playhead--;
+                 }
+             }
+             
+             renderQueue();
+             if(selectedQueueIds.includes(itemId)) updateInspectorFromSelection();
+        }
+
+        function renderLoopBoxesForTrack(track, trackRowEl, trackIndex) {
+            // Remove old boxes for this track
+            document.querySelectorAll(`.loop-enclosure-track-${trackIndex}`).forEach(e => e.remove());
+            if (track.items.length === 0) return;
+
+            const depths = new Array(track.items.length).fill(0);
+            
+            track.items.forEach((item, i) => {
+                if (item.type === 'loop') {
+                    const startIndex = Math.max(0, i - item.params.span);
+                    const endIndex = i;
+                    
+                    let maxDepth = 0;
+                    for (let j = startIndex; j <= endIndex; j++) {
+                        maxDepth = Math.max(maxDepth, depths[j]);
+                    }
+                    const currentDepth = maxDepth + 1;
+                    for (let j = startIndex; j <= endIndex; j++) {
+                        depths[j] = currentDepth;
+                    }
+                    
+                    requestAnimationFrame(() => {
+                        const startEl = document.getElementById(`qitem-${track.items[startIndex].id}`);
+                        const endEl = document.getElementById(`qitem-${track.items[endIndex].id}`);
+                        
+                        if (startEl && endEl) {
+                            const box = document.createElement('div');
+                            box.className = `loop-enclosure-track-${trackIndex} absolute rounded-xl border border-orange-500/40 pointer-events-none`;
+                            
+                            box.style.backgroundColor = `rgba(249, 115, 22, ${0.05 + (currentDepth * 0.02)})`;
+                            
+                            const paddingX = 4 + (currentDepth * 6);
+                            const paddingY = 4 + (currentDepth * 6);
+                            
+                            box.style.left = (startEl.offsetLeft - paddingX) + 'px';
+                            // Align vertically relative to track container
+                            box.style.top = (startEl.offsetTop - paddingY) + 'px'; 
+                            box.style.width = (endEl.offsetLeft + endEl.offsetWidth - startEl.offsetLeft + (paddingX * 2)) + 'px';
+                            box.style.height = (startEl.offsetHeight + (paddingY * 2)) + 'px';
+                            box.style.zIndex = 5; 
+                            
+                            const handle = document.createElement('div');
+                            handle.className = 'absolute left-0 top-0 bottom-0 w-4 cursor-ew-resize hover:bg-orange-500/60 transition-colors pointer-events-auto flex items-center justify-center rounded-l-xl z-20 group';
+                            handle.innerHTML = `<div class="w-1 h-6 bg-orange-400/50 group-hover:bg-orange-200 rounded-full transition-colors"></div>`;
+                            
+                            handle.onmousedown = (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handle.classList.add('loop-drag-active');
+                                
+                                const onMouseMove = (moveEv) => {
+                                    const items = Array.from(trackRowEl.querySelectorAll('.qitem-card'));
+                                    let targetIdx = endIndex;
+                                    
+                                    for (let k = 0; k <= endIndex; k++) {
+                                        const el = items[k];
+                                        if (el) {
+                                            const rect = el.getBoundingClientRect();
+                                            if (moveEv.clientX < rect.right - (rect.width * 0.25)) {
+                                                targetIdx = k;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    
+                                    let newSpan = endIndex - targetIdx;
+                                    if (newSpan < 1) newSpan = 1; 
+                                    if (newSpan > endIndex) newSpan = endIndex; 
+                                    
+                                    if (item.params.span !== newSpan) {
+                                        item.params.span = newSpan;
+                                        renderQueue(); 
+                                        if (selectedQueueIds.includes(item.id)) {
+                                            renderInspector(); 
+                                        }
+                                    }
+                                };
+                                
+                                const onMouseUp = () => {
+                                    handle.classList.remove('loop-drag-active');
+                                    window.removeEventListener('mousemove', onMouseMove);
+                                    window.removeEventListener('mouseup', onMouseUp);
+                                };
+                                
+                                window.addEventListener('mousemove', onMouseMove);
+                                window.addEventListener('mouseup', onMouseUp);
+                            };
+
+                            box.appendChild(handle);
+                            trackRowEl.appendChild(box);
+                        }
+                    });
+                }
+            });
+        }
+
+        function renderInspector() {
+            // Load template
+            const templateId = editorType === 'motor' ? 'tpl-motor-inputs' : 'tpl-loop-inputs';
+            const template = document.getElementById(templateId);
+            inspectorContentEl.innerHTML = '';
+            inspectorContentEl.appendChild(template.content.cloneNode(true));
+
+            // Setup Badge
+            if (editorSource === 'preset') {
+                inspectorBadgeEl.innerText = 'Preset Model';
+                inspectorBadgeEl.className = 'px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-400';
+            } else {
+                inspectorBadgeEl.innerText = selectedQueueIds.length > 1 ? 'Multiple Items' : 'Queue Item';
+                inspectorBadgeEl.className = editorType === 'motor' 
+                    ? 'px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400'
+                    : 'px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-orange-500/20 text-orange-400';
+            }
+
+            if (editorType === 'motor') {
+                document.getElementById('insp-motor-name').innerText = selectedQueueIds.length > 1 ? 'Multiple Motors' : (editorParams.name || 'Custom Motor');
+                document.getElementById('insp-motor-desc').innerText = editorSource === 'preset' ? editorParams.desc : (selectedQueueIds.length > 1 ? 'Bulk Editing' : 'Tuned inside queue');
+
+                const keys = ['startBase', 'finalBase', 'startOsc', 'finalOsc', 'mass', 'time'];
+                keys.forEach(key => {
+                    const numEl = document.getElementById(`num-${key}`);
+                    const rngEl = document.getElementById(`rng-${key}`);
+                    const bpmEl = document.getElementById(`num-${key}Bpm`); // For osc inputs
+                    
+                    const val = editorParams[key];
+                    if (val === null) {
+                        numEl.value = '';
+                        numEl.placeholder = '---';
+                        rngEl.value = rngEl.min; // fallback for slider
+                        if (bpmEl) {
+                            bpmEl.value = '';
+                            bpmEl.placeholder = '---';
+                        }
+                    } else {
+                        numEl.value = val;
+                        rngEl.value = val;
+                        if (bpmEl) bpmEl.value = (val * 60).toFixed(0);
+                    }
+
+                    const updateVal = (newVal, source) => {
+                        let parsed = parseFloat(newVal);
+                        if (isNaN(parsed)) return;
+                        
+                        if (source === 'bpm') {
+                            parsed = parsed / 60;
+                        }
+
+                        editorParams[key] = parsed;
+                        
+                        if (source !== 'num') numEl.value = parsed.toFixed(2);
+                        if (source !== 'rng') rngEl.value = parsed;
+                        if (bpmEl && source !== 'bpm') bpmEl.value = (parsed * 60).toFixed(0);
+                        
+                        if (editorSource === 'queue' && selectedQueueIds.length > 0) {
+                            let updated = false;
+                            tracks.forEach(track => {
+                                track.items.forEach(qItem => {
+                                    if (selectedQueueIds.includes(qItem.id) && qItem.type === editorType) {
+                                        qItem.params[key] = parsed;
+                                        updated = true;
+                                    }
+                                });
+                            });
+                            
+                            if (updated) renderQueue(); 
+                        }
+                    };
+
+                    numEl.addEventListener('input', (e) => updateVal(e.target.value, 'num'));
+                    rngEl.addEventListener('input', (e) => updateVal(e.target.value, 'rng'));
+                    if (bpmEl) {
+                        bpmEl.addEventListener('input', (e) => updateVal(e.target.value, 'bpm'));
+                    }
+                });
+
+                if (editorSource === 'queue') {
+                    const delBox = document.getElementById('queue-actions-motor');
+                    delBox.classList.remove('hidden');
+                    const delBtn = document.getElementById('btn-del-motor');
+                    delBtn.innerText = selectedQueueIds.length > 1 ? `Remove ${selectedQueueIds.length} Motors` : 'Remove from Queue';
+                    delBtn.onclick = removeSelectedFromQueue;
+                }
+
+            } else if (editorType === 'loop') {
+                const keys = ['span', 'count'];
+                keys.forEach(key => {
+                    const numEl = document.getElementById(`num-${key}`);
+                    const rngEl = document.getElementById(`rng-${key}`);
+                    
+                    const val = editorParams[key];
+                    if (val === null) {
+                        numEl.value = '';
+                        numEl.placeholder = '-';
+                        rngEl.value = rngEl.min;
+                    } else {
+                        numEl.value = val;
+                        rngEl.value = val;
+                    }
+
+                    const updateVal = (newVal) => {
+                        let parsed = parseInt(newVal, 10);
+                        if (isNaN(parsed)) return;
+                        editorParams[key] = parsed;
+                        numEl.value = parsed;
+                        rngEl.value = parsed;
+                        
+                        if (editorSource === 'queue' && selectedQueueIds.length > 0) {
+                            let updated = false;
+                            tracks.forEach(track => {
+                                track.items.forEach(qItem => {
+                                    if (selectedQueueIds.includes(qItem.id) && qItem.type === editorType) {
+                                        qItem.params[key] = parsed;
+                                        updated = true;
+                                    }
+                                });
+                            });
+                            if (updated) renderQueue();
+                        }
+                    };
+
+                    numEl.addEventListener('input', (e) => updateVal(e.target.value));
+                    rngEl.addEventListener('input', (e) => updateVal(e.target.value));
+                });
+
+                if (editorSource === 'queue') {
+                    const delBox = document.getElementById('queue-actions-loop');
+                    delBox.classList.remove('hidden');
+                    const delBtn = document.getElementById('btn-del-loop');
+                    delBtn.innerText = selectedQueueIds.length > 1 ? `Remove ${selectedQueueIds.length} Loops` : 'Remove Loop';
+                    delBtn.onclick = removeSelectedFromQueue;
+                }
+            }
+        }
+
+        function renderCatalogue() {
+            catalogueEl.innerHTML = '';
+            PRESETS.forEach((preset, index) => {
+                const isSelected = editorSource === 'preset' && editorParams.id === preset.id;
+                
+                const el = document.createElement('div');
+                el.className = `shrink-0 w-48 p-3 rounded-lg border cursor-pointer transition ${isSelected ? 'border-indigo-500 bg-indigo-900/30 shadow-[0_0_10px_rgba(79,70,229,0.2)]' : 'border-zinc-800 bg-zinc-950 hover:border-zinc-600'}`;
+                el.onclick = () => selectPreset(preset);
+                
+                el.innerHTML = `
+                    <div class="flex justify-between items-start mb-1">
+                        <h3 class="font-bold text-zinc-200 text-xs">${index + 1}. ${preset.name}</h3>
+                        ${isSelected ? '<span class="flex h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_5px_#6366f1]"></span>' : '<span class="text-xs font-mono text-zinc-600">Preset</span>'}
+                    </div>
+                    <p class="text-[10px] text-zinc-500 leading-tight mt-2">${preset.desc}</p>
+                `;
+                catalogueEl.appendChild(el);
+            });
+        }
+
+        function selectPreset(preset) {
+            editorType = 'motor';
+            editorSource = 'preset';
+            selectedQueueIds = [];
+            editorParams = JSON.parse(JSON.stringify(preset));
+            renderCatalogue();
+            renderQueue();
+            renderInspector();
+        }
+
+        function updateInspectorFromSelection() {
+            if (selectedQueueIds.length === 0) {
+                selectPreset(PRESETS[0]);
+                return;
+            }
+
+            const selectedItems = [];
+            tracks.forEach(t => {
+                t.items.forEach(item => {
+                    if (selectedQueueIds.includes(item.id)) selectedItems.push(item);
+                });
+            });
+            
+            if (selectedItems.length === 0) return;
+
+            editorType = selectedItems[0].type;
+            const itemsOfSameType = selectedItems.filter(q => q.type === editorType);
+            
+            const baseParams = itemsOfSameType[0].params;
+            editorParams = {};
+            
+            for (let key in baseParams) {
+                const allSame = itemsOfSameType.every(q => q.params[key] === baseParams[key]);
+                editorParams[key] = allSame ? baseParams[key] : null; // null means mixed values
+            }
+
+            renderCatalogue();
+            renderQueue();
+            renderInspector();
+        }
+
+        function selectQueueItem(id, e) {
+            const loc = findItemLocation(id);
+            if (!loc) return;
+
+            editorSource = 'queue';
+            activeTrackIndex = loc.trackIndex; // Important: switch active track on click
+
+            if (e && (e.ctrlKey || e.metaKey)) {
+                if (selectedQueueIds.includes(id)) {
+                    selectedQueueIds = selectedQueueIds.filter(i => i !== id);
+                } else {
+                    selectedQueueIds.push(id);
+                }
+            } else {
+                selectedQueueIds = [id];
+            }
+
+            updateInspectorFromSelection();
+            renderQueue(); // Re-render to show track activation
+            
+            // Scroll selected item to center of the timeline
+            setTimeout(() => {
+                const el = document.getElementById(`qitem-${id}`);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            }, 50);
+        }
+
+        function previewCurrent() {
+            initAudio();
+            if (editorType === 'motor' && editorParams && editorParams.startBase !== null) {
+                // Generate a generic sound using current settings (if not mixed in bulk-edit)
+                playMotorSound(editorParams, 'preview');
+                
+                // Set transport to show preview
+                transportStatusEl.innerText = 'PREVIEWING...';
+                
+                // Clear the preview sound automatically after it finishes
+                clearTimeout(playbackTimeoutId);
+                playbackTimeoutId = setTimeout(() => {
+                    stopCurrentSound();
+                    if (!isPlaying) transportStatusEl.innerText = 'IDLE';
+                }, (editorParams.time * 1000) + 100);
+            }
+        }
+
+        document.getElementById('btn-play').addEventListener('click', startPlayback);
+        document.getElementById('btn-stop').addEventListener('click', stopPlayback);
+        document.getElementById('btn-reset').addEventListener('click', resetPlayback);
+        document.getElementById('btn-next').addEventListener('click', playNextManually);
+        document.getElementById('btn-clear').addEventListener('click', () => {
+            tracks = [{ id: 'track-0', items: [] }];
+            activeTrackIndex = 0;
+            stopPlayback();
+            selectPreset(PRESETS[0]);
+        });
+
+        // Global Keybinds
+        window.addEventListener('keydown', (e) => {
+            // Guard: don't trigger if user is typing in input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            // Start audio ctx on any key if needed
+            initAudio();
+
+            const key = e.key.toLowerCase();
+
+            // Bulk Delete Trigger
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                if (!deleteTimeoutId && selectedQueueIds.length > 0) {
+                    // Visual feedback for deletion
+                    selectedQueueIds.forEach(id => {
+                        const el = document.getElementById(`qitem-${id}`);
+                        if(el) {
+                            el.style.transition = 'transform 1s linear, filter 1s linear';
+                            el.style.transform = 'scale(0.9)';
+                            el.style.filter = 'brightness(0.2) grayscale(1)';
+                        }
+                    });
+
+                    deleteTimeoutId = setTimeout(() => {
+                        removeSelectedFromQueue();
+                        deleteTimeoutId = null;
+                        transportStatusEl.innerText = 'ITEMS DELETED';
+                    }, 1000);
+                }
+            }
+
+            // Copy
+            if ((e.ctrlKey || e.metaKey) && key === 'c') {
+                if (selectedQueueIds.length > 0) {
+                    clipboardQueue = [];
+                    tracks.forEach(t => {
+                         t.items.forEach(q => {
+                             if (selectedQueueIds.includes(q.id)) {
+                                 clipboardQueue.push(JSON.parse(JSON.stringify(q)));
+                             }
+                         });
+                    });
+                    transportStatusEl.innerText = `COPIED ${clipboardQueue.length} ITEMS`;
+                }
+                return;
+            }
+
+            // Paste
+            if ((e.ctrlKey || e.metaKey) && key === 'v') {
+                if (clipboardQueue.length > 0) {
+                    const newItems = clipboardQueue.map(q => {
+                        const copy = JSON.parse(JSON.stringify(q));
+                        copy.id = generateId(); 
+                        return copy;
+                    });
+                    
+                    let insertIndex = tracks[activeTrackIndex].items.length;
+                    if (selectedQueueIds.length > 0) {
+                        let maxIdx = -1;
+                        tracks[activeTrackIndex].items.forEach((q, idx) => {
+                            if (selectedQueueIds.includes(q.id)) maxIdx = Math.max(maxIdx, idx);
+                        });
+                        if (maxIdx !== -1) insertIndex = maxIdx + 1;
+                    }
+                    
+                    tracks[activeTrackIndex].items.splice(insertIndex, 0, ...newItems);
+                    
+                    selectedQueueIds = newItems.map(q => q.id);
+                    editorSource = 'queue';
+                    
+                    updateInspectorFromSelection();
+                    
+                    transportStatusEl.innerText = `PASTED ${newItems.length} ITEMS`;
+                    
+                    setTimeout(() => {
+                        const lastPasted = document.getElementById(`qitem-${selectedQueueIds[selectedQueueIds.length-1]}`);
+                        if(lastPasted) lastPasted.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }, 50);
+                }
+                return;
+            }
+            
+            if (document.activeElement.tagName === 'INPUT') return; // Don't navigate while typing
+            
+            // W/S keys for up/down track moving
+            if (key === 'w' || key === 's') {
+                 if (selectedQueueIds.length > 0) {
+                     const dir = key === 'w' ? -1 : 1;
+                     
+                     // 1. Check if we need to add a track at boundaries
+                     let needsUnshift = false;
+                     let needsPush = false;
+                     selectedQueueIds.forEach(id => {
+                         const loc = findItemLocation(id);
+                         if (loc) {
+                             if (loc.trackIndex + dir < 0) needsUnshift = true;
+                             if (loc.trackIndex + dir >= tracks.length) needsPush = true;
+                         }
+                     });
+                     
+                     if (needsUnshift) tracks.unshift({ id: `track-${generateId()}`, items: [] });
+                     if (needsPush) tracks.push({ id: `track-${generateId()}`, items: [] });
+                     
+                     // 2. Query fresh locations to move items without overlaps
+                     const toMove = selectedQueueIds.map(id => findItemLocation(id)).filter(l => l);
+                     toMove.sort((a,b) => dir === 1 ? b.trackIndex - a.trackIndex : a.trackIndex - b.trackIndex);
+                     
+                     toMove.forEach(loc => {
+                         const targetIdx = loc.trackIndex + dir;
+                         let targetItemIdx = loc.itemIndex;
+                         if (targetItemIdx > tracks[targetIdx].items.length) {
+                             targetItemIdx = tracks[targetIdx].items.length;
+                         }
+                         moveItemTo(loc.item.id, targetIdx, targetItemIdx);
+                     });
+                     
+                     // 3. Keep active track highlighted and auto-scroll
+                     const firstLoc = findItemLocation(selectedQueueIds[0]);
+                     if (firstLoc) activeTrackIndex = firstLoc.trackIndex;
+                     
+                     renderQueue();
+                     setTimeout(() => {
+                         const el = document.getElementById(`qitem-${selectedQueueIds[0]}`);
+                         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                     }, 50);
+                 }
+                 return; // Handled W/S logic fully
+            }
+
+            // Left/Right arrow keys for adjacent block selection
+            if (selectedQueueIds.length === 1) {
+                const loc = findItemLocation(selectedQueueIds[0]);
+                if (loc) {
+                    if (e.key === 'ArrowLeft') {
+                        if (loc.itemIndex > 0) {
+                            selectQueueItem(tracks[loc.trackIndex].items[loc.itemIndex - 1].id, e);
+                        }
+                    } else if (e.key === 'ArrowRight') {
+                        if (loc.itemIndex < tracks[loc.trackIndex].items.length - 1) {
+                            selectQueueItem(tracks[loc.trackIndex].items[loc.itemIndex + 1].id, e);
+                        }
+                    }
+                }
+            }
+
+            if (key >= '1' && key <= '9') {
+                const idx = parseInt(key) - 1;
+                if (PRESETS[idx]) selectPreset(PRESETS[idx]);
+            } else if (key === 'a') {
+                addToQueue('motor');
+            } else if (key === 'l') {
+                addToQueue('loop');
+            } else if (key === 'd') {
+                playNextManually();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                previewCurrent();
+            } else if (key === ' ') {
+                e.preventDefault(); // prevent scroll
+                if (isPlaying) stopPlayback();
+                else startPlayback();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                if (deleteTimeoutId) {
+                    clearTimeout(deleteTimeoutId);
+                    deleteTimeoutId = null;
+                    // Revert visual feedback if key released early
+                    selectedQueueIds.forEach(id => {
+                        const el = document.getElementById(`qitem-${id}`);
+                        if(el) {
+                            el.style.transition = 'all 0.2s ease';
+                            el.style.transform = 'scale(1)';
+                            el.style.filter = 'none';
+                        }
+                    });
+                }
+            }
+        });
+
+        // Initialize App
+        function initApp() {
+            renderCatalogue();
+            selectPreset(PRESETS[0]);
+            renderQueue();
+        }
+
+        // Kickoff
+        initApp();
+
+    </script>
+</body>
+</html>
