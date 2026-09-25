@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T1: Propuesta de obra — Lucas Nervi — Orquesta de Laptops UC</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --tx:#dfe5ec; --dim:#8b97a6;
+    --acc:#8f9ef0; --acc2:#e8b25a; --ok:#7fc47f;
+    --mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --serif: Georgia, "Times New Roman", serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.6 var(--serif)}
+  header{position:sticky;top:0;z-index:5;background:rgba(11,13,16,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:14px 24px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  header .t{font:600 15px var(--mono);letter-spacing:.08em}
+  header .t small{color:var(--dim);font-weight:400;margin-left:8px}
+  nav{display:flex;gap:14px;flex-wrap:wrap;font:12px var(--mono)}
+  nav a{color:var(--dim);text-decoration:none;border-bottom:1px solid transparent}
+  nav a:hover{color:var(--acc);border-color:var(--acc)}
+  main{max-width:840px;margin:0 auto;padding:8px 24px 90px}
+  h1{font-family:var(--mono);font-size:26px;letter-spacing:.04em;margin:38px 0 6px}
+  h1 small{display:block;font-family:var(--serif);font-size:15px;color:var(--dim);margin-top:6px;font-weight:400}
+  h2{font-family:var(--mono);font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);
+    margin:46px 0 4px;padding-top:10px;border-top:1px solid var(--line)}
+  h3{font-size:17px;margin:26px 0 6px;color:var(--tx)}
+  p{margin:10px 0}
+  .dim{color:var(--dim)}
+  .card{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:18px 20px;margin:14px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:640px){.grid2{grid-template-columns:1fr}}
+  a{color:var(--acc)}
+  code,.mono{font-family:var(--mono);font-size:13px;background:#171c22;padding:1px 5px;border-radius:3px}
+  ul{padding-left:22px}
+  li{margin:5px 0}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+  td,th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+  .fuente{font-size:12.5px;color:var(--dim)}
+  .badge{display:inline-block;font:11px var(--mono);color:var(--bg);background:var(--acc2);
+    padding:2px 8px;border-radius:20px;font-weight:700;letter-spacing:.04em}
+  .btn{display:inline-block;font:12.5px var(--mono);color:var(--bg);background:var(--acc);
+    padding:8px 14px;border-radius:6px;text-decoration:none;font-weight:700;margin:4px 8px 4px 0}
+  .btn.alt{background:transparent;color:var(--acc);border:1px solid var(--acc)}
+  audio{width:100%;margin:10px 0}
+  .declara{border-left:3px solid var(--acc2);padding-left:16px}
+  footer{max-width:840px;margin:60px auto 40px;padding:0 24px;color:var(--dim);font-size:12px;font-family:var(--mono)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="t">LUCAS NERVI <small>· Orquesta de Laptops UC · IEE2003</small></div>
+  <nav>
+    <a href="#p1">Parte 1 · Referentes</a>
+    <a href="#p2">Parte 2 · Propuesta</a>
+    <a href="#p3">Parte 3 · Material sonoro</a>
+    <a href="#ia">Declaración de IA</a>
+    <a href="../index.html">← portafolio</a>
+  </nav>
+</header>
+
+<main>
+
+<h1>T1: Propuesta de obra <small><i>TALEA</i> — serie diatónica y células rítmicas para Orquesta de Laptops UC</small></h1>
+<p class="dim">Lucas Nervi · IEE2003 Orquesta de Laptops UC · entrega 25 de septiembre de 2026</p>
+
+<p>Esta sección reúne las tres partes pedidas en el enunciado de la T1: el análisis de referentes,
+la propuesta de obra completa y el material sonoro funcional. La documentación técnica detallada de
+la obra (sistema de altura, sistema rítmico, forma completa, coordinación) está en
+<a href="PARTITURA.md">PARTITURA.md</a>; esta página resume cada parte y enlaza a los archivos.</p>
+
+<h2 id="p1">Parte 1 — Contexto y referentes</h2>
+
+<div class="card">
+<h3>1. <i>In C</i> — Terry Riley (1964)</h3>
+<p><b>Qué hace.</b> Cualquier número de intérpretes toca, en orden, 53 patrones melódicos breves sobre
+la nota Do. Cada intérprete repite cada patrón las veces que quiera antes de avanzar al siguiente; no hay
+director ni partitura de conjunto que fije cuándo pasa qué. Un intérprete sostiene un pulso fijo en
+corcheas (descubierto en el ensayo original, no escrito de antemano) que da la única referencia de
+tempo compartida. El resultado es una textura que se espesa y adelgaza sola, sin que nadie controle el
+conjunto.</p>
+<p><b>Cómo está construida.</b> Notación de una página, 53 celdas numeradas; instrucciones de ejecución
+en vez de partitura fija (libertad de repetición, prohibición tácita de adelantarse demasiado);
+coordinación completamente humana, por escucha; el pulso es el único elemento que ancla el tiempo.
+El curso ya usa una realización web de esta pieza (<code>obras/in-c/</code> del sitio del curso), que
+digitaliza exactamente este mecanismo: selección de patrón, mantención con barra espaciadora, pulso
+independiente.</p>
+<p><b>Qué es aplicable.</b> El rol del <b>Pulso</b> en TALEA es una adopción directa de esta pieza —
+la única referencia de tempo compartida, sin red. También se adopta la regla de "nadie se adelanta
+demasiado", traducida de patrones a células rítmicas: nadie cambia de célula a mitad de un ciclo.
+Lo que <b>no</b> se adopta es el material compartido: en <i>In C</i> todos leen los mismos 53 patrones;
+en TALEA cada Voz tiene una fila individual y fija, porque el interés compositivo de esta propuesta está
+en la combinatoria serial (P/R/I/RI), no en la variedad de un catálogo común de patrones.</p>
+<p class="fuente">Fuentes: realización web del curso (<code>obras/in-c/index.html</code>, transcripción de
+patrones de teropa/in-c); Library of Congress, National Recording Registry, <i>"In C" — Terry Riley
+(1968)</i>, <a href="https://www.loc.gov/static/programs/national-recording-preservation-board/documents/In-C_Carl.pdf" target="_blank" rel="noopener">loc.gov</a>;
+Wikipedia, <a href="https://en.wikipedia.org/wiki/In_C" target="_blank" rel="noopener">"In C"</a>.</p>
+</div>
+
+<div class="card">
+<h3>2. Técnica isorrítmica — Olivier Messiaen, <i>Quatuor pour la fin du temps</i>, I. «Liturgie de cristal» (1941)</h3>
+<p><b>Qué hace.</b> Mientras clarinete y violín improvisan libremente encima, el violonchelo repite un
+ciclo de cinco alturas (Do, Mi, Re, Fa♯, Sib) contra un ciclo independiente de quince duraciones; el
+piano, por su parte, hace circular veintinueve acordes contra un ciclo de diecisiete duraciones. Como
+las longitudes no coinciden, la combinación exacta de altura y duración de cada ataque casi nunca se
+repite dentro de la pieza — hay que esperar el mínimo común múltiplo de los dos ciclos para que vuelva
+la combinación original. El efecto es una música sin acento métrico perceptible, "como para dar un
+vistazo a algo eterno".</p>
+<p><b>Cómo está construida.</b> Es la técnica medieval de <i>isorritmia</i> (color = ciclo de alturas,
+talea = ciclo de duraciones) retomada en el siglo XX: dos capas cíclicas de largo distinto, sin
+sincronización deliberada entre ellas, que Messiaen aplica tanto a una melodía (el chelo) como a una
+sucesión de acordes (el piano).</p>
+<p><b>Qué es aplicable.</b> Es el referente técnico central de TALEA: la relación fila (color, 7 notas)
+contra célula rítmica (talea, largo variable) de la Parte 2 es exactamente este mecanismo, aplicado a
+una melodía monofónica por estación en vez de a una sola línea de acompañamiento dentro de un cuarteto.
+Lo que no se adopta es la escala: Messiaen no modula la colección de alturas del color, mientras que en
+TALEA la colección diatónica activa sí cambia en el tiempo (gobernada por la estación Armonía) — una
+capa de variación que Messiaen no necesita porque su color ya es cromático libre.</p>
+<p class="fuente">Fuentes: Wikipedia, <a href="https://en.wikipedia.org/wiki/Quatuor_pour_la_fin_du_temps" target="_blank" rel="noopener">"Quatuor pour la fin du temps"</a>
+(sección sobre "Liturgie de cristal", talea de 15/17 duraciones, color de 5 notas/29 acordes).</p>
+</div>
+
+<div class="card">
+<h3>3. <i>Twilight</i> — Ge Wang, Stanford Laptop Orchestra (2013)</h3>
+<p><b>Qué hace.</b> Obra en dos movimientos ("The Dead City", "A Song of Longings") para SLOrk, inspirada
+en el cuento de ciencia ficción homónimo de John W. Campbell (1934): una meditación sobre una posible
+extinción lenta de la humanidad por el reemplazo gradual y pacífico de la tecnología, más que por una
+catástrofe. Estrenada en el Bing Concert Hall de Stanford, primavera de 2013.</p>
+<p><b>Cómo está construida.</b> Escrita en ChucK (el lenguaje que el propio Ge Wang diseñó) para el
+ensamble de laptops de Stanford — más de veinte estaciones con parlantes multicanal propios, en la
+misma tradición que dio origen al modelo que usa este curso. El sitio de SLOrk publica partitura en PDF
+y el código ChucK completo. No fue posible verificar en las fuentes consultadas el detalle de si usa
+sincronización por red entre estaciones o coordinación humana; ese dato queda pendiente si se retoma
+esta obra en clase.</p>
+<p><b>Qué es aplicable.</b> Cumple el requisito de referente externo al curso y de obra escrita
+específicamente para un ensamble de laptops en red — validación de que el formato "estación individual
+en ChucK/lenguaje propio, parlante propio, partitura + código publicados" es exactamente el modelo de
+entrega que pide esta tarea (código, render, documentación). No aporta técnica compositiva directa a
+TALEA — su interés aquí es de precedente de formato y de ensamble, no de proceso interno.</p>
+<p class="fuente">Fuentes: Stanford Laptop Orchestra, <a href="https://slork.stanford.edu/works/twilight/" target="_blank" rel="noopener">"Twilight (2013)"</a>;
+Synthtopia, <a href="https://www.synthtopia.com/content/2014/07/13/the-stanford-laptop-orchestra-twilight/" target="_blank" rel="noopener">"The Stanford Laptop Orchestra – Twilight"</a>.</p>
+</div>
+
+<h2 id="p2">Parte 2 — Propuesta de obra</h2>
+
+<h3>Título provisorio e idea</h3>
+<p><b>TALEA.</b> Cada estación Voz recibe una fila diatónica fija de siete grados (el <i>color</i>),
+generada por un único intervalo, análoga a una fila dodecafónica de intervalo constante. En vivo decide
+solo dos cosas: qué lectura serial usar (P/R/I/RI) y qué célula rítmica aditiva (<i>talea</i>) combinar
+con su fila. Altura y ritmo son procesos independientes que se combinan por isorritmia (Parte 1,
+referente 2); la colección diatónica activa —qué siete notas concretas representan los grados 1–7— la
+gobierna en tiempo real una estación aparte, <b>Armonía</b>. El arco formal es un proceso de
+convergencia rítmica: las células empiezan largas, se acortan al medio y todas las voces terminan
+compartiendo la misma célula (4-3-4, 11 corcheas) — aunque sigan leyendo alturas distintas.</p>
+
+<h3>Estructura formal</h3>
+<table>
+<tr><th>sección</th><th>tiempo</th><th>qué ocurre</th></tr>
+<tr><td>A — Apertura</td><td>0:00–2:30</td><td>entradas escalonadas, talea larga, colección 0</td></tr>
+<tr><td>B — Nudo</td><td>2:30–5:00</td><td>colección sube a +1, talea corta, lecturas alternan más</td></tr>
+<tr><td>C — Convergencia</td><td>5:00–6:30</td><td>todas las voces convergen a la célula 4-3-4</td></tr>
+<tr><td>Coda — Evaporación</td><td>6:30–7:00</td><td>cada voz ancla su ciclo y se apaga a su ritmo</td></tr>
+</table>
+<p class="dim">Detalle completo en <a href="PARTITURA.md">PARTITURA.md §6</a>.</p>
+
+<h3>Estrategia de coordinación</h3>
+<p>Sin red: Pulso da el tempo compartido (como en <i>In C</i>); los cambios de sección los marca el
+director (de palabra, seña o proyectando <a href="director.html">director.html</a>); los cambios de
+colección se reconocen de oído, escuchando a Armonía. Con red (opcional, no implementada en esta
+entrega): dos mensajes informativos sobre el protocolo <code>/oluc</code> —
+<code>/oluc/coleccion &lt;k&gt;</code> y <code>/oluc/seccion &lt;nombre&gt;</code> — que solo
+auto-completarían lo que ya se puede hacer de oído. Si se pierden, no cambia nada. Detalle completo,
+incluida la justificación de por qué no se implementó la red, en <a href="PARTITURA.md#7-estrategia-de-coordinación">PARTITURA.md §7</a>.</p>
+
+<h3>Roles por estación</h3>
+<p>Con 7 estaciones: 1 Pulso + 1 Armonía + 5 Voces (filas generadoras k=1..5). Con hasta 12: se agregan
+Voz 6 (k=6) y Voces 7–10 (reutilizan k=1..4 una octava abajo, con otro timbre). Ninguna estación
+reproduce un archivo fijo: todas deciden lectura, célula y/o colección en vivo. Detalle en
+<a href="PARTITURA.md#4-roles-por-estación">PARTITURA.md §4</a>.</p>
+
+<h3>Notación</h3>
+<p>Sin partitura convencional: cada estación recibe una tarjeta con su fila fija y el mapa de la forma
+(ejemplo completo en <a href="PARTITURA.md#5-notación--instrucciones-de-ejecución">PARTITURA.md §5</a>).
+La aplicación <a href="estacion.html">estacion.html</a> funciona como partitura en vivo: muestra la
+fila, la lectura activa y el índice del ciclo isorrítmico en curso.</p>
+
+<h3>Sonido en la sala</h3>
+<p>Estaciones en semicírculo con parlante propio (en fabricación), Pulso y Armonía al centro, Voces
+dispersas siguiendo el orden de sus filas generadoras — especulativo, sujeto al modelo hemisférico final
+de los parlantes. Detalle en <a href="PARTITURA.md#8-sonido-en-la-sala">PARTITURA.md §8</a>.</p>
+
+<h3>Riesgos</h3>
+<ul>
+<li>Perder la colección de oído — mitigado con cambios solo en límites de sección, sostenidos varios segundos.</li>
+<li>Desalinear el índice del ciclo isorrítmico — mitigado con el indicador siempre visible en pantalla.</li>
+<li>Que la Convergencia (Sección C) no caiga junta la primera vez — versión reducida: si falla, se
+extiende la Sección B y se salta directo a la Coda; la obra no depende de que ese unísono ocurra.</li>
+</ul>
+<p class="dim">Detalle completo en <a href="PARTITURA.md#9-riesgos">PARTITURA.md §9</a>.</p>
+
+<h2 id="p3">Parte 3 — Material sonoro</h2>
+
+<div class="card">
+<p><span class="badge">FUNCIONAL</span> Render de 60 segundos (dentro del rango 30–90s pedido), producido
+por el motor isorrítmico real de la obra: Armonía sostenida (colección 0 → colección +1 a los 28s),
+Pulso audible, y cuatro Voces (filas k=1,2,3,4, en las cuatro lecturas P/R/I/RI respectivamente) que
+entran escalonadas, pasan de célula larga a célula corta a los 28s, y convergen a la célula 4-3-4 en
+los últimos 12 segundos, con una evaporación final de 6 segundos.</p>
+<audio controls src="render.wav"></audio>
+<a class="btn" href="estacion.html">Abrir estacion.html (tocable) ↗</a>
+<a class="btn alt" href="director.html">Abrir director.html ↗</a>
+<a class="btn alt" href="motor.js">Ver motor.js (código) ↗</a>
+<a class="btn alt" href="render.js">Ver render.js (código del render) ↗</a>
+<a class="btn alt" href="render.wav">Descargar render.wav ↗</a>
+</div>
+
+<h3>Documentación del material</h3>
+<table>
+<tr><td><b>Entorno y versión</b></td><td>JavaScript puro (ES2017+), sin dependencias ni CDN.
+<code>estacion.html</code> corre en Chrome/Firefox vía Web Audio API (<code>OscillatorNode</code> +
+<code>StereoPannerNode</code>), abre por <code>file://</code> o HTTP. <code>render.js</code> corre en
+Node.js ≥14 (probado en Node 24), sin paquetes externos — sintetiza directamente a un buffer de muestras
+y escribe un WAV PCM de 16 bits.</td></tr>
+<tr><td><b>Qué controla cada parámetro</b></td><td><code>rol</code> (Pulso/Armonía/Voz) cambia todo el
+panel de control; en Voz: <code>voz N</code> fija la fila generadora (k = ((N−1) mod 6)+1) y la octava;
+<code>lectura</code> (P/R/I/RI) cambia el orden de la fila; <code>célula</code> fija la talea activa
+(agrupadas por sección); <code>colección</code> fija qué escala diatónica interpreta los grados;
+<code>timbre</code> agrega 2° y 3er armónico; <code>tempo</code> fija la duración de la corchea
+compartida por todos los roles.</td></tr>
+<tr><td><b>Cómo reproducir el render</b></td><td><code>cd t1-propuesta-de-obra && node render.js</code>
+— determinista, sin aleatoriedad; siempre produce el mismo <code>render.wav</code> a partir de
+<code>motor.js</code>.</td></tr>
+<tr><td><b>Qué papel juega en la obra</b></td><td>Es una reducción de la Parte 2 completa (todas las
+secciones formales, en miniatura) tocada por cuatro Voces representativas de las diez posibles. El
+material real de la obra — filas, lecturas, células, colecciones — es exactamente este; lo único que
+falta para llegar a la versión de concierto es más estaciones y siete minutos en vez de uno.</td></tr>
+</table>
+
+<p>El resto del material conceptual de la obra (roles Pulso y Armonía completos para 7–12 estaciones,
+disposición espacial final) queda descrito con precisión en <a href="PARTITURA.md">PARTITURA.md</a> pero
+no implementado en código, como permite el enunciado para la parte no funcional.</p>
+
+<h2 id="ia">Declaración de uso de IA</h2>
+<div class="card declara">
+<p><b>Herramienta:</b> Claude Code (Anthropic, modelo Claude Sonnet 5), usado de forma interactiva por
+línea de comandos.</p>
+<p><b>Propósito del uso:</b></p>
+<ul>
+<li>Lectura del enunciado de la T1 y del historial del grupo de WhatsApp del curso para reunir contexto
+(repositorio oficial, obras vistas, protocolo <code>/oluc</code>).</li>
+<li>Clonado y exploración del repositorio <code>orquestalaptopsuc/orquestalaptopsuc.github.io</code> para
+entender la estructura de portafolios y el código de las obras de referencia del curso (<i>In C</i>,
+<i>Campo</i>, <i>Nube</i>).</li>
+<li>Búsqueda web y verificación de fuentes para los tres referentes de la Parte 1 (In C, la técnica
+isorrítmica de Messiaen, <i>Twilight</i> de Ge Wang/SLOrk).</li>
+<li>Implementación del sistema compositivo (<code>motor.js</code>, <code>estacion.html</code>,
+<code>director.html</code>, <code>render.js</code>) a partir de una especificación compositiva dada por
+el estudiante — ver prompts relevantes — incluyendo pruebas funcionales en navegador (Chrome, vía
+automatización) antes de la entrega.</li>
+<li>Redacción de <code>PARTITURA.md</code> y de esta página, a partir de las decisiones compositivas y
+técnicas tomadas junto con el estudiante en la conversación.</li>
+</ul>
+<p><b>Prompts relevantes (resumidos, en orden):</b></p>
+<ol>
+<li>"Quiero que hagas por completo la T1 [...] en la carpeta está el enunciado de la tarea 1 y todo el
+contenido del grupo de WhatsApp del ramo. Hay algunos repositorios mencionados [...] estúdialos."</li>
+<li>Confirmación de un concepto inicial propuesto por la IA (In C + zonas de Campo + anclaje de Nube),
+seguida de: "quiero ajustar algo primero."</li>
+<li>Especificación compositiva completa del estudiante: <i>"quiero que las melodías tocadas por cada
+laptop sean patrones pandiatónicos (serialismo aplicado a lo diatónico). La parte rítmica [...] estará
+dada por distintas modificaciones de la clave [ejemplos numéricos de células aditivas] [...] cuando
+empiece la obra las melodías serán más largas, [...] al final convergerán a 434 en 11 corcheas. Hay un
+laptop que hará las decisiones armónicas, el resto [...] podrá hacer variaciones en el timbre [...],
+hacer inversión de la serie, retrogradación y retrogradación de la inversión, pero tendrán las melodías
+fijas."</i> — esta idea (fila fija por serialismo diatónico, células tipo clave con arco largo→corto→
+convergencia, un rol armónico separado) es la base compositiva completa de TALEA y es enteramente del
+estudiante; el trabajo de la IA fue formalizarla en un sistema implementable (fórmulas de filas
+generadoras, operaciones P/R/I/RI, tabla de colecciones, mapeo isorrítmico) y construir el código y la
+documentación a partir de ella.</li>
+</ol>
+</div>
+
+</main>
+
+<footer>Orquesta de Laptops UC · IEE2003 · T1 — Lucas Nervi · <a href="../index.html">portafolio</a></footer>
+</body>
+</html>

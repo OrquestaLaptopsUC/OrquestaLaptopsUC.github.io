@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TALEA — director · Orquesta de Laptops UC</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --tx:#dfe5ec; --dim:#8b97a6;
+    --acc:#8f9ef0; --acc2:#e8b25a; --ok:#7fc47f; --warn:#e06a5a;
+    --mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--tx);font:13px/1.5 var(--mono);display:flex;flex-direction:column}
+  header{display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{font-size:15px;margin:0;letter-spacing:.25em}
+  .grow{flex:1}
+  button{background:#1b2128;color:var(--tx);border:1px solid var(--line);border-radius:4px;padding:6px 12px;font:12px var(--mono);cursor:pointer}
+  button:hover{border-color:var(--acc)}
+  #reloj{font-size:28px;font-weight:700;letter-spacing:.05em}
+  main{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px;min-height:0;overflow:auto}
+  .bloque{border:1px solid var(--line);border-radius:8px;padding:16px;background:#10141a}
+  .bloque h2{margin:0 0 10px;font-size:12px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
+  #cueGrande{font-size:52px;font-weight:800;letter-spacing:.04em;text-align:center;padding:30px 10px;color:var(--acc2)}
+  #cueSub{text-align:center;color:var(--dim);font-size:13px;margin-top:-6px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+  tr.activa td{color:var(--acc2);font-weight:700}
+  .cmd{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:12.5px}
+  kbd{background:#1e242b;border:1px solid var(--line);border-radius:3px;padding:1px 6px;font-size:11px}
+  #proximo{color:var(--dim);text-align:center;margin-top:4px}
+  .full{grid-column:1/-1}
+</style>
+</head>
+<body>
+<header>
+  <h1>TALEA <span style="color:var(--dim);font-weight:400;letter-spacing:.06em">— director</span></h1>
+  <div class="grow"></div>
+  <div id="reloj">00:00</div>
+  <button id="btnIniciar">Iniciar obra</button>
+  <button id="btnReset">Reiniciar</button>
+</header>
+<main>
+  <div class="bloque full">
+    <div id="cueGrande">ESPERANDO</div>
+    <div id="cueSub">presiona «Iniciar obra» para comenzar el reloj</div>
+    <div id="proximo"></div>
+  </div>
+
+  <div class="bloque">
+    <h2>Forma</h2>
+    <table id="tablaForma"></table>
+  </div>
+
+  <div class="bloque">
+    <h2>Comandos en vivo (teclado)</h2>
+    <div class="cmd">
+      <kbd>A</kbd><span>Sección A — talea larga, colección 0</span>
+      <kbd>B</kbd><span>Sección B — talea corta, sube colección a +1</span>
+      <kbd>C</kbd><span>Convergencia — todas a 4-3-4</span>
+      <kbd>E</kbd><span>Evaporación — anclar y apagar</span>
+      <kbd>0</kbd>…<kbd>4</kbd><span>anuncia colección −2..+2 (se anuncia también de palabra/gesto)</span>
+      <kbd>espacio</kbd><span>iniciar / pausar reloj</span>
+    </div>
+    <p style="color:var(--dim);font-size:11.5px;margin-top:14px">
+      No hay red: esta consola es un guion y, proyectada, un canal visual.
+      Cada estación decide con lo que anuncia esta pantalla o con lo que se
+      escucha en la voz de <b>Armonía</b>. Si nadie mira la proyección, la
+      obra igual funciona: los cambios de colección se oyen.
+    </p>
+  </div>
+
+  <div class="bloque full">
+    <h2>Señas manuales (sin proyector)</h2>
+    <div class="cmd">
+      <span>palma abierta, se acerca</span><span>entra la sección siguiente</span>
+      <span>mano horizontal, se cierra en puño</span><span>ir a convergencia (4-3-4)</span>
+      <span>mano descendiendo lentamente</span><span>evaporación / anclar y apagar</span>
+      <span>dedos levantados (1-4)</span><span>sube o baja la colección un paso</span>
+    </div>
+  </div>
+</main>
+<script>
+const $=(id)=>document.getElementById(id);
+const reloj=$('reloj'), cueGrande=$('cueGrande'), cueSub=$('cueSub'), proximo=$('proximo');
+const tablaForma=$('tablaForma');
+
+const FORMA=[
+  {ini:0,   fin:150, nombre:'A — Apertura',      cue:'SECCIÓN A',      sub:'talea larga (16 · 14 · 10) · colección 0 · entradas escalonadas'},
+  {ini:150, fin:300, nombre:'B — Nudo',          cue:'SECCIÓN B',      sub:'talea corta (8 · 5 · 7) · colección sube a +1'},
+  {ini:300, fin:390, nombre:'C — Convergencia',  cue:'CONVERGENCIA',   sub:'todas las voces a 4-3-4 (11 corcheas)'},
+  {ini:390, fin:420, nombre:'Coda — Evaporación',cue:'EVAPORACIÓN',    sub:'anclar el último ciclo y apagar de a poco'},
+];
+
+function fmt(s){
+  s=Math.max(0,Math.floor(s));
+  const m=String(Math.floor(s/60)).padStart(2,'0');
+  const ss=String(s%60).padStart(2,'0');
+  return m+':'+ss;
+}
+
+function pintaTabla(activaIdx){
+  tablaForma.innerHTML = '<tr><th>tiempo</th><th>sección</th></tr>' + FORMA.map((f,i)=>
+    `<tr class="${i===activaIdx?'activa':''}"><td>${fmt(f.ini)}–${fmt(f.fin)}</td><td>${f.nombre}</td></tr>`
+  ).join('');
+}
+pintaTabla(-1);
+
+let t0=null, pausadoEn=0, corriendo=false, manual=false;
+
+function estadoPorTiempo(t){
+  for(let i=0;i<FORMA.length;i++) if(t>=FORMA[i].ini && t<FORMA[i].fin) return i;
+  return t<0 ? -1 : FORMA.length-1;
+}
+
+function tick(){
+  if(!corriendo) return;
+  const t = (performance.now()-t0)/1000 + pausadoEn;
+  reloj.textContent = fmt(t);
+  if(!manual){
+    const idx = estadoPorTiempo(t);
+    if(idx>=0){
+      cueGrande.textContent = FORMA[idx].cue;
+      cueSub.textContent = FORMA[idx].sub;
+      pintaTabla(idx);
+      const f=FORMA[idx];
+      proximo.textContent = idx<FORMA.length-1 ? ('próxima sección en '+fmt(f.fin-t)) : 'última sección';
+    } else {
+      cueGrande.textContent='—'; cueSub.textContent=''; pintaTabla(-1);
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+$('btnIniciar').onclick=()=>{
+  if(!corriendo){ corriendo=true; manual=false; t0=performance.now(); requestAnimationFrame(tick); }
+};
+$('btnReset').onclick=()=>{
+  corriendo=false; pausadoEn=0; manual=false;
+  reloj.textContent='00:00'; cueGrande.textContent='ESPERANDO'; cueSub.textContent='presiona «Iniciar obra» para comenzar el reloj';
+  proximo.textContent=''; pintaTabla(-1);
+};
+
+const CUES_MANUALES={
+  'a':{txt:'SECCIÓN A', sub:'talea larga · colección 0'},
+  'b':{txt:'SECCIÓN B', sub:'talea corta · colección +1'},
+  'c':{txt:'CONVERGENCIA', sub:'todas a 4-3-4'},
+  'e':{txt:'EVAPORACIÓN', sub:'anclar y apagar'},
+};
+const COLECCIONES={'0':'−2','1':'−1','2':'0 (natural)','3':'+1','4':'+2'};
+
+window.addEventListener('keydown',(e)=>{
+  const k=e.key.toLowerCase();
+  if(k===' '){ e.preventDefault();
+    if(corriendo){ pausadoEn += (performance.now()-t0)/1000; corriendo=false; }
+    else { corriendo=true; t0=performance.now(); requestAnimationFrame(tick); }
+    return;
+  }
+  if(CUES_MANUALES[k]){
+    manual=true;
+    cueGrande.textContent=CUES_MANUALES[k].txt;
+    cueSub.textContent=CUES_MANUALES[k].sub;
+    proximo.textContent='cue manual — el reloj sigue corriendo de fondo';
+  }
+  if(COLECCIONES[k]!==undefined){
+    manual=true;
+    cueGrande.textContent='COLECCIÓN '+COLECCIONES[k];
+    cueSub.textContent='anúnciala también de palabra o con los dedos';
+  }
+});
+</script>
+</body>
+</html>

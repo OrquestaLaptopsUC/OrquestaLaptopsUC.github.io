@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TALEA — estación · Orquesta de Laptops UC</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --tx:#dfe5ec; --dim:#8b97a6;
+    --acc:#8f9ef0; --acc2:#e8b25a; --ok:#7fc47f; --warn:#e06a5a;
+    --mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--tx);font:13px/1.45 var(--mono);
+       display:flex;flex-direction:column;overflow:hidden}
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:9px 14px;
+    border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{font-size:15px;margin:0;letter-spacing:.25em;font-weight:600}
+  header h1 small{letter-spacing:.06em;color:var(--dim);font-weight:400;margin-left:10px;font-size:11px}
+  .grow{flex:1}
+  .ctl{display:flex;align-items:center;gap:6px}
+  label{color:var(--dim);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase}
+  select,button,input{background:#1b2128;color:var(--tx);border:1px solid var(--line);
+    border-radius:4px;padding:4px 8px;font:12px var(--mono)}
+  button{cursor:pointer}
+  button:hover{border-color:var(--acc)}
+  button.on{background:var(--acc2);color:#1a1204;border-color:var(--acc2);font-weight:700}
+  input[type=range]{width:110px;accent-color:var(--acc)}
+  main{flex:1;display:grid;grid-template-columns:220px 1fr;min-height:0}
+  #roles{border-right:1px solid var(--line);background:var(--panel);padding:14px 12px;display:flex;flex-direction:column;gap:8px}
+  #roles button{width:100%;text-align:left;padding:10px}
+  #stage{padding:16px 22px;overflow:auto}
+  .bloque{border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px;background:#10141a}
+  .bloque h2{margin:0 0 10px;font-size:12px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
+  .fila-botones{display:flex;gap:8px;flex-wrap:wrap}
+  .fila-botones button{min-width:64px}
+  .celula{font-size:12px}
+  .celula .n{color:var(--acc2)}
+  #estado{white-space:pre-wrap;font-size:12px;color:var(--tx);line-height:1.7}
+  #estado b{color:var(--acc)}
+  .led{width:11px;height:11px;border-radius:50%;background:#2a323c;display:inline-block;transition:background .05s;margin-right:6px}
+  .led.on{background:var(--acc2);box-shadow:0 0 10px var(--acc2)}
+  #splash{position:fixed;inset:0;background:rgba(8,10,12,.97);display:flex;align-items:center;
+    justify-content:center;z-index:9;padding:20px}
+  #splash .box{max-width:680px;padding:26px 30px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+  #splash h2{margin:0 0 4px;font-size:22px;letter-spacing:.25em}
+  #splash p{color:var(--dim);font-size:12.5px}
+  #splash b{color:var(--tx)}
+  .hidden{display:none !important}
+  footer{padding:7px 14px;border-top:1px solid var(--line);background:var(--panel);
+    color:var(--dim);font-size:11px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+  kbd{background:#1e242b;border:1px solid var(--line);border-radius:3px;padding:1px 5px;font-size:10.5px;color:var(--tx)}
+</style>
+</head>
+<body>
+
+<div id="splash"><div class="box">
+  <h2>T A L E A</h2>
+  <p>Propuesta para Orquesta de Laptops UC · T1 · Lucas Nervi<br>
+  variación de <i>In C</i> con serie diatónica (color) y células rítmicas (talea)</p>
+  <p style="margin-top:14px">Elige tu <b>rol</b> a la izquierda: <b>Pulso</b>, <b>Armonía</b> o <b>Voz</b>.
+  Cada rol suena solo; ajusta sus parámetros en vivo y presiona <b>Iniciar</b>.
+  El motor genera las notas: tu decides <b>qué</b> leer y <b>cuándo</b> cambiarlo.</p>
+  <div style="margin-top:18px;display:flex;gap:12px;align-items:center">
+    <button id="go" style="background:var(--acc);color:#0a0d1c;border-color:var(--acc);font-weight:700;padding:8px 18px">Activar audio</button>
+    <span style="color:var(--dim);font-size:11.5px">Chrome o Firefox. Usa audífonos o tu parlante.</span>
+  </div>
+</div></div>
+
+<header>
+  <h1>TALEA <small>OLUC · T1 · Lucas Nervi</small></h1>
+  <div class="ctl"><label>tempo (negra)</label>
+    <input type="range" id="bpm" min="60" max="160" step="1" value="96">
+    <span id="bpmv" style="width:60px;display:inline-block">96 <span style="color:var(--dim)">bpm</span></span></div>
+  <div class="ctl"><label>vol</label><input type="range" id="vol" min="0" max="100" value="70"></div>
+  <div class="grow"></div>
+  <button id="btnRun" style="padding:8px 18px">Iniciar <kbd>espacio</kbd></button>
+</header>
+
+<main>
+  <div id="roles">
+    <button id="rolPulso" data-rol="pulso">Pulso</button>
+    <button id="rolArmonia" data-rol="armonia">Armonía</button>
+    <button id="rolVoz" data-rol="voz" class="on">Voz</button>
+    <div style="margin-top:14px;color:var(--dim);font-size:11px;line-height:1.6">
+      Regla sin red: la <b>Armonía</b> se escucha (o la anuncia el director);
+      ajusta tu colección de oído. Nadie cambia de sección sin que termine
+      su célula rítmica en curso.
+    </div>
+  </div>
+  <div id="stage">
+
+    <div class="bloque" id="panelVoz">
+      <h2>Voz</h2>
+      <div class="fila-botones" style="margin-bottom:10px">
+        <div class="ctl"><label>voz</label>
+          <select id="vozN"></select></div>
+        <div class="ctl"><label>octava</label>
+          <select id="octava"><option>3</option><option selected>4</option><option>5</option></select></div>
+        <div class="ctl"><label>pan</label><input type="range" id="pan" min="-100" max="100" value="0"></div>
+        <div class="ctl"><label>timbre</label><input type="range" id="timbre" min="0" max="100" value="20"></div>
+      </div>
+      <div style="margin-bottom:10px">
+        <label>lectura de la fila (serie)</label>
+        <div class="fila-botones" id="lecturas">
+          <button data-lectura="P" class="on">P — prima</button>
+          <button data-lectura="R">R — retrogradación</button>
+          <button data-lectura="I">I — inversión</button>
+          <button data-lectura="RI">RI — retrogradación de la inversión</button>
+        </div>
+      </div>
+      <div style="margin-bottom:6px">
+        <label>célula rítmica (talea) — sección larga (comienzo)</label>
+        <div class="fila-botones" id="celdasLarga"></div>
+      </div>
+      <div style="margin-bottom:6px">
+        <label>célula rítmica — sección corta (medio)</label>
+        <div class="fila-botones" id="celdasCorta"></div>
+      </div>
+      <div>
+        <label>convergencia final — todas las voces</label>
+        <div class="fila-botones" id="celdasConv"></div>
+      </div>
+    </div>
+
+    <div class="bloque hidden" id="panelArmonia">
+      <h2>Armonía</h2>
+      <div class="fila-botones">
+        <div class="ctl"><label>colección</label>
+          <select id="coleccionArmonia"></select></div>
+      </div>
+      <p style="color:var(--dim);font-size:11.5px;margin-top:8px">Sostén el acorde pandiatónico (grados 1-3-5-7) de la colección activa.
+      Cambia de colección con calma; el resto de la orquesta se guía de oído por este cambio.</p>
+    </div>
+
+    <div class="bloque hidden" id="panelPulso">
+      <h2>Pulso</h2>
+      <div class="fila-botones">
+        <div class="ctl"><label>vol pulso</label><input type="range" id="volPulso" min="0" max="100" value="55"></div>
+      </div>
+      <p style="color:var(--dim);font-size:11.5px;margin-top:8px">Clic estable en cada corchea, todo el tiempo. Es la única referencia de tempo compartida (como en <i>In C</i>).</p>
+    </div>
+
+    <div class="bloque" id="panelColeccionVoz">
+      <h2>Colección activa (ajústala de oído)</h2>
+      <div class="fila-botones">
+        <select id="coleccionVoz"></select>
+      </div>
+    </div>
+
+    <div class="bloque">
+      <h2>Estado</h2>
+      <div id="estado"><span class="led" id="led"></span><span id="estadoTxt">detenido</span></div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <span><kbd>espacio</kbd> iniciar / detener</span>
+  <span><kbd>1</kbd>…<kbd>4</kbd> P / R / I / RI (rol Voz)</span>
+  <span><kbd>↑</kbd> <kbd>↓</kbd> colección</span>
+  <span class="grow"></span>
+  <span style="opacity:.65">motor: motor.js · mismo código usado en render.js</span>
+</footer>
+
+<script src="motor.js"></script>
+<script>
+const M = OLUC_TALEA;
+
+// ---------- referencias UI ----------
+const $ = (id)=>document.getElementById(id);
+const splash=$('splash'), go=$('go');
+const btnRun=$('btnRun'), led=$('led'), estadoTxt=$('estadoTxt');
+const bpmEl=$('bpm'), bpmv=$('bpmv'), volEl=$('vol');
+const rolBtns=[$('rolPulso'),$('rolArmonia'),$('rolVoz')];
+const paneles={pulso:$('panelPulso'), armonia:$('panelArmonia'), voz:$('panelVoz')};
+const panelColeccionVoz=$('panelColeccionVoz');
+const vozNSel=$('vozN'), octavaSel=$('octava'), panEl=$('pan'), timbreEl=$('timbre');
+const lecturaBtns=[...document.querySelectorAll('#lecturas button')];
+const coleccionArmoniaSel=$('coleccionArmonia'), coleccionVozSel=$('coleccionVoz');
+const volPulsoEl=$('volPulso');
+
+let rol='voz';
+let lectura='P';
+let celulaActiva=M.TALEAS.larga[0];
+
+// ---------- llena selects ----------
+for(let n=1;n<=10;n++){ const o=document.createElement('option'); o.value=n; o.textContent='Voz '+n; vozNSel.appendChild(o); }
+[-2,-1,0,1,2].forEach(k=>{
+  [coleccionArmoniaSel, coleccionVozSel].forEach(sel=>{
+    const o=document.createElement('option'); o.value=k;
+    o.textContent = k+' — '+M.NOMBRES_COLECCION[String(k)];
+    if(k===0) o.selected=true;
+    sel.appendChild(o);
+  });
+});
+
+function pintaCeldas(contId, lista, tag){
+  const cont=$(contId); cont.innerHTML='';
+  lista.forEach((cel,i)=>{
+    const b=document.createElement('button');
+    const dur=M.duracionTalea(cel);
+    b.innerHTML = cel.join('+') + ' <span class="n">('+dur+')</span>';
+    b.className = 'celula'+(i===0 && tag==='larga' ? ' on':'');
+    b.onclick=()=>{
+      [...cont.parentElement.querySelectorAll('.fila-botones button')].forEach(x=>{});
+      document.querySelectorAll('#celdasLarga button,#celdasCorta button,#celdasConv button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      celulaActiva = cel;
+    };
+    cont.appendChild(b);
+  });
+}
+pintaCeldas('celdasLarga', M.TALEAS.larga, 'larga');
+pintaCeldas('celdasCorta', M.TALEAS.corta, 'corta');
+pintaCeldas('celdasConv', M.TALEAS.convergencia, 'conv');
+
+lecturaBtns.forEach(b=>b.onclick=()=>{
+  lecturaBtns.forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  lectura=b.dataset.lectura;
+});
+
+rolBtns.forEach(b=>b.onclick=()=>{
+  rolBtns.forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  rol=b.dataset.rol;
+  Object.entries(paneles).forEach(([k,el])=>el.classList.toggle('hidden', k!==rol));
+  panelColeccionVoz.classList.toggle('hidden', rol==='armonia');
+});
+document.querySelectorAll('#roles [data-rol]').forEach(b=>{ if(b.dataset.rol==='voz') b.classList.add('on'); });
+
+bpmEl.oninput=()=>{ bpmv.firstChild.textContent=bpmEl.value+' '; };
+
+// ---------- audio ----------
+let ctx=null, master=null;
+let running=false;
+let timer=null;
+const LOOKAHEAD=0.1, INTERVAL=25;
+
+let stPulso={next:0};
+let stArmonia={next:0};
+let stVoz={next:0, ic:0, it:0, filaBase:null};
+
+function corchea(){ return 60/parseFloat(bpmEl.value)/2; }
+function volMaster(){ return parseFloat(volEl.value)/100; }
+function coleccionVoz(){ return parseInt(coleccionVozSel.value,10); }
+function coleccionArmonia(){ return parseInt(coleccionArmoniaSel.value,10); }
+
+function playNota(freq, startTime, dur, gain, pan, timbre){
+  const g=ctx.createGain();
+  const p=ctx.createStereoPanner(); p.pan.value=Math.max(-1,Math.min(1,pan));
+  g.connect(p); p.connect(master);
+  const atk=Math.min(0.012,dur*0.25), rel=Math.min(0.09,dur*0.4);
+  g.gain.setValueAtTime(0,startTime);
+  g.gain.linearRampToValueAtTime(gain,startTime+atk);
+  g.gain.setValueAtTime(gain,Math.max(startTime+atk,startTime+dur-rel));
+  g.gain.linearRampToValueAtTime(0,startTime+dur);
+  function addOsc(mult,amp){
+    const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=freq*mult;
+    const og=ctx.createGain(); og.gain.value=amp;
+    o.connect(og); og.connect(g);
+    o.start(startTime); o.stop(startTime+dur+0.03);
+  }
+  addOsc(1,1);
+  if(timbre>0){ addOsc(2,timbre*0.28); addOsc(3,timbre*0.12); }
+}
+
+function estadoVoz(){
+  const N=parseInt(vozNSel.value,10);
+  const k0=((N-1)%6)+1;
+  const octava=parseInt(octavaSel.value,10);
+  const timbre=parseFloat(timbreEl.value)/100;
+  const pan=parseFloat(panEl.value)/100;
+  return {N,k0,octava,timbre,pan};
+}
+
+function tick(){
+  const now=ctx.currentTime, horizon=now+LOOKAHEAD;
+  if(rol==='pulso'){
+    const g=(parseFloat(volPulsoEl.value)/100)*volMaster()*0.25;
+    while(stPulso.next<horizon){ playNota(1760,stPulso.next,0.02,g,0,0); stPulso.next+=corchea(); }
+  } else if(rol==='armonia'){
+    const g=0.16*volMaster();
+    while(stArmonia.next<horizon){
+      const k=coleccionArmonia();
+      [1,3,5,7].forEach((grado,i)=>{
+        const freq=M.gradoAFrecuencia(grado,k,3);
+        playNota(freq,stArmonia.next,0.62,g*(0.75+0.25*((i%2)?1:0.6)),0,0.15);
+      });
+      stArmonia.next+=0.6;
+    }
+  } else if(rol==='voz'){
+    const g=0.5*volMaster();
+    while(stVoz.next<horizon){
+      const {k0,octava,timbre,pan}=estadoVoz();
+      const base=M.filaGeneradora(k0);
+      const fila=M.leer(base,lectura);
+      const grado=fila[stVoz.ic % fila.length];
+      const durC=celulaActiva[stVoz.it % celulaActiva.length];
+      const dur=durC*corchea();
+      const k=coleccionVoz();
+      const freq=M.gradoAFrecuencia(grado,k,octava);
+      playNota(freq,stVoz.next,dur*0.92,g,pan,timbre);
+      stVoz.ic++; stVoz.it++;
+      stVoz.next+=dur;
+    }
+  }
+  pintaEstado();
+}
+
+function pintaEstado(){
+  const N=parseInt(vozNSel.value,10);
+  let txt='';
+  if(rol==='voz'){
+    txt = 'rol: Voz '+N+' · fila generadora k='+(((N-1)%6)+1)+' · lectura '+lectura+
+      '\ncélula activa: '+celulaActiva.join('+')+' ('+M.duracionTalea(celulaActiva)+' corcheas)'+
+      '\nciclo isorrítmico: color['+ (stVoz.ic%7) +'] × talea['+ (stVoz.it%celulaActiva.length) +']'+
+      '\ncolección: '+coleccionVoz()+' — '+M.NOMBRES_COLECCION[String(coleccionVoz())];
+  } else if(rol==='armonia'){
+    txt = 'rol: Armonía · colección: '+coleccionArmonia()+' — '+M.NOMBRES_COLECCION[String(coleccionArmonia())]+
+      '\nacorde pandiatónico: grados 1-3-5-7';
+  } else {
+    txt = 'rol: Pulso · negra='+bpmEl.value+' bpm · corchea='+corchea().toFixed(3)+'s';
+  }
+  estadoTxt.textContent = (running?'ejecutando — ':'detenido — ')+txt;
+}
+
+function iniciar(){
+  if(!ctx) return;
+  running=true;
+  btnRun.textContent='Detener espacio'; btnRun.classList.add('on'); led.classList.add('on');
+  const t0=ctx.currentTime+0.05;
+  stPulso.next=t0; stArmonia.next=t0; stVoz.next=t0; stVoz.ic=0; stVoz.it=0;
+  timer=setInterval(tick, INTERVAL);
+}
+function detener(){
+  running=false;
+  btnRun.textContent='Iniciar espacio'; btnRun.classList.remove('on'); led.classList.remove('on');
+  clearInterval(timer);
+  pintaEstado();
+}
+
+go.onclick=()=>{
+  ctx = ctx || new (window.AudioContext||window.webkitAudioContext)();
+  master = master || ctx.createGain();
+  master.connect(ctx.destination);
+  ctx.resume();
+  splash.classList.add('hidden');
+  pintaEstado();
+};
+
+btnRun.onclick=()=>{ running? detener(): iniciar(); };
+
+window.addEventListener('keydown', (e)=>{
+  if(e.code==='Space'){ e.preventDefault(); running?detener():iniciar(); }
+  if(rol==='voz' && ['1','2','3','4'].includes(e.key)){
+    const map={'1':'P','2':'R','3':'I','4':'RI'};
+    lectura=map[e.key];
+    lecturaBtns.forEach(b=>b.classList.toggle('on', b.dataset.lectura===lectura));
+  }
+  if(e.key==='ArrowUp' || e.key==='ArrowDown'){
+    const sel = rol==='armonia'?coleccionArmoniaSel:coleccionVozSel;
+    let idx=sel.selectedIndex + (e.key==='ArrowUp'?1:-1);
+    idx=Math.max(0,Math.min(sel.options.length-1,idx));
+    sel.selectedIndex=idx;
+  }
+});
+
+pintaEstado();
+</script>
+</body>
+</html>
