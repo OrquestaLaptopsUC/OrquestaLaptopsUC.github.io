@@ -344,6 +344,52 @@ function dibujaPentagrama(svg, notas, activoIdx){
   svg.innerHTML = html;
 }
 
+// pentagrama CON ritmo: cada evento trae su propia duración en corcheas
+// (2=negra, 3=negra con puntillo, 4=blanca — los únicos valores que usan las
+// talea de la obra) y el espaciado horizontal es proporcional a esa
+// duración, como en una partitura real. Así se puede verificar de un
+// vistazo que el ritmo de cada nota es el que dice la talea.
+function dibujaPentagramaRitmica(svg, eventos, activoIdx){
+  const W = svg.clientWidth || 600, H = 180;
+  const top = 46, sp = 11;
+  const bottom = top + 4*sp;
+  const labelY = 158;
+  let html = '';
+  for(let i=0;i<5;i++){
+    const y = top + i*sp;
+    html += `<line x1="34" y1="${y}" x2="${W-16}" y2="${y}" stroke="#3a4552" stroke-width="1.2"/>`;
+  }
+  html += `<text x="8" y="${top+3*sp}" font-size="30" fill="#8b97a6" font-family="serif">𝄞</text>`;
+  const totalDur = eventos.reduce((a,e)=>a+e.dur,0) || 1;
+  const usableW = W - 100;
+  let xCursor = 56;
+  eventos.forEach((ev,i)=>{
+    const anchoNota = Math.max(36, usableW * (ev.dur/totalDur));
+    const x = xCursor + anchoNota/2;
+    const pos = M.posDiatonica(ev.letra, ev.octava);
+    const y = bottom - pos*(sp/2);
+    if(pos < 0){ for(let p=-2;p>=pos;p-=2){ const ly=bottom-p*(sp/2); html+=`<line x1="${x-10}" y1="${ly}" x2="${x+10}" y2="${ly}" stroke="#4a5560" stroke-width="1.2"/>`; } }
+    if(pos > 8){ for(let p=10;p<=pos;p+=2){ const ly=bottom-p*(sp/2); html+=`<line x1="${x-10}" y1="${ly}" x2="${x+10}" y2="${ly}" stroke="#4a5560" stroke-width="1.2"/>`; } }
+    const activo = i===activoIdx;
+    const fill = activo? '#e8b25a':'#e6ecf4';
+    const r = activo? 7.2:5.6;
+    const hueca = ev.dur>=4; // blanca (media): cabeza hueca
+    if(ev.alteracion!==0){
+      html += `<text x="${x-19}" y="${y+5}" font-size="14" fill="${fill}">${simboloAlt(ev.alteracion)}</text>`;
+    }
+    html += hueca
+      ? `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*0.72}" fill="none" stroke="${fill}" stroke-width="2.2" ${activo?'style="filter:drop-shadow(0 0 6px #e8b25a)"':''}/>`
+      : `<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*0.72}" fill="${fill}" ${activo?'style="filter:drop-shadow(0 0 6px #e8b25a)"':''}/>`;
+    const stemX = x + r - 1;
+    html += `<line x1="${stemX}" y1="${y}" x2="${stemX}" y2="${y-28}" stroke="${fill}" stroke-width="1.6"/>`;
+    if(ev.dur===3){ html += `<circle cx="${x+r+6}" cy="${y}" r="2.2" fill="${fill}"/>`; } // puntillo = +50%
+    html += `<text x="${x-13}" y="${labelY}" font-size="10.5" fill="${activo?'#e8b25a':'#8b97a6'}">${nombreNota(ev.letra,ev.alteracion,ev.octava)}</text>`;
+    html += `<text x="${x-6}" y="${labelY+14}" font-size="9.5" fill="#5b6775">${ev.dur}♪</text>`;
+    xCursor += anchoNota;
+  });
+  svg.innerHTML = html;
+}
+
 function dibujaRitmo(svg, celula, activoIdx){
   const W = svg.clientWidth || 600, H = 64;
   const total = celula.reduce((a,b)=>a+b,0) || 1;
@@ -366,6 +412,7 @@ const LOOKAHEAD=0.1, INTERVAL=25;
 
 let stArmonia={next:0};
 let stVoz={next:0, ic:0, it:0};
+let historialVoz=[]; // últimos eventos tocados (altura+duración), para ver el ritmo real
 
 function corchea(){ return 60/parseFloat(bpmEl.value)/2; }
 function volMaster(){ return parseFloat(volEl.value)/100; }
@@ -418,8 +465,11 @@ function tick(){
       const grado=fila[stVoz.ic % fila.length];
       const durC=celulaActiva[stVoz.it % celulaActiva.length];
       const dur=durC*corchea();
-      const freq=M.gradoAFrecuencia(grado,alt,octava);
+      const {letra,alteracion}=M.gradoALetraYAlteracion(grado,alt);
+      const freq=M.notaAFrecuencia(letra,alteracion,octava);
       playNota(freq,stVoz.next,dur*0.92,g,pan,timbre);
+      historialVoz.push({letra,alteracion,octava,dur:durC});
+      if(historialVoz.length>6) historialVoz.shift();
       stVoz.ic++; stVoz.it++;
       stVoz.next+=dur;
     }
@@ -434,15 +484,28 @@ function pintaEstado(){
     const {k0,octava}=estadoVoz();
     const base=M.filaGeneradora(k0);
     const fila=M.leer(base,lectura);
-    const notas = fila.map(g=>{ const {letra,alteracion}=M.gradoALetraYAlteracion(g,alt); return {letra,alteracion,octava}; });
-    const activoIdx = stVoz.ic % fila.length;
-    dibujaPentagrama(pentagramaEl, notas, activoIdx);
+    let eventos, activoIdx;
+    if(historialVoz.length>0){
+      eventos = historialVoz;
+      activoIdx = eventos.length-1;
+    } else {
+      // vista previa (detenido): los próximos eventos tal como los generaría
+      // el motor isorrítmico con la fila/célula actuales
+      eventos = M.generarEventos(fila, celulaActiva, 6).map(ev=>{
+        const {letra,alteracion}=M.gradoALetraYAlteracion(ev.grado,alt);
+        return {letra,alteracion,octava,dur:ev.duracionCorcheas};
+      });
+      activoIdx = 0;
+    }
+    dibujaPentagramaRitmica(pentagramaEl, eventos, activoIdx);
     dibujaRitmo(ritmoEl, celulaActiva, stVoz.it % celulaActiva.length);
-    notaGrandeEl.textContent = nombreNota(notas[activoIdx].letra, notas[activoIdx].alteracion, notas[activoIdx].octava);
+    const evActivo = eventos[activoIdx];
+    notaGrandeEl.textContent = nombreNota(evActivo.letra, evActivo.alteracion, evActivo.octava);
     lecturaGrandeEl.textContent = lectura;
     txt = 'rol: Melodía '+N+' · fila generadora k='+k0+' · lectura '+lectura+
       '\ncélula activa: '+celulaActiva.join('+')+' ('+M.duracionTalea(celulaActiva)+' corcheas)'+
-      '\nciclo isorrítmico: color['+ (stVoz.ic%7) +'] × talea['+ (stVoz.it%celulaActiva.length) +']';
+      '\nciclo isorrítmico: color['+ (stVoz.ic%7) +'] × talea['+ (stVoz.it%celulaActiva.length) +']'+
+      (historialVoz.length? '' : '\n(vista previa — aún no inicia)');
   } else if(rol==='armonia'){
     const notas=M.masterChordSobreGrado(gradoArmonia,alt).map(nt=>({letra:nt.letra,alteracion:nt.alteracion,octava:3}));
     dibujaPentagrama(pentagramaArmoniaEl, notas, 'todas');
@@ -457,7 +520,7 @@ function iniciar(){
   running=true;
   btnRun.textContent='Detener espacio'; btnRun.classList.add('on');
   const t0=ctx.currentTime+0.05;
-  stArmonia.next=t0; stVoz.next=t0; stVoz.ic=0; stVoz.it=0;
+  stArmonia.next=t0; stVoz.next=t0; stVoz.ic=0; stVoz.it=0; historialVoz=[];
   timer=setInterval(tick, INTERVAL);
 }
 function detener(){
