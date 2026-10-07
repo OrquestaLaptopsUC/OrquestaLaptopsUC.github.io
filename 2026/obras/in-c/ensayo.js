@@ -354,7 +354,7 @@ function construirPortada() {
   }));
   $("cjEnsayar").onclick = () => empezar(+inp.value);
 
-  /* index.html#ensayo (el enlace "Ensayar" de obras.html): el ensayo pasa a ser
+  /* index.html#ensayo (el enlace "Ensayar" de obras/index.html): el ensayo pasa a ser
      el botón principal de la portada y espacio o Enter lo empiezan */
   if (location.hash === "#ensayo") {
     $("cjEnsayar").style.cssText = "background:#e8b25a;color:#1a1204;border-color:#e8b25a;font-weight:700;padding:8px 18px";
