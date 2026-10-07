@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Portafolios individuales de los integrantes de la Orquesta de Laptops UC, curso IEE2003, 2026." />
+  <title>Portafolios 2026 — Orquesta de Laptops UC</title>
+
+  <style>
+    :root{
+      --bg:#0b0f19; --card:#111827; --text:#e5e7eb; --muted:#9ca3af;
+      --accent:#60a5fa; --accent2:#34d399; --amber:#e8b25a;
+      --border:rgba(255,255,255,.08);
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+      --radius:16px; --max:1040px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;scroll-padding-top:72px}
+    html,body{margin:0;padding:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+      background:radial-gradient(1200px 800px at 20% 0%, rgba(96,165,250,.18), transparent 60%),
+                 radial-gradient(1000px 700px at 80% 10%, rgba(52,211,153,.14), transparent 60%),
+                 var(--bg);
+      color:var(--text); line-height:1.55}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.92em;
+      background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:5px;padding:1px 5px}
+
+    header{position:sticky; top:0; z-index:10;
+      background:rgba(11,15,25,.78); backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--border)}
+    .nav{max-width:var(--max); margin:0 auto; padding:10px 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap}
+    .brand{display:flex; align-items:center; gap:12px; color:var(--text)}
+    .brand:hover{text-decoration:none}
+    .ucmark{height:32px; width:auto; max-width:140px; display:block; border-radius:8px;
+      background:rgba(255,255,255,.04); border:1px solid var(--border); padding:4px; object-fit:contain}
+    .brandtext{display:flex; flex-direction:column; line-height:1.05}
+    .brandtext strong{font-size:15px; letter-spacing:.2px}
+    .brandtext span{font-size:12px; color:var(--muted); margin-top:2px}
+    .indice{display:flex; flex-wrap:wrap; gap:6px}
+    .indice a{font-size:12.5px; font-weight:600; letter-spacing:.04em; color:var(--text);
+      border:1px solid var(--border); border-radius:999px; padding:4px 11px; background:rgba(255,255,255,.03)}
+    .indice a:hover{border-color:var(--accent); text-decoration:none}
+
+    .wrap{max-width:var(--max); margin:0 auto; padding:24px 16px 60px}
+    .card{background:rgba(17,24,39,.72); border:1px solid var(--border);
+      border-radius:var(--radius); box-shadow:var(--shadow); padding:22px}
+    h1{margin:0 0 8px; font-size:30px; line-height:1.15}
+    h2{margin:0 0 6px; font-size:20px}
+    p{margin:0 0 12px}
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+    .badge{display:inline-block; font-size:12px; padding:5px 10px; border-radius:999px;
+      border:1px solid var(--border); background:rgba(255,255,255,.03); color:var(--muted); margin-bottom:10px}
+
+    .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:14px; margin-top:14px}
+    .alumno{display:flex; flex-direction:column}
+    .alumno .cab{display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap}
+    .alumno .obra{color:var(--muted); font-size:14px; margin:2px 0 14px}
+    .alumno .obra em{color:var(--text); font-style:normal; font-weight:600}
+    .tag{font-size:11px; font-weight:700; letter-spacing:.08em; padding:2px 8px; border-radius:999px;
+      border:1px solid var(--border); color:var(--muted); white-space:nowrap}
+    .tag.repo{color:var(--accent2); border-color:rgba(52,211,153,.4)}
+    .tag.web{color:var(--accent); border-color:rgba(96,165,250,.45)}
+    .tag.pend{color:var(--amber); border-color:rgba(232,178,90,.5)}
+    .tag.nuevo{color:var(--amber); border-color:rgba(232,178,90,.5)}
+    .acciones{display:flex; flex-wrap:wrap; gap:8px; margin-top:auto}
+    .entregas{list-style:none; margin:0 0 14px; padding:0; border-top:1px solid var(--border)}
+    .entregas li{display:flex; justify-content:space-between; gap:10px; padding:7px 0;
+      border-bottom:1px solid var(--border); font-size:14px}
+    .entregas li span{color:var(--muted); font-size:12.5px; white-space:nowrap}
+
+    .btn{display:inline-flex; align-items:center; justify-content:center; gap:6px;
+      padding:8px 13px; border-radius:12px; border:1px solid var(--border);
+      background:rgba(255,255,255,.04); color:var(--text); font-weight:600; font-size:14px}
+    .btn.primary{background:linear-gradient(135deg, rgba(96,165,250,.95), rgba(52,211,153,.85));
+      border:none; color:#061018}
+    .btn:hover{transform:translateY(-1px); transition:.15s ease; text-decoration:none}
+
+    ol.pasos{margin:0; padding-left:20px}
+    ol.pasos li{margin:0 0 6px}
+
+    footer{border-top:1px solid var(--border); margin-top:30px; padding-top:18px;
+      color:var(--muted); font-size:13px}
+    @media (max-width:700px){
+      h1{font-size:25px}
+      .grid{grid-template-columns:1fr}
+      .indice{flex-wrap:nowrap; overflow-x:auto; max-width:100%; scrollbar-width:none}
+      .indice a{flex:none}
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <nav class="nav">
+    <a class="brand" href="../../index.html">
+      <img class="ucmark" src="../../assets/logoUClaptop.png" onerror="this.remove()" alt="Logo Pontificia Universidad Católica de Chile" />
+      <div class="brandtext">
+        <strong>Orquesta de Laptops UC</strong>
+        <span>Portafolios · 2026</span>
+      </div>
+    </a>
+    <div class="indice" id="indice">
+      <a href="#Federico_Fodic">Federico Fodic</a>
+      <a href="#Felipe_Osorio">Felipe Osorio</a>
+      <a href="#Lucas_Nervi">Lucas Nervi</a>
+      <a href="#Lukas_Recart">Lukas Recart</a>
+      <a href="#Rocio_Navas_Nervi">Rocío Navas Nervi</a>
+    </div>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <section class="card">
+    <span class="badge">IEE2003 · Orquesta de Laptops UC · 2º semestre 2026</span>
+    <h1>Portafolios</h1>
+    <p class="muted" style="margin:0">Portafolio individual de cada integrante: propuestas de obra, instrumentos,
+      material sonoro y documentación. <span class="tag repo">EN EL REPO</span> se abre también sin internet desde la copia de cada laptop;
+      <span class="tag web">SITIO PROPIO</span> muestra el sitio personal del estudiante y necesita internet.</p>
+  </section>
+
+  <div class="grid" id="lista">
+
+    <!-- ============ Para agregar a alguien: copiar un <article> y cambiar id, nombre y enlaces ============ -->
+
+    <article class="card alumno" id="Federico_Fodic" data-carpeta="Federico_Fodic">
+      <div class="cab"><h2>Federico Fodic</h2><span class="tag repo">EN EL REPO</span></div>
+      <p class="obra">T1 · <em>PULSO 128</em></p>
+      <ul class="entregas">
+        <li><a href="Federico_Fodic/PULSO128_entrega/pulso128.html">Instrumento PULSO 128</a><span>material sonoro</span></li>
+        <li><a href="Federico_Fodic/PULSO128_entrega/pulso128_demo_45s.wav">Demo de 45 s</a><span>wav</span></li>
+        <li><a href="Federico_Fodic/PULSO128_entrega/T1_Pulso_128.md">Texto de la propuesta</a><span>md</span></li>
+      </ul>
+      <div class="acciones"><a class="btn primary" href="Federico_Fodic/index.html">Abrir portafolio</a></div>
+    </article>
+
+    <article class="card alumno" id="Felipe_Osorio" data-carpeta="Felipe_Osorio">
+      <div class="cab"><h2>Felipe Osorio</h2><span class="tag web">SITIO PROPIO</span></div>
+      <p class="obra">Samples de coro</p>
+      <ul class="entregas">
+        <li><a href="Felipe_Osorio/Samples/corosample.wav">corosample</a><span>wav</span></li>
+        <li><a href="Felipe_Osorio/Samples/corosconbajo.wav">corosconbajo</a><span>wav</span></li>
+        <li><a href="Felipe_Osorio/Samples/corostresbp.wav">corostresbp</a><span>wav</span></li>
+      </ul>
+      <div class="acciones">
+        <a class="btn primary" href="Felipe_Osorio/index.html">Abrir portafolio</a>
+        <a class="btn" href="https://eepyysspp.github.io/" target="_blank" rel="noopener">Sitio ↗</a>
+      </div>
+    </article>
+
+    <article class="card alumno" id="Lucas_Nervi" data-carpeta="Lucas_Nervi">
+      <div class="cab"><h2>Lucas Nervi</h2><span class="tag repo">EN EL REPO</span></div>
+      <p class="obra">T1 · <em>TALEA</em></p>
+      <ul class="entregas">
+        <li><a href="Lucas_Nervi/t1-propuesta-de-obra/index.html">Propuesta de obra</a><span>T1</span></li>
+        <li><a href="Lucas_Nervi/t1-propuesta-de-obra/estacion.html">Estación</a><span>instrumento</span></li>
+        <li><a href="Lucas_Nervi/t1-propuesta-de-obra/director.html">Director</a><span>consola</span></li>
+        <li><a href="Lucas_Nervi/t1-propuesta-de-obra/render.wav">Render</a><span>wav</span></li>
+        <li><a href="Lucas_Nervi/t1-propuesta-de-obra/PARTITURA.md">Partitura</a><span>md</span></li>
+      </ul>
+      <div class="acciones"><a class="btn primary" href="Lucas_Nervi/index.html">Abrir portafolio</a></div>
+    </article>
+
+    <article class="card alumno" id="Lukas_Recart" data-carpeta="Lukas_Recart">
+      <div class="cab"><h2>Lukas Recart</h2><span class="tag web">SITIO PROPIO</span></div>
+      <p class="obra">T1 · <em>MotorSynth</em></p>
+      <ul class="entregas">
+        <li><a href="Lukas_Recart/T1_Propuesta_de_obra/MotorSynth_V0.0.2.html">MotorSynth v0.0.2</a><span>instrumento</span></li>
+        <li><a href="Lukas_Recart/T1_Propuesta_de_obra/Propuesta.pdf">Propuesta</a><span>pdf</span></li>
+        <li><a href="Lukas_Recart/T1_Propuesta_de_obra/Video.MP4">Video</a><span>mp4</span></li>
+        <li><a href="Lukas_Recart/T1_Propuesta_de_obra/Documentacion/documentaci_n_motorsynth.md">Documentación</a><span>md</span></li>
+        <li><a href="Lukas_Recart/Portafolio%20Orquesta%20de%20Laptops%20Agosto.pdf">Portafolio de agosto</a><span>pdf</span></li>
+      </ul>
+      <div class="acciones">
+        <a class="btn primary" href="Lukas_Recart/index.html">Abrir portafolio</a>
+        <a class="btn" href="https://lksrcrt.github.io/" target="_blank" rel="noopener">Sitio ↗</a>
+      </div>
+    </article>
+
+    <article class="card alumno" id="Rocio_Navas_Nervi" data-carpeta="Rocio_Navas_Nervi">
+      <div class="cab"><h2>Rocío Navas Nervi</h2><span class="tag pend">PLANTILLA SIN COMPLETAR</span></div>
+      <p class="obra">Sin entregas en el repo todavía.</p>
+      <div class="acciones">
+        <a class="btn primary" href="Rocio_Navas_Nervi/index.html">Abrir portafolio</a>
+        <a class="btn" href="https://chio-nn.github.io/" target="_blank" rel="noopener">Sitio ↗</a>
+      </div>
+    </article>
+
+  </div>
+
+  <section class="card" style="margin-top:14px" id="agregar">
+    <h2>Cómo subir tu portafolio</h2>
+    <ol class="pasos muted">
+      <li>Crea una carpeta con tu nombre en formato <code>Nombre_Apellido</code> dentro de <code>2026/portafolios/</code> (ojo: ya no en <code>portafolios/</code> de la raíz).</li>
+      <li>Pon adentro un <code>index.html</code>: tu portafolio, o la plantilla que muestra tu sitio de GitHub Pages (copia la de un compañero y cambia tu nombre y tu usuario).</li>
+      <li>Cada entrega va en una subcarpeta propia, por ejemplo <code>T1_Propuesta_de_obra/</code>, con rutas relativas para que funcione sin internet en las laptops.</li>
+      <li>Tu tarjeta aparece aquí sola cuando la página se abre con internet; el profesor la completa con tus entregas.</li>
+    </ol>
+  </section>
+
+  <footer>
+    <p><a href="../../index.html">Inicio</a> · <a href="../obras.html">Obras</a> ·
+      © 2026 Orquesta de Laptops UC · Pontificia Universidad Católica de Chile.</p>
+  </footer>
+
+</main>
+
+<script>
+/* Carpetas nuevas en 2026/portafolios/ que todavía no tienen tarjeta:
+   con internet se consultan en GitHub y se agrega una tarjeta básica.
+   Sin internet (copia local de las laptops) no pasa nada. */
+(function () {
+  const API = "https://api.github.com/repos/OrquestaLaptopsUC/OrquestaLaptopsUC.github.io/contents/2026/portafolios";
+  const lista = document.getElementById("lista");
+  const indice = document.getElementById("indice");
+  const conocidas = new Set([...lista.querySelectorAll("[data-carpeta]")].map(a => a.dataset.carpeta));
+  const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  fetch(API, { headers: { Accept: "application/vnd.github+json" } })
+    .then(r => r.ok ? r.json() : [])
+    .then(items => {
+      items.filter(it => it.type === "dir" && !conocidas.has(it.name))
+        .sort((a, b) => a.name.localeCompare(b.name, "es"))
+        .forEach(it => {
+          const nombre = it.name.replace(/_/g, " ");
+          const href = encodeURIComponent(it.name) + "/index.html";
+          const art = document.createElement("article");
+          art.className = "card alumno"; art.id = it.name; art.dataset.carpeta = it.name;
+          art.innerHTML = `<div class="cab"><h2>${esc(nombre)}</h2><span class="tag nuevo">NUEVO</span></div>
+            <p class="obra">Carpeta recién subida.</p>
+            <div class="acciones"><a class="btn primary" href="${href}">Abrir portafolio</a></div>`;
+          lista.appendChild(art);
+          const a = document.createElement("a");
+          a.href = "#" + it.name; a.textContent = nombre;
+          indice.appendChild(a);
+        });
+    })
+    .catch(() => {});
+})();
+</script>
+</body>
+</html>

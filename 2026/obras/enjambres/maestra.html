@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ENJAMBRES · MAESTRA</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --tx:#dfe5ec; --dim:#8b97a6;
+    --acc:#8f9ef0; --acc2:#e8b25a; --ok:#7fc47f; --warn:#e06a5a;
+    --mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--tx);font:12.5px/1.45 var(--mono);
+       display:flex;flex-direction:column;overflow:hidden;user-select:none;-webkit-user-select:none}
+  header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 14px;
+    border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{font-size:15px;margin:0;letter-spacing:.3em;font-weight:600}
+  .chip{font-size:10.5px;letter-spacing:.14em;font-weight:700;padding:2px 8px;border-radius:3px;background:var(--acc2);color:#1a1204}
+  .grow{flex:1}
+  label,.lbl{color:var(--dim);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+  select,button{background:#1b2128;color:var(--tx);border:1px solid var(--line);border-radius:4px;padding:4px 8px;font:12px var(--mono)}
+  button{cursor:pointer}
+  button:hover{border-color:var(--acc)}
+  button:disabled{opacity:.4;cursor:default}
+  button.on{background:var(--acc2);color:#1a1204;border-color:var(--acc2);font-weight:700}
+  button.chico{padding:2px 7px;font-size:11px}
+  button.peligro:hover{border-color:var(--warn)}
+  button.armado{background:var(--warn);border-color:var(--warn);color:#1a0806;font-weight:700}
+  input[type=range]{accent-color:var(--acc);width:100%;margin:0}
+  #dir{font-size:11.5px;color:var(--dim);display:flex;align-items:center;gap:8px}
+  #dir b{color:var(--tx);font-size:15px;letter-spacing:.04em;background:#1b2128;border:1px solid var(--line);
+    border-radius:4px;padding:2px 9px;user-select:text;-webkit-user-select:text}
+  #dir.mal{color:var(--warn)}
+  .punto{width:9px;height:9px;border-radius:50%;background:#4a525c;display:inline-block;flex:none}
+  .punto.ok{background:var(--ok);box-shadow:0 0 6px var(--ok)}
+  .punto.mal{background:var(--warn)}
+  main{flex:1;display:grid;grid-template-columns:1fr 400px;min-height:0}
+  #izq{display:flex;flex-direction:column;min-width:0;min-height:0}
+  #escena{position:relative;flex:1;min-height:0}
+  #lienzo{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+  #ayuda{position:absolute;left:14px;top:10px;color:var(--dim);font-size:11px;pointer-events:none;line-height:1.6}
+  #opciones{position:absolute;right:14px;top:10px;display:flex;gap:14px;font-size:11px;color:var(--dim)}
+  #opciones label{display:flex;gap:5px;align-items:center;cursor:pointer;text-transform:none;letter-spacing:0;font-size:11px}
+  #mensajes{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;max-width:80%;text-align:center;pointer-events:none}
+  #mensajes div{background:rgba(20,24,29,.92);border:1px solid var(--line);border-radius:6px;padding:5px 12px;margin-top:5px;font-size:13px}
+  #mensajes small{color:var(--dim);margin-right:8px}
+  #cajon{height:300px;border-top:1px solid var(--line);display:flex;flex-direction:column;min-height:0;position:relative}
+  #cajon.cerrado{height:30px !important}
+  #tirador{position:absolute;left:0;right:0;top:-4px;height:8px;cursor:ns-resize;z-index:5}
+  #cajonTabs{display:flex;gap:2px;padding:3px 8px 0;background:var(--panel);border-bottom:1px solid var(--line)}
+  .tab{border:1px solid transparent;border-bottom:0;border-radius:4px 4px 0 0;background:transparent;color:var(--dim);padding:4px 12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+  .tab.on{background:var(--bg);color:var(--tx);border-color:var(--line)}
+  #cajonCuerpo{flex:1;min-height:0;position:relative}
+  #cajon.cerrado #cajonCuerpo{display:none}
+  .hoja{position:absolute;inset:0}
+  #cajaEsp{background:#07090b}
+  #espectro{height:100%;width:100%;display:block}
+  #marcas{position:absolute;inset:0;pointer-events:none;font-size:10px;color:#5b6775}
+  #marcas span{position:absolute;right:6px;transform:translateY(-50%)}
+  #marcas b{position:absolute;left:8px;top:4px;font-weight:400;letter-spacing:.06em}
+  #panel{border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-width:0;min-height:0}
+  #panelTabs{display:flex;gap:2px;padding:6px 10px 0;border-bottom:1px solid var(--line)}
+  #panelCuerpo{flex:1;overflow-y:auto;min-height:0}
+  .sec{padding:10px 14px 12px;border-bottom:1px solid var(--line)}
+  .sec h2{font-size:11px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 8px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .sec h2 small{color:var(--dim);letter-spacing:.04em;text-transform:none;font-weight:400}
+  .sec h2 .grow{flex:1}
+  .nota{font-size:10.5px;color:#6f7b8a}
+  .botones{display:flex;gap:6px;flex-wrap:wrap}
+  .fila{display:grid;grid-template-columns:74px 1fr 58px;gap:4px 8px;align-items:center;padding:3px 0}
+  .fila.sin{grid-template-columns:1fr 58px}
+  .fila .nom{grid-column:1/-1;font-size:11px;color:var(--dim);display:flex;justify-content:space-between;margin-bottom:-3px}
+  .fila .val{text-align:right;font-variant-numeric:tabular-nums;font-size:11.5px}
+  .fila select{width:100%;padding:2px 4px}
+  .fila.apagada .ctl,.fila.apagada .val{opacity:.35}
+  .cand{font-size:9.5px;letter-spacing:.1em;padding:2px 0;width:74px;text-align:center}
+  .cand.ret{background:#2b2214;border-color:#6d5427;color:var(--acc2)}
+  .cand.ced{background:#15202b;border-color:#2c4660;color:#8cc0f0}
+  .opcion{display:grid;grid-template-columns:74px 1fr;gap:8px;align-items:center;margin-top:10px}
+  #laptops .lap{display:grid;grid-template-columns:26px 1fr auto;gap:8px;align-items:center;padding:4px 6px;border-radius:4px;cursor:pointer;border:1px solid transparent}
+  #laptops .lap:hover{background:#1a2029}
+  #laptops .lap.sel{border-color:var(--acc);background:#1b2233}
+  .num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#10131a;font-size:12px}
+  .num.m{border-radius:4px}
+  .lap .info{font-size:11px;color:var(--dim);line-height:1.35}
+  .lap .info b{color:var(--tx);font-weight:600}
+  .lap .acc{display:flex;gap:4px}
+  .lap .acc button{padding:0 8px;font-size:13px;line-height:19px;min-width:26px}
+  .lap .est{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;margin-left:4px}
+  .lap .est.fuera{color:var(--warn)} .lap .est.real{color:var(--ok)}
+  #chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+  .ag{font-size:10px;padding:1px 5px;border-radius:3px;cursor:pointer;color:#10131a;font-weight:700;font-variant-numeric:tabular-nums;border:1px solid transparent}
+  .ag.mudo{background:#3a3f46 !important;color:#8b97a6;text-decoration:line-through}
+  .ag:hover{border-color:#fff}
+  .oculta{display:none !important}
+  footer{padding:5px 14px;border-top:1px solid var(--line);background:var(--panel);color:var(--dim);font-size:11px;display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+  footer b{color:var(--tx);font-weight:600;font-variant-numeric:tabular-nums}
+  kbd{background:#1e242b;border:1px solid var(--line);border-radius:3px;padding:0 4px;font-size:10.5px;color:var(--tx)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ENJAMBRES</h1>
+  <span class="chip">MAESTRA</span>
+  <span id="dir"></span>
+  <span class="grow"></span>
+  <button id="bCorrer" title="espacio">⏸ pausa</button>
+  <button id="bReiniciar" title="los agentes vuelven a nacer junto a su laptop">reiniciar</button>
+  <button id="bVaciar" class="peligro" title="quita todos los agentes (pide un segundo clic)">vaciar</button>
+  <button id="bProyeccion" title="abre el enjambre en una ventana aparte, para proyectar a pantalla completa">proyección</button>
+  <button id="bApagar" class="peligro oculta" title="apaga el Servidor Enjambres (pide un segundo clic)">apagar servidor</button>
+  <button id="bSonido">activar sonido</button>
+  <select id="monitor" title="qué se escucha en esta laptop"></select>
+  <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8" style="width:80px" title="volumen">
+</header>
+
+<main>
+  <div id="izq">
+    <section id="escena">
+      <canvas id="lienzo"></canvas>
+      <div id="ayuda">arrastra una laptop por el arco · clic: elegirla<br><kbd>espacio</kbd> pausa · <kbd>+</kbd> <kbd>−</kbd> agentes de la elegida</div>
+      <div id="opciones">
+        <label><input type="checkbox" id="oLineas" checked> ganancias de la elegida</label>
+        <label><input type="checkbox" id="oRadios"> radios</label>
+      </div>
+      <div id="mensajes"></div>
+    </section>
+    <div id="cajon">
+      <div id="tirador" title="arrastra para cambiar la altura"></div>
+      <div id="cajonTabs">
+        <button class="tab on" data-h="hPartitura">partitura</button>
+        <button class="tab" data-h="hEspectro">espectrograma</button>
+        <span class="grow"></span>
+        <button class="tab" id="bCajon" title="mostrar u ocultar">▾</button>
+      </div>
+      <div id="cajonCuerpo">
+        <div class="hoja" id="hPartitura"></div>
+        <div class="hoja oculta" id="hEspectro"><div id="cajaEsp" class="hoja"><canvas id="espectro"></canvas><div id="marcas"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <aside id="panel">
+    <div id="panelTabs">
+      <button class="tab on" data-p="pEnjambre">enjambre</button>
+      <button class="tab" data-p="pLaptops">laptops <span id="nLaps"></span></button>
+      <button class="tab" data-p="pAvanzado">avanzado</button>
+    </div>
+    <div id="panelCuerpo">
+      <div id="pEnjambre">
+        <div class="sec">
+          <h2>Enjambre<span class="grow"></span>
+            <button class="chico" id="bRetTodo" title="todos los parámetros los fija la maestra">retener todo</button>
+            <button class="chico" id="bCedTodo" title="cada laptop usa sus propios valores">ceder todo</button></h2>
+          <div class="nota" style="margin-bottom:8px">Cada pad mueve dos parámetros. Su botón lo <b style="color:var(--acc2)">retiene</b> (rige para todas) o lo <b style="color:#8cc0f0">cede</b> (cada laptop usa el suyo; sus puntos aparecen en el pad).</div>
+          <div class="pads" id="pads"></div>
+          <div class="opcion"><button class="cand" id="candMapeo"></button><div id="segMapeo"></div></div>
+          <div style="margin-top:12px" id="filaKappa"></div>
+        </div>
+      </div>
+      <div id="pLaptops" class="oculta">
+        <div class="sec">
+          <h2>Laptops<span class="grow"></span>
+            <button class="chico" id="bMasLap" title="agrega una laptop simulada, para probar sin las reales">+ simulada</button>
+            <button class="chico" id="bRepartir">repartir</button></h2>
+          <label style="display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-size:11px;margin-bottom:6px;cursor:pointer">
+            <input type="checkbox" id="oBots"> las simuladas tocan solas (agregan, quitan y mutean agentes)</label>
+          <div id="laptops"></div>
+        </div>
+        <div class="sec oculta" id="secLaptop">
+          <h2 id="tLaptop">Laptop</h2>
+          <div class="nota" id="nLaptop"></div>
+          <div class="botones" id="botLaptop" style="margin:8px 0 4px">
+            <button id="bMenosAg">− agente</button>
+            <button id="bMasAg">+ agente</button>
+            <button class="chico" id="bMuteTodos">mutear todos</button>
+            <button class="chico" id="bDesmuteTodos">desmutear todos</button>
+            <button class="chico" id="bQuitarLap" style="margin-left:auto">quitar laptop</button>
+          </div>
+          <div id="chips"></div>
+          <div class="fila sin" style="margin-top:8px">
+            <div class="nom"><span>salidas de audio</span><span class="aviso" id="avisoSalidas"></span></div>
+            <select id="salidas" class="ctl" style="grid-column:1/3"></select>
+          </div>
+          <div class="pads" id="padsLap" style="margin-top:10px"></div>
+          <div class="opcion" id="opMapeoLap"><span class="lbl">mapeo</span><div id="segMapeoLap"></div></div>
+        </div>
+      </div>
+      <div id="pAvanzado" class="oculta">
+        <div class="sec">
+          <h2>Parámetros, uno por uno</h2>
+          <div class="nota" style="margin-bottom:6px">MAESTRA: su valor rige para todas · CEDIDO: cada laptop usa el suyo</div>
+          <div id="params"></div>
+        </div>
+        <div class="sec">
+          <h2>Conjunto <small>solo la maestra</small></h2>
+          <div id="conj"></div>
+          <div class="botones" style="margin-top:8px"><button class="chico" id="bPaso" title=".">un paso</button></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<footer id="pie"></footer>
+
+<script src="modelo.js"></script>
+<script src="protocolo.js"></script>
+<script src="simulador.js"></script>
+<script src="sonido.js"></script>
+<script src="vista.js"></script>
+<script src="ui.js"></script>
+<script src="editor.js"></script>
+<script src="partitura.js"></script>
+<script>
+"use strict";
+const { Motor, PARAMS, CONJUNTO, MAPEOS, NOMBRE_MAPEO, decodificar, Vista, Espectro, etiqueta,
+        Pad, PADS, paramsDePad, padDeValores, valoresDePad, textoPad, Segmentos, mensajesEn, EditorPartitura } = Enjambres;
+
+/* Abierta desde el Servidor Enjambres (http), se conecta y espera a las laptops reales.
+   Abierta con doble clic (file://), no hay red: arranca con laptops simuladas para probar. */
+const SERVIDOR = /^https?:$/.test(location.protocol) ? location.host : null;
+const SIMULADAS_SIN_SERVIDOR = 7;   /* la obra parte sin agentes: cada laptop agrega y quita los suyos */
+const $ = id => document.getElementById(id);
+const motor = new Motor();
+
+let est = null, tEstado = performance.now();   /* último estado que mandó el simulador */
+let cuadro = null, bytesCuadro = 0;
+let elegida = null;
+const porNum = new Map();      /* num → laptop del último estado */
+
+/* La maestra es la única que escribe sus propios valores: los guarda aquí y le avisa
+   al simulador de cada cambio. */
+const maestra = { vals: {}, retenido: {}, conj: {} };
+for (const p of PARAMS) { maestra.vals[p.k] = p.def; maestra.retenido[p.k] = true; }
+for (const p of CONJUNTO) maestra.conj[p.k] = p.def;
+
+/* ---------- el simulador, en un Worker (simulador.js) ---------- */
+let proy = null;               /* ventana de proyección, si está abierta */
+let editor = null, editorTocado = false;
+const sim = crearSimulador(recibir);
+const llamar = (metodo, ...args) => sim.enviar({ cmd: "llamar", metodo, args });
+const fijarMaestra = (grupo, k, v) => { maestra[grupo][k] = v; sim.enviar({ cmd: "maestra", grupo, k, v }); };
+
+let cuadrosMedidos = 0, tCuadros = performance.now(), cuadrosPorSeg = 0, restauradoVisto = 0, versionVista = 0, guardadaVista = 0;
+function recibir(m) {
+  if (m.tipo === "cuadro") {
+    const inst = decodificar(m.buf);
+    if (!inst) return;
+    cuadro = inst; bytesCuadro = m.buf.byteLength; cuadrosMedidos++;
+    motor.actualizar(inst);            /* la maestra suena con lo mismo que reciben las laptops */
+    if (proy && !proy.closed) proy.postMessage({ tipo: "cuadro", buf: m.buf }, "*");
+  } else if (m.tipo === "estado") {
+    est = m; tEstado = performance.now();
+    porNum.clear();
+    for (const l of est.laptops) porNum.set(l.num, l);
+    if ((est.red.restaurado || 0) !== restauradoVisto) {      /* se recuperó un respaldo: adoptar sus valores */
+      restauradoVisto = est.red.restaurado || 0;
+      for (const g of ["vals", "retenido", "conj"]) Object.assign(maestra[g], est.maestra[g]);
+      refrescarTodo();
+    }
+    if (editor && est.versionPartitura !== versionVista && !editorTocado) { versionVista = est.versionPartitura; editor.fijar(est.partitura); }
+    if (editor && est.red.guardada && est.red.guardada.n !== guardadaVista) {
+      guardadaVista = est.red.guardada.n;
+      editor.estado(est.red.guardada.ok ? "guardada en " + est.red.guardada.ruta : "no se pudo guardar: " + est.red.guardada.error);
+    }
+    $("oBots").checked = est.bots;
+    pintarRed();
+    $("bCorrer").textContent = est.corriendo ? "⏸ pausa" : "▶ correr";
+    $("bCorrer").classList.toggle("on", !est.corriendo);
+    pintarLaptops();
+    refrescarLap();
+    if (proy && !proy.closed) proy.postMessage({ tipo: "info", laptops: est.laptops.map(l =>
+      ({ num: l.num, color: l.color, conectada: l.simulada || l.conectada || l.maestra, nivel: l.ef.nivel })) }, "*");
+  }
+}
+
+/* ---------- red: dónde se conectan las demás laptops ---------- */
+function pintarRed() {
+  const r = est.red, d = $("dir");
+  $("bApagar").classList.toggle("oculta", r.estado !== "conectada");
+  d.classList.toggle("mal", r.estado === "rechazada" || r.estado === "reconectando");
+  d.title = SERVIDOR ? "" : "para que entren las laptops reales, abre la maestra con Servidor Enjambres";
+  if (!SERVIDOR) d.innerHTML = `<span class="punto"></span> sin servidor: solo laptops simuladas`;
+  else if (r.estado === "conectada") d.innerHTML = `<span class="punto ok"></span> las laptops abren: ` +
+    (r.direcciones.length ? r.direcciones.map(x => `<b>${x}</b>`).join(" o ") : `<span style="color:var(--warn)">no encontré una red: ¿Wi-Fi o cable?</span>`);
+  else if (r.estado === "rechazada") d.innerHTML = `<span class="punto mal"></span> esta no es la laptop servidora: la maestra se abre en la laptop que corre Servidor Enjambres`;
+  else if (r.estado === "apagado") d.innerHTML = `<span class="punto mal"></span> servidor apagado`;
+  else d.innerHTML = `<span class="punto mal"></span> ${r.estado === "conectando" ? "conectando con" : "sin conexión con"} el servidor (${SERVIDOR})…`;
+}
+
+/* ---------- formato y filas (pestaña avanzado) ---------- */
+function decimales(p) { return p.paso >= 1 ? 0 : p.paso >= 0.1 ? 1 : p.paso >= 0.01 ? 2 : 3; }
+function fmt(p, v) { return p.opciones ? (NOMBRE_MAPEO[v] || v) : Number(v).toFixed(decimales(p)); }
+const aSlider = (p, v) => p.log ? 1000 * Math.log(v / p.min) / Math.log(p.max / p.min) : v;
+const deSlider = (p, s) => p.log ? Math.round(p.min * Math.pow(p.max / p.min, s / 1000)) : +s;
+
+function fila(p, obt, fij, opc) {
+  opc = opc || {};
+  const el = document.createElement("div");
+  el.className = "fila" + (opc.candado ? "" : " sin");
+  el.innerHTML = `<div class="nom"><span>${p.n}</span><span class="aviso"></span></div>`;
+  let cand = null;
+  if (opc.candado) { cand = document.createElement("button"); cand.className = "cand"; cand.onclick = () => retener([p.k], !maestra.retenido[p.k]); el.appendChild(cand); }
+  let ctl, tocando = false;
+  if (p.opciones) {
+    ctl = document.createElement("select");
+    for (const o of p.opciones) ctl.add(new Option(fmt(p, o), o));
+    ctl.onchange = () => { fij(ctl.value); refrescarTodo(); };
+  } else {
+    ctl = document.createElement("input"); ctl.type = "range";
+    ctl.min = p.log ? 0 : p.min; ctl.max = p.log ? 1000 : p.max; ctl.step = p.log ? 1 : p.paso;
+    ctl.oninput = () => { fij(deSlider(p, ctl.value)); val.textContent = fmt(p, deSlider(p, ctl.value)); };
+    ctl.onpointerdown = () => { tocando = true; };
+    addEventListener("pointerup", () => { tocando = false; });
+    ctl.ondblclick = () => { fij(p.def); refrescarTodo(); };
+    ctl.title = "doble clic: valor por defecto (" + fmt(p, p.def) + ")";
+  }
+  ctl.classList.add("ctl"); el.appendChild(ctl);
+  const val = document.createElement("span"); val.className = "val";
+  if (p.opciones) ctl.style.gridColumn = opc.candado ? "2 / 4" : "1 / 3"; else el.appendChild(val);
+  function refrescar() {
+    const v = obt(); if (v === undefined) return;
+    if (!tocando) { if (p.opciones) { if (document.activeElement !== ctl) ctl.value = v; } else { ctl.value = aSlider(p, v); val.textContent = fmt(p, v); } }
+    if (cand) { const r = maestra.retenido[p.k]; cand.textContent = r ? "MAESTRA" : "CEDIDO"; cand.className = "cand " + (r ? "ret" : "ced"); el.classList.toggle("apagada", !r); }
+  }
+  refrescar();
+  return { el, refrescar };
+}
+const filas = [];
+for (const p of PARAMS) { const f = fila(p, () => maestra.vals[p.k], v => fijarMaestra("vals", p.k, v), { candado: true }); $("params").appendChild(f.el); filas.push(f); }
+for (const p of CONJUNTO) {
+  const f = fila(p, () => maestra.conj[p.k], v => fijarMaestra("conj", p.k, v));
+  (p.k === "kappa" ? $("filaKappa") : $("conj")).appendChild(f.el); filas.push(f);
+}
+function retener(ks, si) { for (const k of ks) fijarMaestra("retenido", k, si); refrescarTodo(); }
+$("bRetTodo").onclick = () => retener(PARAMS.map(p => p.k), true);
+$("bCedTodo").onclick = () => retener(PARAMS.map(p => p.k), false);
+
+/* ---------- pads de la maestra, con su candado ---------- */
+const NOMBRES_MAPEO = { directo: "directo", osciladores: "osciladores", friccion: "fricción" };
+const pads = PADS.map(d => {
+  const ks = paramsDePad(d);
+  const pad = new Pad($("pads"), d, { alCambiar: (x, y) => {
+    const v = valoresDePad(d, x, y);
+    for (const k in v) fijarMaestra("vals", k, v[k]);
+    pad.texto(textoPad(d, maestra.vals));
+    for (const f of filas) f.refrescar();
+  } });
+  const cand = document.createElement("span"); cand.className = "candPad";
+  cand.title = "retener (rige la maestra) o ceder (cada laptop usa el suyo)";
+  cand.onclick = () => retener(ks, !ks.every(k => maestra.retenido[k]));
+  pad.cab.appendChild(cand);
+  return { d, ks, pad, cand };
+});
+const segMapeo = new Segmentos($("segMapeo"), MAPEOS, NOMBRES_MAPEO, v => { fijarMaestra("vals", "mapeo", v); refrescarTodo(); });
+$("candMapeo").onclick = () => retener(["mapeo"], !maestra.retenido.mapeo);
+function refrescarPads() {
+  for (const { d, ks, pad, cand } of pads) {
+    const ret = ks.filter(k => maestra.retenido[k]).length;
+    cand.textContent = ret === ks.length ? "MAESTRA" : ret ? "MIXTO" : "CEDIDO";
+    cand.className = "candPad " + (ret === ks.length ? "ret" : ret ? "mixto" : "ced");
+    const p = padDeValores(d, maestra.vals);
+    pad.fijar(p.x, p.y, textoPad(d, maestra.vals));
+    const f = [];                                  /* cedido: los valores de cada laptop, en su color */
+    if (ret < ks.length && est) for (const l of est.laptops) if (!l.maestra) {
+      const q = padDeValores(d, Object.assign({}, maestra.vals, l.params));
+      f.push({ x: q.x, y: q.y, color: l.color, etiqueta: String(l.num) });
+    }
+    pad.fantasmas(f);
+  }
+  segMapeo.fijar(maestra.vals.mapeo);
+  const r = maestra.retenido.mapeo;
+  $("candMapeo").textContent = r ? "MAESTRA" : "CEDIDO"; $("candMapeo").className = "cand " + (r ? "ret" : "ced");
+}
+function refrescarTodo() { for (const f of filas) f.refrescar(); refrescarPads(); refrescarLap(); }
+
+/* ---------- pestañas ---------- */
+for (const b of document.querySelectorAll("[data-p]")) b.onclick = () => {
+  for (const x of document.querySelectorAll("[data-p]")) { x.classList.toggle("on", x === b); $(x.dataset.p).classList.toggle("oculta", x !== b); }
+  for (const { pad } of pads.concat(padsLap)) pad.dibujar();
+};
+for (const b of document.querySelectorAll("[data-h]")) b.onclick = () => {
+  $("cajon").classList.remove("cerrado"); $("bCajon").textContent = "▾";
+  for (const x of document.querySelectorAll("[data-h]")) { x.classList.toggle("on", x === b); $(x.dataset.h).classList.toggle("oculta", x !== b); }
+  if (b.dataset.h === "hEspectro") espectro.medir();
+};
+/* el cajón de abajo se agranda o achica arrastrando su borde superior */
+$("tirador").addEventListener("pointerdown", e => {
+  const y0 = e.clientY, h0 = $("cajon").getBoundingClientRect().height, t = $("tirador");
+  t.setPointerCapture(e.pointerId);
+  const mover = m => { $("cajon").style.height = Math.max(120, Math.min(innerHeight * 0.75, h0 + (y0 - m.clientY))) + "px"; };
+  const soltar = () => { t.removeEventListener("pointermove", mover); t.removeEventListener("pointerup", soltar); espectro.medir(); };
+  t.addEventListener("pointermove", mover); t.addEventListener("pointerup", soltar);
+});
+$("bCajon").onclick = () => { $("cajon").classList.toggle("cerrado"); $("bCajon").textContent = $("cajon").classList.contains("cerrado") ? "▴" : "▾"; };
+
+/* ---------- laptops ---------- */
+const nombreLap = num => num === 0 ? "maestra" : "laptop " + num;
+const grados = fi => Math.round(fi * 180 / Math.PI) + "°";
+let firmaLaps = "";
+function pintarLaptops(forzar) {
+  if (!est) return;
+  const laps = [...est.laptops].sort((a, b) => a.num - b.num);
+  const firma = laps.map(l => l.num + (l.simulada ? "s" : "")).join(",") + "|" + elegida;
+  if (firma !== firmaLaps || forzar) {
+    firmaLaps = firma;
+    const cont = $("laptops"); cont.innerHTML = "";
+    for (const l of laps) {
+      const d = document.createElement("div");
+      d.className = "lap" + (l.num === elegida ? " sel" : "");
+      d.innerHTML = `<div class="num${l.maestra ? " m" : ""}" style="background:${l.color}">${etiqueta(l.num)}</div><div class="info" data-num="${l.num}"></div>` +
+        (l.maestra ? `<div></div>` : `<div class="acc"><button title="quitar un agente">−</button><button title="agregar un agente">+</button></div>`);
+      d.onclick = () => elegir(l.num === elegida ? null : l.num);
+      if (!l.maestra) {
+        const [menos, mas] = d.querySelectorAll(".acc button");
+        menos.onclick = e => { e.stopPropagation(); llamar("quitarAgente", l.num); };
+        mas.onclick = e => { e.stopPropagation(); llamar("crearAgente", l.num); };
+      }
+      cont.appendChild(d);
+    }
+    $("nLaps").textContent = "(" + laps.filter(l => !l.maestra).length + ")";
+    armarPanelLaptop(); armarMonitor(); if (editor) editor.pintar();
+  }
+  for (const el of document.querySelectorAll("#laptops .info")) {
+    const l = porNum.get(+el.dataset.num); if (!l) continue;
+    if (l.maestra) { el.innerHTML = `<b>maestra</b> · parlante del arco · ${grados(l.fi)}`; continue; }
+    const e = l.simulada ? `<span class="est">simulada</span>` : l.conectada ? `<span class="est real">conectada</span>` : `<span class="est fuera">desconectada</span>`;
+    el.innerHTML = `<b>${l.n}</b> agentes${l.mudos ? ` (${l.mudos} mudos)` : ""} · ψ ${l.psi.toFixed(2)} · ${grados(l.fi)} ${e}`;
+  }
+}
+function elegir(num) { elegida = num; pintarLaptops(true); }
+$("bMasLap").onclick = () => { if (!est) return; let n = 1; while (porNum.has(n)) n++; llamar("agregarLaptop", n, { simulada: true }); elegida = n; };
+$("bRepartir").onclick = () => llamar("repartir");
+$("oBots").onchange = () => sim.enviar({ cmd: "bots", si: $("oBots").checked });
+
+/* Panel de la laptop elegida: los mismos pads que ve ella (solo se mueven los ejes cedidos). */
+const padsLap = PADS.map(d => {
+  const pad = new Pad($("padsLap"), d, { alCambiar: (x, y) => {
+    if (elegida == null) return;
+    const v = valoresDePad(d, x, y), l = porNum.get(elegida);
+    for (const k in v) { if (maestra.retenido[k]) continue; if (l) l.params[k] = v[k]; sim.enviar({ cmd: "laptop", num: elegida, k, v: v[k] }); }
+  } });
+  return { d, ks: paramsDePad(d), pad };
+});
+const segMapeoLap = new Segmentos($("segMapeoLap"), MAPEOS, NOMBRES_MAPEO, v => sim.enviar({ cmd: "laptop", num: elegida, k: "mapeo", v }));
+function refrescarLap() {
+  const l = elegida != null ? porNum.get(elegida) : null;
+  if (!l || l.maestra) return;
+  for (const { d, ks, pad } of padsLap) {
+    const ef = Object.assign({}, maestra.vals); for (const k of ks) if (!maestra.retenido[k]) ef[k] = l.params[k];
+    const p = padDeValores(d, ef);
+    const hx = d.k === "registro" ? ks.every(k => !maestra.retenido[k]) : !maestra.retenido[d.px];
+    const hy = d.k === "registro" ? hx : !maestra.retenido[d.py];
+    pad.habilitar(hx, hy, !hx && !hy ? "rige la maestra" : "");
+    pad.fijar(p.x, p.y, textoPad(d, ef));
+  }
+  segMapeoLap.fijar(maestra.retenido.mapeo ? maestra.vals.mapeo : l.params.mapeo);
+  segMapeoLap.habilitar(!maestra.retenido.mapeo);
+}
+function armarPanelLaptop() {
+  const sec = $("secLaptop"), l = elegida != null ? porNum.get(elegida) : null;
+  if (!l) { sec.classList.add("oculta"); return; }
+  sec.classList.remove("oculta");
+  $("tLaptop").innerHTML = `<div class="num${l.maestra ? " m" : ""}" style="background:${l.color}">${etiqueta(l.num)}</div> ${nombreLap(l.num)}` +
+    (l.simulada ? " <small>simulada</small>" : l.maestra ? "" : l.conectada ? " <small>conectada</small>" : " <small>desconectada</small>");
+  $("botLaptop").style.display = l.maestra ? "none" : "";
+  $("padsLap").style.display = $("opMapeoLap").style.display = l.maestra ? "none" : "";
+  $("nLaptop").textContent = l.maestra ? "La maestra no tiene sub-enjambre: suena como un parlante más del arco."
+    : l.simulada ? "Laptop simulada: aquí se hace lo que haría su intérprete." : "Laptop real: lo que se cambie aquí lo verá también en su pantalla.";
+  pintarAvisoSalidas();
+  firmaChips = null;
+  if (l.maestra) $("chips").innerHTML = "";
+  refrescarLap();
+  for (const { pad } of padsLap) pad.dibujar();
+}
+let firmaChips = null;
+function pintarChips() {
+  if (elegida == null || elegida === 0 || !cuadro) return;
+  const l = porNum.get(elegida); if (!l) return;
+  const A = cuadro.agentes, C = cuadro.campos.length, mios = [];
+  for (let i = 0; i < A.length; i += C) if (A[i + 1] === elegida) mios.push({ id: A[i], mudo: A[i + 9] });
+  const firma = mios.map(a => a.id + (a.mudo ? "m" : "")).join(",");
+  if (firma === firmaChips) return;
+  firmaChips = firma;
+  const c = $("chips"); c.innerHTML = "";
+  for (const a of mios) {
+    const s = document.createElement("span");
+    s.className = "ag" + (a.mudo ? " mudo" : ""); s.style.background = l.color; s.textContent = a.id;
+    s.title = a.mudo ? "muteado: sigue en el modelo, no suena" : "clic para mutear";
+    s.onclick = () => llamar("mutear", a.id);
+    c.appendChild(s);
+  }
+  if (!mios.length) c.innerHTML = `<span class="nota">sin agentes</span>`;
+}
+$("salidas").onchange = () => {
+  const n = +$("salidas").value;
+  llamar("fijarSalidas", elegida, n);
+  if (elegida === 0) motor.fijarCanales(n);          /* la maestra: sus salidas son los canales de este dispositivo */
+  const l = porNum.get(elegida); if (l) l.salidas = n;
+  pintarAvisoSalidas();
+};
+function pintarAvisoSalidas() {
+  const av = $("avisoSalidas"), sel = $("salidas"), l = porNum.get(elegida);
+  if (!l) return;
+  const disp = l.maestra ? motor.canalesDisponibles() : null;
+  sel.innerHTML = "";
+  for (let n = 1; n <= Enjambres.MAX_CANALES; n++) {
+    const nombre = n === 1 ? "1 · mono" : n === 2 ? "2 · estéreo" : n + " canales";
+    const o = new Option(nombre + (disp != null && n > disp ? " · no disponible" : ""), n);
+    o.disabled = disp != null && n > disp; sel.add(o);
+  }
+  sel.value = String(l.salidas);
+  av.textContent = l.maestra ? (disp == null ? "activa el sonido para ver cuántos hay" : `este dispositivo: ${disp} canales`) : (l.simulada ? "simulada" : "");
+}
+$("bMasAg").onclick = () => llamar("crearAgente", elegida);
+$("bMenosAg").onclick = () => llamar("quitarAgente", elegida);
+$("bMuteTodos").onclick = () => llamar("mutearTodos", elegida, true);
+$("bDesmuteTodos").onclick = () => llamar("mutearTodos", elegida, false);
+$("bQuitarLap").onclick = () => { if (elegida) { llamar("quitarLaptop", elegida); elegir(null); } };
+
+/* ---------- sonido y monitor ---------- */
+function armarMonitor() {
+  const s = $("monitor"), antes = s.value || "L0";
+  s.innerHTML = "";
+  s.add(new Option("escuchar: la maestra", "L0"));
+  for (const l of [...est.laptops].filter(l => !l.maestra).sort((a, b) => a.num - b.num)) s.add(new Option("escuchar: laptop " + l.num, "L" + l.num));
+  s.add(new Option("escuchar: toda la sala (estéreo)", "E"));
+  s.add(new Option("silencio", "S"));
+  s.value = [...s.options].some(o => o.value === antes) ? antes : "L0";
+  aplicarMonitor();
+}
+function aplicarMonitor() {
+  const v = $("monitor").value;
+  motor.fijarModo(v === "E" ? { tipo: "estereo" } : v === "S" ? { tipo: "silencio" } : { tipo: "laptop", num: +v.slice(1), fisico: v === "L0" });
+}
+$("monitor").onchange = aplicarMonitor;
+$("vol").oninput = () => motor.fijarVolumen(+$("vol").value);
+$("bSonido").onclick = async () => {
+  if (motor.ctx && motor.ctx.state === "running") await motor.ctx.suspend();
+  else { const m = porNum.get(0); if (m) motor.fijarCanales(m.salidas); await motor.iniciar(); }
+  const on = motor.ctx.state === "running";
+  pintarAvisoSalidas();
+  $("bSonido").textContent = on ? "sonido activo" : "activar sonido";
+  $("bSonido").classList.toggle("on", on);
+};
+
+/* ---------- transporte ---------- */
+$("bCorrer").onclick = () => sim.enviar({ cmd: "correr", si: !(est && est.corriendo) });
+$("bPaso").onclick = () => sim.enviar({ cmd: "paso" });
+$("bReiniciar").onclick = () => llamar("reiniciar");
+function dobleClic(boton, accion) {          /* el primer clic arma, el segundo (dentro de 3 s) actúa */
+  let t = -1e9;
+  boton.onclick = () => {
+    const ahora = performance.now();
+    if (ahora - t < 3000) { t = -1e9; boton.classList.remove("armado"); accion(); return; }
+    t = ahora; boton.classList.add("armado");
+    setTimeout(() => { if (performance.now() - t >= 2900) boton.classList.remove("armado"); }, 3000);
+  };
+}
+dobleClic($("bVaciar"), () => llamar("vaciar"));
+dobleClic($("bApagar"), () => sim.enviar({ cmd: "apagar" }));
+document.addEventListener("keydown", e => {
+  if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName) && e.target.type !== "range" && e.target.type !== "checkbox") return;
+  if (e.key === " ") { e.preventDefault(); $("bCorrer").click(); }
+  else if (e.key === ".") sim.enviar({ cmd: "paso" });
+  else if ((e.key === "+" || e.key === "=") && elegida) llamar("crearAgente", elegida);
+  else if ((e.key === "-" || e.key === "_") && elegida) llamar("quitarAgente", elegida);
+});
+
+/* ---------- partitura (solo mensajes) ---------- */
+editor = new EditorPartitura($("hPartitura"), {
+  alCambiar: p => {
+    editorTocado = true; sim.enviar({ cmd: "partitura", partitura: p });
+    clearTimeout(editor._t); editor._t = setTimeout(() => { editorTocado = false; versionVista = -1; }, 1500);
+  },
+  alIr: ms => sim.enviar({ cmd: "reloj", accion: "ir", ms }),
+  alReloj: accion => sim.enviar({ cmd: "reloj", accion }),
+  alGuardar: () => {
+    if (!SERVIDOR) { editor.estado("sin servidor no se puede guardar en la carpeta: usa exportar"); return; }
+    editor.estado("guardando…"); sim.enviar({ cmd: "guardarPartitura" });
+  },
+  carriles: () => est ? est.laptops.filter(l => !l.maestra).map(l => l.num) : [],
+  color: n => (porNum.get(n) || {}).color || Enjambres.colorDe(n),
+});
+const msReloj = () => !est ? 0 : est.reloj.estado === "corriendo" ? est.reloj.ms + (performance.now() - tEstado) : est.reloj.ms;
+const escapar = s => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+function pintarMensajes() {
+  if (!est) return;
+  const { actuales, proximo } = mensajesEn(est.partitura, msReloj(), null);
+  const para = e => e.para === "todos" ? "todos" : "laptop " + e.para;
+  const html = actuales.map(e => `<div><small>${para(e)}</small>${escapar(e.texto) || "…"}</div>`).join("") +
+    (proximo && est.reloj.estado === "corriendo" && proximo.faltaMs < 15000
+      ? `<div style="opacity:.6"><small>en ${Math.ceil(proximo.faltaMs / 1000)} s · ${para(proximo.ev)}</small>${escapar(proximo.ev.texto)}</div>` : "");
+  if ($("mensajes").innerHTML !== html) $("mensajes").innerHTML = html;
+}
+
+/* ---------- proyección: ventana aparte, recibe los cuadros por postMessage ---------- */
+$("bProyeccion").onclick = () => {
+  if (proy && !proy.closed) { proy.focus(); return; }
+  proy = window.open("proyeccion.html", "enjambres-proyeccion", "popup,width=1280,height=720");
+};
+
+/* ---------- dibujo del semicírculo (vista.js) ---------- */
+const lienzo = $("lienzo"), vista = new Vista(lienzo);
+const info = new Map();
+let arrastrando = null, sobre = null, abajo = null, fiLocal = null;
+function dibujar() {
+  info.clear();
+  for (const l of porNum.values()) info.set(l.num, { color: l.color, ef: l.ef, conectada: l.simulada || l.conectada });
+  vista.dibujar(cuadro, {
+    info, elegida, resaltar: [arrastrando, sobre].filter(n => n != null),
+    lineas: $("oLineas").checked, radios: $("oRadios").checked,
+    mover: arrastrando != null ? { n: arrastrando, fi: fiLocal } : null,
+    vacio: ["sin agentes: cada laptop agrega los suyos", SERVIDOR ? "(o aquí: elige una laptop y usa  + agente)" : "(aquí, con las simuladas: elige una laptop y usa  + agente)"],
+  });
+}
+lienzo.addEventListener("pointerdown", e => {
+  const [X, Y] = vista.pos(e);
+  abajo = { X, Y, num: vista.laptopEn(cuadro, X, Y), movio: false };
+  if (abajo.num != null) { arrastrando = abajo.num; fiLocal = null; lienzo.setPointerCapture(e.pointerId); }
+});
+lienzo.addEventListener("pointermove", e => {
+  const [X, Y] = vista.pos(e);
+  if (arrastrando != null) {
+    if (Math.hypot(X - abajo.X, Y - abajo.Y) > 3) abajo.movio = true;
+    if (abajo.movio) { fiLocal = vista.fiDe(X, Y); llamar("moverLaptop", arrastrando, fiLocal); }
+  } else {
+    sobre = vista.laptopEn(cuadro, X, Y);
+    lienzo.style.cursor = sobre != null ? "grab" : vista.agenteEn(cuadro, X, Y) ? "pointer" : "default";
+  }
+});
+lienzo.addEventListener("pointerup", e => {
+  const [X, Y] = vista.pos(e);
+  if (abajo && !abajo.movio) {
+    if (abajo.num != null) elegir(abajo.num === elegida ? null : abajo.num);
+    else { const a = vista.agenteEn(cuadro, X, Y); elegir(a ? a.dueno : null); }
+  }
+  arrastrando = null; abajo = null; fiLocal = null;
+});
+const espectro = new Espectro($("espectro"), $("marcas"));
+
+/* ---------- pie ---------- */
+function pintarPie() {
+  const ahora = performance.now();
+  if (ahora - tCuadros >= 1000) { cuadrosPorSeg = cuadrosMedidos * 1000 / (ahora - tCuadros); cuadrosMedidos = 0; tCuadros = ahora; }
+  if (!est) { $("pie").textContent = sim.error ? "simulador: " + sim.error : "esperando al simulador…"; return; }
+  const mudos = est.laptops.reduce((s, l) => s + l.mudos, 0), kb = bytesCuadro / 1024, nl = est.laptops.length;
+  $("pie").innerHTML =
+    `agentes <b>${est.N}</b>${mudos ? ` (${mudos} mudos)` : ""} · ψ <b>${est.psi.toFixed(3)}</b> · vecinos <b>${est.vecinos.toFixed(1)}</b> · ` +
+    `<b>${est.pasosPorSeg.toFixed(1)}</b> pasos/s${est.pasosMin != null ? ` (mín. ${est.pasosMin.toFixed(1)})` : ""} en ${sim.donde}` +
+    `${sim.error ? ` <b style="color:var(--warn)">${sim.error}</b>` : ""} · cuadro <b>${kb.toFixed(2)} kB</b> → ${(kb * cuadrosPorSeg * nl / 1024).toFixed(2)} MB/s con ${nl} · ` +
+    `voces aquí <b>${motor.voces.size}</b>` + (motor.ctx ? ` · salida ${motor.S} de ${motor.canalesDisponibles()} canales` : "");
+}
+
+let tLento = 0;
+function cuadroPantalla(t) {
+  requestAnimationFrame(cuadroPantalla);   /* primero: un error en un cuadro no debe detener el dibujo */
+  try {
+    dibujar();
+    if (!$("hEspectro").classList.contains("oculta") && !$("cajon").classList.contains("cerrado")) espectro.dibujar(motor);
+    pintarChips();
+    if (est) editor.reloj_(est.reloj.estado, msReloj());
+    if (t - tLento > 250) { tLento = t; pintarPie(); pintarMensajes(); refrescarPads(); }
+  } catch (e) {
+    if (!cuadroPantalla.avisado) { console.error("dibujo:", e); cuadroPantalla.avisado = true; }
+  }
+}
+
+sim.enviar({ cmd: "iniciar", servidor: SERVIDOR, simuladas: SERVIDOR ? 0 : SIMULADAS_SIN_SERVIDOR,
+             partitura: window.ENJAMBRES_PARTITURA || null });
+requestAnimationFrame(cuadroPantalla);
+</script>
+</body>
+</html>

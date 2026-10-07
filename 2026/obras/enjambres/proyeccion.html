@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ENJAMBRES · PROYECCIÓN</title>
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  #pista{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);color:#6f7b8a;
+    font:12px ui-monospace,Menlo,monospace;letter-spacing:.08em;transition:opacity 1.5s;pointer-events:none;text-align:center}
+  body.quieto{cursor:none}
+</style>
+</head>
+<body>
+<canvas id="estelas"></canvas>
+<canvas id="fondo"></canvas>
+<div id="pista">clic o <b>F</b>: pantalla completa · <b>L</b>: laptops · <b>A</b>: arco · <b>E</b>: largo de las estelas</div>
+
+<script src="modelo.js"></script>
+<script src="protocolo.js"></script>
+<script>
+"use strict";
+/* ============================================================
+   ENJAMBRES · proyección
+   El enjambre para el público: fondo negro, cada agente deja una estela del
+   color de su laptop; el arco y las laptops apenas marcados; sin texto.
+   Recibe los cuadros de la maestra que la abrió (postMessage) o, abierta en
+   otro computador, del Servidor Enjambres (WebSocket, como "vista").
+   ============================================================ */
+const { decodificar } = Enjambres;
+const $ = id => document.getElementById(id);
+const fondo = $("fondo"), gf = fondo.getContext("2d");
+const estelas = $("estelas"), ge = estelas.getContext("2d");
+const R_LAP = 1.07;
+let W = 0, H = 0, dpr = 1, esc = 1, cx = 0, cy = 0;
+let cuadro = null, tCuadro = 0;
+const info = new Map();             /* num → {color, conectada, nivel} */
+let verLaptops = true, verArco = true;
+const ESTELAS = [0.06, 0.12, 0.25];  /* cuánto se borra por cuadro: estela larga, media, corta */
+let estela = 1;
+
+function medir() {
+  dpr = window.devicePixelRatio || 1;
+  W = innerWidth; H = innerHeight;
+  for (const c of [fondo, estelas]) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+  const m = Math.min(W, H) * 0.06;
+  esc = Math.min((W - 2 * m) / (2 * R_LAP), (H - 2 * m) / R_LAP);
+  cx = W / 2; cy = H / 2 + esc * R_LAP / 2;
+  ge.setTransform(1, 0, 0, 1, 0, 0); ge.fillStyle = "#000"; ge.fillRect(0, 0, estelas.width, estelas.height);
+  pintarFondo();
+}
+addEventListener("resize", medir);
+const aX = x => cx + x * esc, aY = y => cy - y * esc;
+function rgba(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; }
+
+/* el arco y las laptops, en una capa que no deja estela */
+function pintarFondo() {
+  gf.setTransform(dpr, 0, 0, dpr, 0, 0);
+  gf.clearRect(0, 0, W, H);
+  if (verArco) {
+    gf.strokeStyle = "rgba(140,155,170,.16)"; gf.lineWidth = 1.2;
+    gf.beginPath(); gf.moveTo(aX(-1), aY(0)); gf.arc(cx, cy, esc, Math.PI, 0); gf.closePath(); gf.stroke();
+  }
+  if (verLaptops && cuadro) for (const l of cuadro.laptops) {
+    const i = info.get(l.n), X = aX(R_LAP * Math.cos(l.fi)), Y = aY(R_LAP * Math.sin(l.fi));
+    gf.fillStyle = rgba(l.c, i && i.conectada === false ? 0.12 : 0.45);
+    gf.beginPath(); gf.arc(X, Y, Math.max(3, esc * 0.012), 0, 2 * Math.PI); gf.fill();
+  }
+}
+
+function dibujar() {
+  requestAnimationFrame(dibujar);
+  ge.setTransform(dpr, 0, 0, dpr, 0, 0);
+  /* las estelas se desvanecen hacia el negro; el arco y las laptops van en la capa de encima */
+  ge.globalCompositeOperation = "source-over";
+  ge.fillStyle = `rgba(0,0,0,${ESTELAS[estela]})`; ge.fillRect(0, 0, W, H);
+  if (!cuadro || performance.now() - tCuadro > 3000) return;
+  ge.globalCompositeOperation = "lighter";
+  const A = cuadro.agentes, C = cuadro.campos.length, r = Math.max(1.6, esc * 0.006);
+  const color = new Map(cuadro.laptops.map(l => [l.n, l.c]));
+  for (let i = 0; i < A.length; i += C) {
+    const col = color.get(A[i + 1]); if (!col) continue;
+    const X = aX(A[i + 2]), Y = aY(A[i + 3]);
+    if (A[i + 9]) { ge.fillStyle = "rgba(90,96,104,.25)"; ge.beginPath(); ge.arc(X, Y, r * 0.7, 0, 2 * Math.PI); ge.fill(); continue; }
+    const l = info.get(A[i + 1]), amp = Math.min(1, l && l.nivel != null ? A[i + 6] / Math.pow(10, l.nivel / 20) : A[i + 6] * 4);
+    ge.fillStyle = rgba(col, 0.10 + 0.12 * amp); ge.beginPath(); ge.arc(X, Y, r * 3.2, 0, 2 * Math.PI); ge.fill();
+    ge.fillStyle = rgba(col, 0.55 + 0.45 * amp); ge.beginPath(); ge.arc(X, Y, r, 0, 2 * Math.PI); ge.fill();
+  }
+}
+
+/* ---------- de dónde llegan los cuadros ---------- */
+let ultimoFondo = "";
+function alCuadro(buf) {
+  const inst = decodificar(buf); if (!inst) return;
+  cuadro = inst; tCuadro = performance.now();
+  const firma = inst.laptops.map(l => l.n + ":" + l.fi.toFixed(3) + ":" + (info.get(l.n) || {}).conectada).join("|");
+  if (firma !== ultimoFondo) { ultimoFondo = firma; pintarFondo(); }
+}
+/* 1) abierta desde la maestra */
+addEventListener("message", e => {
+  const m = e.data || {};
+  if (m.tipo === "cuadro") alCuadro(m.buf);
+  else if (m.tipo === "info") { for (const l of m.laptops) info.set(l.num, l); }
+});
+/* 2) abierta en otro computador: se conecta al servidor como "vista" */
+if (!window.opener && /^https?:$/.test(location.protocol)) {
+  let intento = 0;
+  const conectar = () => {
+    const ws = new WebSocket(`ws://${location.host}/enjambres`);
+    ws.binaryType = "arraybuffer";
+    ws.onopen = () => { intento = 0; ws.send(JSON.stringify({ t: "hola", rol: "vista" })); };
+    ws.onmessage = e => {
+      if (typeof e.data !== "string") return alCuadro(e.data);
+      const m = JSON.parse(e.data);
+      if (m.t === "config") for (const l of m.laptops)
+        info.set(l.num, { color: l.color, conectada: l.simulada || l.conectada || l.maestra, nivel: m.retenido.nivel ? m.vals.nivel : l.params.nivel });
+    };
+    ws.onclose = () => setTimeout(conectar, Math.min(5000, 500 * Math.pow(2, intento++)));
+  };
+  conectar();
+}
+
+/* ---------- pantalla completa, teclas, cursor ---------- */
+const completa = () => { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { }); };
+addEventListener("click", completa);
+addEventListener("keydown", e => {
+  const k = e.key.toLowerCase();
+  if (k === "f") document.fullscreenElement ? document.exitFullscreen() : completa();
+  else if (k === "l") { verLaptops = !verLaptops; pintarFondo(); }
+  else if (k === "a") { verArco = !verArco; pintarFondo(); }
+  else if (k === "e") estela = (estela + 1) % ESTELAS.length;
+});
+let tQuieto = null;
+addEventListener("pointermove", () => {
+  document.body.classList.remove("quieto"); $("pista").style.opacity = 1;
+  clearTimeout(tQuieto); tQuieto = setTimeout(() => { document.body.classList.add("quieto"); $("pista").style.opacity = 0; }, 2500);
+});
+setTimeout(() => { $("pista").style.opacity = 0; document.body.classList.add("quieto"); }, 5000);
+
+medir();
+requestAnimationFrame(dibujar);
+</script>
+</body>
+</html>
