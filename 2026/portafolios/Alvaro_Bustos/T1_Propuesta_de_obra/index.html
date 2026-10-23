@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORDER · T1 · Alvaro Bustos</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --tx:#dfe5ec; --dim:#8b97a6; --acc:#e04a3f;
+    --mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.6 Georgia,serif;padding:40px 16px}
+  main{max-width:760px;margin:0 auto}
+  h1{font-family:var(--mono);letter-spacing:.08em;font-size:22px;margin-bottom:4px}
+  p.dim{color:var(--dim);font-size:14px;margin-top:0}
+  .card{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:20px 22px;margin-top:22px}
+  .card h2{margin:0 0 8px;font-size:17px}
+  .card p,.card li{color:var(--dim);font-size:14px}
+  .btn{display:inline-block;font:12.5px var(--mono);color:var(--bg);background:var(--acc);
+    padding:9px 16px;border-radius:6px;text-decoration:none;font-weight:700;margin:4px 6px 4px 0}
+  .btn.sec{background:transparent;color:var(--tx);border:1px solid var(--line)}
+  a{color:var(--acc)}
+  code{font-family:var(--mono);font-size:13px;color:var(--tx)}
+  audio{width:100%;margin:6px 0}
+  img{max-width:100%;border-radius:6px;border:1px solid var(--line);margin-top:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+</style>
+</head>
+<body>
+<main>
+  <p class="dim"><a href="../index.html">← Alvaro Bustos</a></p>
+  <h1>T1 · ORDER</h1>
+  <p class="dim">Propuesta de obra para Orquesta de Laptops UC · tema <i>Order</i> de Heaven Pierce Her</p>
+
+  <div class="card">
+    <h2>Propuesta</h2>
+    <p>Cada intérprete toca una parte del tema (batería, bajo, guitarras, sintes…) con el teclado del computador,
+    leyendo las notas que caen en pantalla. Referentes: <i>CliX</i> (Ge Wang) y <i>Freesia</i>.</p>
+    <a class="btn" href="T1-Propuesta-de-obra-Order.pdf">Propuesta (PDF)</a>
+    <img src="img/forma-order.png" alt="Forma de la obra Order por secciones">
+  </div>
+
+  <div class="card">
+    <h2>Render (75 s)</h2>
+    <audio controls preload="none" src="render-order.mp3"></audio>
+    <a class="btn sec" href="render-order.mp3">mp3</a><a class="btn sec" href="render-order.wav">wav</a>
+  </div>
+
+  <div class="card">
+    <h2>Tocar: app Keyboard Instruments</h2>
+    <p><b>Programa listo (sin instalar Python)</b>, siempre la última versión de mi repositorio (necesita internet):</p>
+    <a class="btn" href="https://github.com/Ikilly0/ORQUESTRA-DE-LAPTOS/releases/latest/download/KeyboardInstruments-Windows.zip">Windows</a>
+    <a class="btn" href="https://github.com/Ikilly0/ORQUESTRA-DE-LAPTOS/releases/latest/download/KeyboardInstruments-macOS.zip">macOS</a>
+    <a class="btn" href="https://github.com/Ikilly0/ORQUESTRA-DE-LAPTOS/releases/latest/download/KeyboardInstruments-Linux.tar.gz">Linux</a>
+    <p><b>Copia del código en este repo</b> (funciona sin internet desde la copia de cada laptop):</p>
+    <a class="btn sec" href="app/keyboard-instruments.zip">keyboard-instruments.zip</a>
+    <ul>
+      <li>Windows: descomprimir y doble clic en <code>run_windows.bat</code> (Python 3.12 de python.org).</li>
+      <li>Linux: <code>sudo apt install python3-venv python3-tk libportaudio2</code> y <code>./run_linux.sh</code>.</li>
+      <li>macOS: doble clic en <code>run_macos.command</code>.</li>
+      <li>A mano: <code>pip install -r requirements.txt</code> y <code>python app.py</code>.</li>
+    </ul>
+    <p>Código y todas las versiones: <a href="https://github.com/Ikilly0/ORQUESTRA-DE-LAPTOS">github.com/Ikilly0/ORQUESTRA-DE-LAPTOS</a>.
+    Para traer la última versión del código a esta carpeta: <code>python app/actualizar.py</code>.</p>
+    <div class="grid">
+      <img src="img/app-menu.png" alt="Menú de la app">
+      <img src="img/app-elegir.png" alt="Elegir parte">
+      <img src="img/app-tocar.png" alt="Tocando: notas que caen">
+      <img src="img/app-escuchar.png" alt="Escuchar el tema">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Percusión por patrones</h2>
+    <p>La batería de <i>Order</i> descompuesta en 10 trozos estándar (ritmos, fills de toms, redobles, ráfagas…).
+    Quien toca percusión le da play y elige con las teclas 1–0 qué patrón suena en el siguiente compás.</p>
+    <audio controls preload="none" src="muestras/todos-los-patrones.mp3"></audio>
+    <img src="muestras/patrones.png" alt="Los 10 patrones de batería">
+  </div>
+</main>
+</body>
+</html>
