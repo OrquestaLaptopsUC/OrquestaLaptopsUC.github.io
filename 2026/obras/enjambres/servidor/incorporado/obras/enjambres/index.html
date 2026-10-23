@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ENJAMBRES · LAPTOP</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --tx:#dfe5ec; --dim:#8b97a6;
+    --acc:#8f9ef0; --acc2:#e8b25a; --ok:#7fc47f; --warn:#e06a5a; --mio:#8f9ef0;
+    --mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--tx);font:12.5px/1.45 var(--mono);
+       display:flex;flex-direction:column;overflow:hidden;user-select:none;-webkit-user-select:none}
+  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{font-size:15px;margin:0;letter-spacing:.3em;font-weight:600}
+  .chip{font-size:11px;letter-spacing:.14em;font-weight:700;padding:2px 9px;border-radius:3px;background:var(--mio);color:#10131a}
+  .chip.ensayo{background:transparent;color:var(--acc2);border:1px solid var(--acc2)}
+  .grow{flex:1}
+  label{color:var(--dim);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+  select,button,input[type=text],input[type=number]{background:#1b2128;color:var(--tx);border:1px solid var(--line);border-radius:4px;padding:4px 8px;font:12px var(--mono)}
+  button{cursor:pointer}
+  button:hover{border-color:var(--acc)}
+  button:disabled{opacity:.35;cursor:default}
+  button.on{background:var(--acc2);color:#1a1204;border-color:var(--acc2);font-weight:700}
+  input[type=range]{accent-color:var(--acc);width:100%;margin:0}
+  #red{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--dim)}
+  .punto{width:9px;height:9px;border-radius:50%;background:#4a525c;display:inline-block;flex:none}
+  .punto.ok{background:var(--ok);box-shadow:0 0 6px var(--ok)}
+  .punto.mal{background:var(--warn)}
+  main{flex:1;display:grid;grid-template-columns:1fr 380px;min-height:0}
+  #escena{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0}
+  #lienzo{flex:1;min-height:0;width:100%;display:block}
+  #aviso{position:absolute;left:0;right:0;top:0;padding:6px 14px;background:var(--warn);color:#1a0806;font-weight:700;letter-spacing:.06em;display:none;text-align:center;z-index:2}
+  #partitura{width:min(680px,92%);margin:0 auto;text-align:center;flex:none;padding-top:6px}
+  #partitura:empty{display:none}
+  #partitura .reloj{font-size:12px;color:var(--dim);letter-spacing:.1em}
+  #partitura .msg{background:rgba(20,24,29,.94);border:1px solid var(--line);border-radius:8px;padding:10px 16px;margin-top:8px;font-size:20px;line-height:1.3}
+  #partitura .msg.mio{border:2px solid var(--mio)}
+  #partitura .msg small{display:block;font-size:10.5px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px}
+  #partitura .prox{margin-top:8px;font-size:13px;color:var(--dim);background:rgba(20,24,29,.85);border-radius:6px;padding:5px 12px;display:inline-block}
+  #partitura .prox b{color:var(--tx)}
+  #cajaEsp{position:relative;height:80px;border-top:1px solid var(--line);background:#07090b}
+  #espectro{height:100%;width:100%;display:block}
+  #marcas{position:absolute;inset:0;pointer-events:none;font-size:10px;color:#5b6775}
+  #marcas span{position:absolute;right:6px;transform:translateY(-50%)}
+  #marcas b{position:absolute;left:8px;top:4px;font-weight:400;letter-spacing:.06em}
+  #panel{border-left:1px solid var(--line);background:var(--panel);overflow-y:auto;min-width:0}
+  .sec{padding:12px 14px;border-bottom:1px solid var(--line)}
+  .sec h2{font-size:11px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 8px;font-weight:600;display:flex;gap:8px;align-items:center}
+  .sec h2 small{color:var(--dim);letter-spacing:.04em;text-transform:none;font-weight:400}
+  .grande{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .grande button{font-size:22px;padding:12px 0;font-weight:700;border-width:2px}
+  .grande button small{display:block;font-size:10.5px;font-weight:400;letter-spacing:.08em;color:var(--dim)}
+  .grande #bMas{border-color:var(--mio)}
+  .dos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  #cuenta{margin-top:10px;color:var(--dim);font-size:11.5px}
+  #cuenta b{color:var(--tx);font-size:14px}
+  #chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+  .ag{font-size:10.5px;padding:1px 6px;border-radius:3px;cursor:pointer;color:#10131a;font-weight:700;font-variant-numeric:tabular-nums;border:1px solid transparent;background:var(--mio)}
+  .ag.mudo{background:#3a3f46;color:#8b97a6;text-decoration:line-through}
+  .ag:hover{border-color:#fff}
+  .fila{display:grid;grid-template-columns:1fr 58px;gap:4px 8px;align-items:center;padding:3px 0}
+  .fila .nom{grid-column:1/-1;font-size:11px;color:var(--dim);display:flex;justify-content:space-between;margin-bottom:-3px}
+  .fila .val{text-align:right;font-variant-numeric:tabular-nums;font-size:11.5px}
+  .fila select{width:100%;padding:2px 4px;grid-column:1/3}
+  .fila.apagada .ctl,.fila.apagada .val{opacity:.35}
+  .nota{font-size:10.5px;color:#6f7b8a}
+  .opcion{display:grid;grid-template-columns:70px 1fr;gap:8px;align-items:center;margin-top:10px}
+  .lbl{color:var(--dim);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+  kbd{background:#1e242b;border:1px solid var(--line);border-radius:3px;padding:0 4px;font-size:10.5px;color:var(--tx)}
+  #secEnsayo .botones{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  #secEnsayo .tiempo{font-size:16px;font-variant-numeric:tabular-nums;margin-left:6px}
+  /* entrada */
+  #entrada{position:fixed;inset:0;background:rgba(8,10,12,.97);display:flex;align-items:center;justify-content:center;z-index:9;padding:20px}
+  #entrada .caja{max-width:660px;width:100%;padding:26px 30px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+  #entrada h2{margin:0 0 4px;font-size:22px;letter-spacing:.3em}
+  #entrada p{color:var(--dim);font-size:12.5px}
+  #numeros{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:12px 0}
+  #numeros button{font-size:17px;padding:10px 0;font-weight:700}
+  #numeros button.sel{background:var(--acc);color:#10131a;border-color:var(--acc)}
+  #numeros button.tomado{text-decoration:line-through}
+  .acciones{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .acciones>div{border:1px solid var(--line);border-radius:6px;padding:12px}
+  .acciones button.grande2{width:100%;font-size:15px;padding:10px 0;font-weight:700}
+  #bEntrar{background:var(--acc2);color:#1a1204;border-color:var(--acc2)}
+  #bEnsayar{border-color:var(--acc2);color:var(--acc2)}
+  #msgEntrada{color:var(--warn);min-height:1.4em;margin-top:8px}
+  .oculto{display:none !important}
+</style>
+</head>
+<body>
+
+<div id="entrada"><div class="caja">
+  <h2>ENJAMBRES</h2>
+  <p>Orquesta de Laptops UC · a partir de Huepe, Colasso y Cádiz (2014), "Generating Music from Flocking Dynamics".</p>
+  <p style="margin-top:14px"><b style="color:var(--tx)">Elige tu número</b> (el que te asignaron en el ensamble). Los tachados ya los tiene otra laptop.</p>
+  <div id="numeros"></div>
+  <div style="display:flex;gap:10px;align-items:center"><label for="otro">otro número</label>
+    <input type="text" id="otro" inputmode="numeric" maxlength="2" style="width:60px" placeholder="1–99"></div>
+  <div class="acciones">
+    <div>
+      <button id="bEntrar" class="grande2">tocar en el concierto</button>
+      <p class="nota">Conectada a la maestra. Activa el sonido.</p>
+      <span id="campoServidor" class="oculto"><label for="servidor">servidor</label>
+        <input type="text" id="servidor" placeholder="192.168.0.10:8080" style="width:100%;margin-top:4px"></span>
+    </div>
+    <div>
+      <button id="bEnsayar" class="grande2">ensayar sola o solo</button>
+      <p class="nota">Sin red: la simulación corre aquí y los demás intérpretes tocan simulados.
+        <br>con <input type="number" id="nSim" min="0" max="15" value="7" style="width:50px"> intérpretes simulados</p>
+    </div>
+  </div>
+  <div id="msgEntrada"></div>
+  <p class="nota">Tu laptop suena con los agentes que pasan cerca de ella en el semicírculo. Con <kbd>+</kbd> y <kbd>−</kbd> agregas y quitas los tuyos.</p>
+</div></div>
+
+<header>
+  <h1>ENJAMBRES</h1>
+  <span class="chip" id="chipNum">LAPTOP</span>
+  <span id="red"><span class="punto"></span> sin conexión</span>
+  <span class="grow"></span>
+  <select id="escucha" class="oculto" title="qué escuchar en el ensayo">
+    <option value="sala">escuchar: toda la sala (estéreo)</option>
+    <option value="mia">escuchar: solo lo que suena en mi laptop</option>
+  </select>
+  <button id="bNumero" title="volver a la pantalla de entrada">cambiar número</button>
+  <button id="bSonido">activar sonido</button>
+  <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8" style="width:90px" title="volumen">
+</header>
+
+<main>
+  <section id="escena">
+    <div id="aviso"></div>
+    <div id="partitura"></div>
+    <canvas id="lienzo"></canvas>
+    <div id="cajaEsp"><canvas id="espectro"></canvas><div id="marcas"></div></div>
+  </section>
+
+  <aside id="panel">
+    <div class="sec oculto" id="secEnsayo">
+      <h2>Ensayo <small>la maestra está simulada y te cede todo</small></h2>
+      <div class="botones">
+        <span class="lbl">partitura</span>
+        <button id="bRelIni" title="iniciar o continuar">▶</button><button id="bRelDet" title="detener">⏸</button><button id="bRelRei" title="volver a 0:00">⏮</button>
+        <span class="tiempo" id="tEnsayo">0:00</span>
+      </div>
+      <label style="display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-size:11px;margin-top:8px;cursor:pointer">
+        <input type="checkbox" id="oBots" checked> los demás intérpretes tocan</label>
+    </div>
+    <div class="sec">
+      <h2>Mis agentes</h2>
+      <div class="grande">
+        <button id="bMenos" title="tecla −">−<small>QUITAR AGENTE</small></button>
+        <button id="bMas" title="tecla +">+<small>AGREGAR AGENTE</small></button>
+      </div>
+      <div class="dos">
+        <button id="bMuteTodos" title="tecla m">mutear todos</button>
+        <button id="bDesmuteTodos">desmutear todos</button>
+      </div>
+      <div id="cuenta"></div>
+      <div id="chips"></div>
+    </div>
+    <div class="sec">
+      <h2>Mi sonido <small id="nCedidos"></small></h2>
+      <div class="pads" id="pads"></div>
+      <div class="opcion"><span class="lbl">mapeo</span><div id="segMapeo"></div></div>
+      <details class="avanzado" style="margin-top:10px">
+        <summary>avanzado</summary>
+        <div class="fila" style="margin-top:4px">
+          <div class="nom"><span>salidas de audio (grupo pegado a esta laptop)</span><span id="avisoSalidas"></span></div>
+          <select id="salidas" class="ctl"></select>
+        </div>
+        <div id="params"></div>
+      </details>
+    </div>
+  </aside>
+</main>
+
+<script src="modelo.js"></script>
+<script src="protocolo.js"></script>
+<script src="simulador.js"></script>
+<script src="sonido.js"></script>
+<script src="vista.js"></script>
+<script src="ui.js"></script>
+<script src="partitura.js"></script>
+<script>
+"use strict";
+const { Motor, PARAMS, MAPEOS, NOMBRE_MAPEO, decodificar, Vista, Espectro, MAX_CANALES,
+        Pad, PADS, paramsDePad, padDeValores, valoresDePad, textoPad, Segmentos, mensajesEn, mmss, RelojLocal } = Enjambres;
+const $ = id => document.getElementById(id);
+const K = "oluc.enjambres.";
+const ls = {
+  get(k) { try { return localStorage.getItem(K + k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(K + k, v); } catch (e) { } },
+};
+function nuevoId() {
+  try { const a = new Uint32Array(2); crypto.getRandomValues(a); return a[0].toString(36) + a[1].toString(36); }
+  catch (e) { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+}
+const miId = ls.get("id") || (() => { const i = nuevoId(); ls.set("id", i); return i; })();
+let miNum = +ls.get("num") || null;
+let misSalidas = +ls.get("salidas") || 2;           /* estéreo por defecto */
+let modo = null;                                    /* "concierto" | "ensayo" */
+
+const HTTP = /^https?:$/.test(location.protocol);
+function normHost(s) {
+  s = String(s || "").trim().replace(/^[a-z]+:\/\//i, "").replace(/\/.*$/, "");
+  if (!s) return "";
+  if (!/:\d+$/.test(s)) s += ":8080";
+  return s;
+}
+let host = normHost(new URLSearchParams(location.search).get("servidor")) || (HTTP ? location.host : normHost(ls.get("servidor")));
+
+const motor = new Motor();
+const reloj = new RelojLocal();
+let ws = null, conectado = false, intento = 0, tReintento = null, detenido = false, sim = null;
+let config = null, partitura = { eventos: [] }, cuadro = null, tCuadro = 0, maestraPresente = false, silenciado = false;
+
+/* ---------- entrada: elegir número y modo ---------- */
+let elegido = miNum;
+async function ocupados() {
+  if (!host) return [];
+  try { const r = await fetch(`http://${host}/enjambres/info`, { cache: "no-store" }); const j = await r.json(); return j.ocupados || []; }
+  catch (e) { return []; }
+}
+async function mostrarEntrada(msg) {
+  $("entrada").classList.remove("oculto");
+  $("msgEntrada").textContent = msg || "";
+  $("campoServidor").classList.toggle("oculto", HTTP);
+  $("servidor").value = host || "";
+  const tomados = modo === "ensayo" ? [] : (await ocupados()).filter(n => n !== miNum);   /* el mío: el servidor me lo devuelve */
+  const cont = $("numeros"); cont.innerHTML = "";
+  for (let n = 1; n <= 24; n++) {
+    const b = document.createElement("button");
+    b.textContent = n;
+    const tomado = tomados.includes(n);
+    b.className = (n === elegido ? "sel " : "") + (tomado ? "tomado" : "");
+    b.title = tomado ? "ya la tiene otra laptop (para ensayar sí se puede usar)" : "";
+    b.onclick = () => { elegido = n; $("otro").value = ""; for (const x of cont.children) x.classList.toggle("sel", +x.textContent === n); };
+    cont.appendChild(b);
+  }
+  if (elegido > 24) $("otro").value = elegido;
+}
+$("otro").addEventListener("input", () => {
+  const n = parseInt($("otro").value, 10);
+  if (n >= 1 && n <= 99) { elegido = n; for (const x of $("numeros").children) x.classList.toggle("sel", +x.textContent === n); }
+});
+function numeroValido() {
+  if (elegido >= 1 && elegido <= 99) return true;
+  $("msgEntrada").textContent = "elige un número del 1 al 99"; return false;
+}
+$("bEntrar").onclick = async () => {
+  if (!numeroValido()) return;
+  if (modo === "ensayo") { ls.set("num", elegido); location.reload(); return; }   /* del ensayo al concierto: empezar limpio */
+  if (!HTTP) { host = normHost($("servidor").value); if (!host) { $("msgEntrada").textContent = "escribe la dirección del servidor que muestra la maestra"; return; } ls.set("servidor", host); }
+  if ((await ocupados()).includes(elegido) && elegido !== miNum) { $("msgEntrada").textContent = `El número ${elegido} ya lo tiene otra laptop conectada: elige otro.`; return; }
+  miNum = elegido; ls.set("num", miNum); modo = "concierto";
+  $("entrada").classList.add("oculto");
+  await activarSonido(true);
+  arrancarModo();
+  detenido = false;
+  if (ws) { try { ws.close(); } catch (e) { } } else conectar();
+};
+$("bEnsayar").onclick = async () => {
+  if (!numeroValido()) return;
+  if (modo) { ls.set("num", elegido); ls.set("ensayar", "1"); location.reload(); return; }   /* cambiar de número: empezar limpio */
+  miNum = elegido; ls.set("num", miNum); modo = "ensayo";
+  $("entrada").classList.add("oculto");
+  await activarSonido(true);
+  arrancarModo();
+  /* la simulación corre aquí, como en la maestra (simulador.js) */
+  sim = crearSimulador(m => {
+    if (m.tipo === "cuadro") alCuadro(m.buf);
+    else if (m.tipo === "difusion") alMensaje(m.m);
+    else if (m.tipo === "estado") $("oBots").checked = m.bots;
+  });
+  sim.enviar({ cmd: "iniciar", servidor: null, simuladas: Math.max(0, Math.min(15, +$("nSim").value | 0)), propia: miNum,
+               bots: true, local: true, cederTodo: true, partitura: window.ENJAMBRES_PARTITURA || null });
+};
+$("bNumero").onclick = () => mostrarEntrada();
+["otro", "servidor", "nSim"].forEach(id => $(id).addEventListener("keydown", e => e.stopPropagation()));
+
+function arrancarModo() {
+  const ensayo = modo === "ensayo";
+  $("chipNum").textContent = (ensayo ? "ENSAYO · " : "") + "LAPTOP " + miNum;
+  $("chipNum").classList.toggle("ensayo", ensayo);
+  document.documentElement.style.setProperty("--mio", Enjambres.colorDe(miNum));
+  document.title = "ENJAMBRES · " + (ensayo ? "ENSAYO · " : "") + "LAPTOP " + miNum;
+  $("secEnsayo").classList.toggle("oculto", !ensayo);
+  $("escucha").classList.toggle("oculto", !ensayo);
+  $("red").classList.toggle("oculto", ensayo);
+  $("bNumero").textContent = ensayo ? "salir del ensayo" : "cambiar número";
+  aplicarEscucha();
+}
+function aplicarEscucha() {
+  motor.fijarModo(modo === "ensayo" && $("escucha").value === "sala" ? { tipo: "estereo" } : { tipo: "laptop", num: miNum, fisico: true });
+}
+$("escucha").onchange = aplicarEscucha;
+
+/* ---------- red (concierto) ---------- */
+function conectar() {
+  clearTimeout(tReintento);
+  if (!host || !miNum || detenido || modo !== "concierto") return;
+  pintarRed("conectando");
+  try { ws = new WebSocket(`ws://${host}/enjambres`); } catch (e) { return reintentar(); }
+  ws.binaryType = "arraybuffer";
+  ws.onopen = () => { intento = 0; ws.send(JSON.stringify({ t: "hola", rol: "laptop", id: miId, num: miNum, salidas: misSalidas })); };
+  ws.onmessage = e => {
+    if (typeof e.data !== "string") return alCuadro(e.data);
+    let m; try { m = JSON.parse(e.data); } catch (x) { return; }
+    alMensaje(m);
+  };
+  ws.onclose = () => { ws = null; conectado = false; pintarRed(); if (!detenido) reintentar(); };
+}
+function reintentar() {
+  pintarRed("reconectando");
+  tReintento = setTimeout(conectar, Math.min(5000, 500 * Math.pow(2, intento++)));
+}
+/* lo que llega de la maestra: por la red en concierto, del simulador propio en ensayo */
+function alMensaje(m) {
+  if (m.t === "bienvenida") { conectado = true; maestraPresente = m.maestra; pintarRed(); }
+  else if (m.t === "config") { config = m; pintarConfig(); }
+  else if (m.t === "partitura") partitura = m.partitura || { eventos: [] };
+  else if (m.t === "reloj") reloj.recibir(m);
+  else if (m.t === "maestra") { maestraPresente = m.si; pintarRed(); }
+  else if (m.t === "ocupado") { detenido = true; ws.close(); mostrarEntrada(`El número ${m.num} ya lo tiene otra laptop conectada: elige otro.`); }
+  else if (m.t === "reemplazado") { detenido = true; pintarRed("reemplazada"); }
+  else if (m.t === "error") { detenido = true; mostrarEntrada(m.motivo); }
+}
+function orden(accion, extra) {
+  if (modo === "ensayo") { if (sim) sim.enviar(Object.assign({ cmd: "orden", num: miNum, accion }, extra || {})); }
+  else if (ws && ws.readyState === 1 && conectado) ws.send(JSON.stringify(Object.assign({ t: "cmd", accion }, extra || {})));
+}
+function pintarRed(forzado) {
+  let clase = "mal", txt;
+  if (forzado === "reemplazada") txt = "esta laptop se abrió en otra pestaña o ventana; esta quedó desconectada";
+  else if (conectado && maestraPresente) { clase = "ok"; txt = "conectada a " + host; }
+  else if (conectado) txt = "conectada, esperando a la maestra";
+  else if (forzado === "conectando") { clase = ""; txt = "conectando con " + host + "…"; }
+  else txt = "sin conexión con " + (host || "el servidor") + ", reintentando";
+  $("red").innerHTML = `<span class="punto ${clase}"></span> ${txt}`;
+}
+
+/* ---------- cada cuadro (≈30 por segundo) ---------- */
+let bytesCuadro = 0;
+function alCuadro(buf) {
+  const inst = decodificar(buf);
+  if (!inst) return;
+  cuadro = inst; tCuadro = performance.now(); bytesCuadro = buf.byteLength;
+  if (silenciado) silenciado = false;
+  motor.actualizar(inst);
+}
+/* Sin cuadros por 1,5 s (maestra recargándose, red caída): silencio, en vez de dejar sonando lo último. */
+setInterval(() => {
+  const sinDatos = !cuadro || performance.now() - tCuadro > 1500;
+  if (sinDatos && !silenciado && motor.ctx) { motor.silenciarTodo(); silenciado = true; }
+  const av = $("aviso");
+  av.style.display = modo === "concierto" && sinDatos && $("entrada").classList.contains("oculto") ? "block" : "none";
+  av.textContent = !conectado ? "SIN CONEXIÓN CON EL SERVIDOR" : "SIN DATOS DE LA MAESTRA";
+}, 300);
+
+/* ---------- sonido ---------- */
+async function activarSonido(forzarEncendido) {
+  if (motor.ctx && motor.ctx.state === "running" && !forzarEncendido) await motor.ctx.suspend();
+  else { motor.fijarCanales(misSalidas); await motor.iniciar(); }
+  const on = motor.ctx.state === "running";
+  $("bSonido").textContent = on ? "sonido activo" : "activar sonido";
+  $("bSonido").classList.toggle("on", on);
+  pintarSalidas();
+}
+$("bSonido").onclick = () => activarSonido(false);
+$("vol").oninput = () => motor.fijarVolumen(+$("vol").value);
+
+/* ---------- salidas: estéreo por defecto; solo lo que tenga este dispositivo ---------- */
+function pintarSalidas() {
+  const disp = motor.canalesDisponibles(), sel = $("salidas");
+  sel.innerHTML = "";
+  for (let n = 1; n <= MAX_CANALES; n++) {
+    const nombre = n === 1 ? "1 · mono" : n === 2 ? "2 · estéreo" : n + " canales";
+    const o = new Option(nombre + (disp != null && n > disp ? " · no disponible" : ""), n);
+    o.disabled = disp != null && n > disp; sel.add(o);
+  }
+  if (disp != null && misSalidas > disp) { misSalidas = Math.max(1, Math.min(2, disp)); orden("salidas", { n: misSalidas }); motor.fijarCanales(misSalidas); }
+  sel.value = String(misSalidas);
+  $("avisoSalidas").textContent = disp == null ? "" : `este dispositivo: ${disp}`;
+}
+$("salidas").onchange = () => {
+  misSalidas = +$("salidas").value; ls.set("salidas", misSalidas);
+  motor.fijarCanales(misSalidas);
+  orden("salidas", { n: misSalidas });
+};
+
+/* ---------- mis agentes ---------- */
+function mios() {
+  const out = [];
+  if (!cuadro) return out;
+  const A = cuadro.agentes, C = cuadro.campos.length;
+  for (let i = 0; i < A.length; i += C) if (A[i + 1] === miNum) out.push({ id: A[i], mudo: A[i + 9] });
+  return out;
+}
+let firmaChips = null;
+function pintarChips() {
+  const ms = mios();
+  const firma = ms.map(a => a.id + (a.mudo ? "m" : "")).join(",");
+  if (firma === firmaChips) return;
+  firmaChips = firma;
+  const c = $("chips"); c.innerHTML = "";
+  for (const a of ms) {
+    const s = document.createElement("span");
+    s.className = "ag" + (a.mudo ? " mudo" : ""); s.textContent = a.id;
+    s.title = a.mudo ? "muteado: clic para que vuelva a sonar" : "clic para mutear (sigue volando, pero no suena)";
+    s.onclick = () => orden("mutear", { id: a.id });
+    c.appendChild(s);
+  }
+  const mudos = ms.filter(a => a.mudo).length, tope = config ? config.maxAgentes : 100;
+  $("cuenta").innerHTML = `<b>${ms.length}</b> agentes${mudos ? ` (${mudos} muteados)` : ""} · máximo ${tope}`;
+  $("bMenos").disabled = !ms.length;
+  $("bMas").disabled = ms.length >= tope;
+}
+$("bMas").onclick = () => orden("crear");
+$("bMenos").onclick = () => orden("quitar");
+$("bMuteTodos").onclick = () => orden("mutearTodos", { si: true });
+$("bDesmuteTodos").onclick = () => orden("mutearTodos", { si: false });
+document.addEventListener("keydown", e => {
+  if (!$("entrada").classList.contains("oculto")) return;
+  if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName) && e.target.type !== "range" && e.target.type !== "checkbox") return;
+  if (e.key === "+" || e.key === "=") orden("crear");
+  else if (e.key === "-" || e.key === "_") orden("quitar");
+  else if (e.key === "m" || e.key === "M") { const ms = mios(); orden("mutearTodos", { si: ms.some(a => !a.mudo) }); }
+});
+
+/* ---------- mi sonido: pads (solo se mueve lo que la maestra cede) ---------- */
+const locales = {};                      /* lo último que moví yo, hasta que la maestra lo confirme */
+function misValores() {
+  const yo = config && config.laptops.find(l => l.num === miNum), v = {};
+  for (const p of PARAMS) {
+    if (!config) { v[p.k] = p.def; continue; }
+    if (config.retenido[p.k]) { v[p.k] = config.vals[p.k]; continue; }
+    let x = yo && yo.params ? yo.params[p.k] : p.def;
+    if (locales[p.k] !== undefined) { if (String(locales[p.k]) === String(x)) delete locales[p.k]; else x = locales[p.k]; }
+    v[p.k] = x;
+  }
+  return v;
+}
+const cedido = k => config && !config.retenido[k];
+function fijarMio(k, v) { locales[k] = v; orden("param", { k, v }); }
+const pads = PADS.map(d => {
+  const pad = new Pad($("pads"), d, { alCambiar: (x, y) => {
+    const v = valoresDePad(d, x, y);
+    for (const k in v) if (cedido(k)) fijarMio(k, v[k]);
+    pad.texto(textoPad(d, misValores()));
+  } });
+  return { d, ks: paramsDePad(d), pad };
+});
+const segMapeo = new Segmentos($("segMapeo"), MAPEOS, { directo: "directo", osciladores: "osciladores", friccion: "fricción" }, v => fijarMio("mapeo", v));
+/* lo que no está en los pads, en "avanzado" */
+function decimales(p) { return p.paso >= 1 ? 0 : p.paso >= 0.1 ? 1 : p.paso >= 0.01 ? 2 : 3; }
+function fmt(p, v) { return p.opciones ? (NOMBRE_MAPEO[v] || v) : Number(v).toFixed(decimales(p)); }
+const aSlider = (p, v) => p.log ? 1000 * Math.log(v / p.min) / Math.log(p.max / p.min) : v;
+const deSlider = (p, s) => p.log ? Math.round(p.min * Math.pow(p.max / p.min, s / 1000)) : +s;
+const enPads = new Set(PADS.flatMap(paramsDePad).concat(["mapeo"]));
+const filas = PARAMS.filter(p => !enPads.has(p.k)).map(p => {
+  const el = document.createElement("div"); el.className = "fila";
+  el.innerHTML = `<div class="nom"><span>${p.n}</span><span class="aviso"></span></div>`;
+  let ctl, tocando = false;
+  const val = document.createElement("span"); val.className = "val";
+  if (p.opciones) {
+    ctl = document.createElement("select");
+    for (const o of p.opciones) ctl.add(new Option(fmt(p, o), o));
+    ctl.onchange = () => fijarMio(p.k, ctl.value);
+  } else {
+    ctl = document.createElement("input"); ctl.type = "range";
+    ctl.min = p.log ? 0 : p.min; ctl.max = p.log ? 1000 : p.max; ctl.step = p.log ? 1 : p.paso;
+    ctl.oninput = () => { const v = deSlider(p, ctl.value); val.textContent = fmt(p, v); fijarMio(p.k, v); };
+    ctl.onpointerdown = () => { tocando = true; };
+    addEventListener("pointerup", () => { tocando = false; });
+  }
+  ctl.classList.add("ctl");
+  el.appendChild(ctl); if (!p.opciones) el.appendChild(val);
+  $("params").appendChild(el);
+  const aviso = el.querySelector(".aviso");
+  return function refrescar(v) {
+    const ret = !cedido(p.k);
+    if (!tocando && document.activeElement !== ctl) { if (p.opciones) ctl.value = v[p.k]; else { ctl.value = aSlider(p, v[p.k]); val.textContent = fmt(p, v[p.k]); } }
+    ctl.disabled = ret; el.classList.toggle("apagada", ret);
+    aviso.textContent = ret ? "rige la maestra" : "";
+  };
+});
+function pintarConfig() {
+  const v = misValores();
+  for (const { d, ks, pad } of pads) {
+    const hx = d.k === "registro" ? ks.every(cedido) : cedido(d.px);
+    const hy = d.k === "registro" ? hx : cedido(d.py);
+    pad.habilitar(hx, hy, !hx && !hy ? "rige la maestra" : "");
+    const p = padDeValores(d, v);
+    pad.fijar(p.x, p.y, textoPad(d, v));
+  }
+  segMapeo.fijar(v.mapeo); segMapeo.habilitar(cedido("mapeo"));
+  for (const f of filas) f(v);
+  const ced = PARAMS.filter(p => cedido(p.k)).length;
+  $("nCedidos").textContent = !config ? "" : ced === PARAMS.length ? "todo cedido" : ced ? `${ced} de ${PARAMS.length} cedidos` : "todo lo fija la maestra";
+}
+
+/* ---------- partitura: mis mensajes ---------- */
+const escapar = s => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+let htmlPartitura = "";
+function pintarPartitura() {
+  const ms = reloj.ahora();
+  if (modo === "ensayo") $("tEnsayo").textContent = mmss(ms);
+  const evs = partitura && partitura.eventos || [];
+  let html = "";
+  if (evs.length && miNum) {
+    const { actuales, proximo } = mensajesEn(partitura, ms, miNum);
+    if (reloj.estado !== "espera" || actuales.length) html += `<div class="reloj">${mmss(ms)}</div>`;
+    for (const e of actuales) html += `<div class="msg${e.para === miNum ? " mio" : ""}"><small>${e.para === miNum ? "para ti" : "para todos"}</small>${escapar(e.texto) || "…"}</div>`;
+    if (proximo && reloj.estado === "corriendo" && proximo.faltaMs < 20000)
+      html += `<div class="prox">en <b>${Math.ceil(proximo.faltaMs / 1000)} s</b> · ${proximo.ev.para === miNum ? "para ti" : "para todos"}: ${escapar(proximo.ev.texto)}</div>`;
+  }
+  if (html !== htmlPartitura) { htmlPartitura = html; $("partitura").innerHTML = html; }
+}
+$("bRelIni").onclick = () => sim && sim.enviar({ cmd: "reloj", accion: "iniciar" });
+$("bRelDet").onclick = () => sim && sim.enviar({ cmd: "reloj", accion: "detener" });
+$("bRelRei").onclick = () => sim && sim.enviar({ cmd: "reloj", accion: "reiniciar" });
+$("oBots").onchange = () => sim && sim.enviar({ cmd: "bots", si: $("oBots").checked });
+
+/* ---------- vista ---------- */
+const vista = new Vista($("lienzo"));
+const espectro = new Espectro($("espectro"), $("marcas"));
+const info = new Map();
+function infoDeConfig() {
+  info.clear();
+  if (!config) return;
+  for (const l of config.laptops) {
+    const ef = {};
+    for (const p of PARAMS) ef[p.k] = config.retenido[p.k] ? config.vals[p.k] : l.params[p.k];
+    info.set(l.num, { color: l.color, ef, conectada: l.simulada || l.conectada || l.maestra });
+  }
+}
+let tLento = 0;
+function cuadroPantalla(t) {
+  requestAnimationFrame(cuadroPantalla);
+  try {
+    infoDeConfig();
+    vista.dibujar(cuadro, { info, elegida: miNum, lineas: true, atenuar: !cuadro || performance.now() - tCuadro > 1500,
+                            vacio: ["sin agentes todavía", "agrega los tuyos con  +  (o la tecla +)"] });
+    espectro.dibujar(motor);
+    pintarChips();
+    if (t - tLento > 200) { tLento = t; pintarPartitura(); if (config) pintarConfig(); }
+  } catch (e) {
+    if (!cuadroPantalla.avisado) { console.error("dibujo:", e); cuadroPantalla.avisado = true; }
+  }
+}
+
+pintarSalidas(); pintarRed(); pintarConfig();
+requestAnimationFrame(cuadroPantalla);
+if (ls.get("ensayar") === "1") { ls.set("ensayar", ""); elegido = miNum; mostrarEntrada("Elige tu número y vuelve a apretar «ensayar»."); }
+else mostrarEntrada();
+</script>
+</body>
+</html>

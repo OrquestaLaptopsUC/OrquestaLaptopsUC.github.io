@@ -3,9 +3,11 @@
 //
 // Una sola aplicación, sin dependencias ni instalación: doble clic y queda
 // funcionando. Hace dos cosas:
-//  1. Sirve la carpeta Web/ por HTTP para que las demás laptops abran
-//     http://<ip-de-esta-laptop>:8080 sin internet. Si la app no está dentro
-//     de Web/, sirve la copia de Enjambres que lleva incorporada.
+//  1. Sirve el sitio de la orquesta (el repositorio OrquestaLaptopsUC.github.io)
+//     por HTTP para que las demás laptops abran http://<ip-de-esta-laptop>:8080
+//     sin internet; la obra queda en /<año>/obras/enjambres/, igual que en
+//     GitHub Pages, y /obras/enjambres/ sigue funcionando. Si no encuentra el
+//     repositorio, sirve la copia de Enjambres que lleva incorporada.
 //  2. Por WebSocket (/enjambres) hace de central entre la maestra y las laptops:
 //     reenvía a todas las laptops cada cuadro binario de la simulación (unos 30
 //     por segundo), les reparte la configuración, reserva el número de cada
@@ -64,8 +66,10 @@ const (
 	guidWS       = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 	archRespaldo = "oluc-enjambres-respaldo.json"
 	archBitacora = "oluc-enjambres.log"
-	obra         = "/obras/enjambres/"
 )
+
+// dirección de la obra; con el repositorio completo, /<año>/obras/enjambres/ (ver usarWeb)
+var obra = "/obras/enjambres/"
 
 //go:embed incorporado
 var incorporado embed.FS
@@ -646,31 +650,77 @@ func manejarWS(w http.ResponseWriter, r *http.Request) {
    HTTP: archivos de Web/ (o la copia incorporada)
    ============================================================ */
 
-var raiz fs.FS // Web/ en disco o la copia incorporada
+var raiz fs.FS    // el sitio en disco (raíz del repositorio), la carpeta del año o la copia incorporada
+var delAnio fs.FS // la carpeta del año (2026/): mantiene válidas las direcciones /obras/... sin el año
 var raizTxt string
 
-// Busca hacia arriba desde el ejecutable una carpeta que contenga obras/enjambres/maestra.html.
-// Así funciona igual dentro de "Servidor Enjambres.app/Contents/MacOS/" que suelto.
+func tieneObra(d string) bool {
+	st, err := os.Stat(filepath.Join(d, "obras", "enjambres", "maestra.html"))
+	return err == nil && !st.IsDir()
+}
+
+// Devuelve la carpeta que contiene obras/enjambres/ (en el repositorio, la del año: 2026/).
+// Busca primero hacia arriba desde el ejecutable, así funciona igual dentro de
+// "Servidor Enjambres.app/Contents/MacOS/" que suelto. Si la app se sacó del repositorio
+// (o macOS la abrió desde una copia aislada), busca el repositorio en la carpeta
+// personal: ~/Development/OrquestaLaptopsUC.github.io o ~/OrquestaLaptopsUC.github.io.
 func buscarWeb() string {
-	exe, err := os.Executable()
-	if err != nil {
-		return ""
-	}
-	if r, err := filepath.EvalSymlinks(exe); err == nil {
-		exe = r
-	}
-	d := filepath.Dir(exe)
-	for i := 0; i < 10; i++ {
-		if st, err := os.Stat(filepath.Join(d, "obras", "enjambres", "maestra.html")); err == nil && !st.IsDir() {
-			return d
+	if exe, err := os.Executable(); err == nil {
+		if r, err := filepath.EvalSymlinks(exe); err == nil {
+			exe = r
 		}
-		p := filepath.Dir(d)
-		if p == d {
-			break
+		d := filepath.Dir(exe)
+		for i := 0; i < 10; i++ {
+			if tieneObra(d) {
+				return d
+			}
+			p := filepath.Dir(d)
+			if p == d {
+				break
+			}
+			d = p
 		}
-		d = p
+	}
+	if home, err := os.UserHomeDir(); err == nil {
+		for _, rep := range []string{
+			filepath.Join(home, "Development", "OrquestaLaptopsUC.github.io"),
+			filepath.Join(home, "OrquestaLaptopsUC.github.io"),
+		} {
+			hijas, _ := os.ReadDir(rep)
+			for i := len(hijas) - 1; i >= 0; i-- { // el año más reciente primero
+				if d := filepath.Join(rep, hijas[i].Name()); hijas[i].IsDir() && tieneObra(d) {
+					return d
+				}
+			}
+		}
 	}
 	return ""
+}
+
+// Si la carpeta del año está dentro del sitio (su carpeta madre tiene index.html),
+// se sirve el sitio completo con las mismas direcciones que GitHub Pages
+// (/2026/obras/enjambres/); las direcciones antiguas sin el año
+// (/obras/enjambres/) siguen funcionando a través de "delAnio".
+func usarWeb(d string) {
+	webDir = d
+	madre := filepath.Dir(d)
+	if st, err := os.Stat(filepath.Join(madre, "index.html")); err == nil && !st.IsDir() && madre != d {
+		raiz, delAnio, raizTxt = os.DirFS(madre), os.DirFS(d), madre
+		obra = "/" + filepath.Base(d) + "/obras/enjambres/"
+		return
+	}
+	raiz, raizTxt = os.DirFS(d), d
+}
+
+// Busca el archivo en la raíz y, si no está, en la carpeta del año.
+func buscarArchivo(nombre string) (fs.FS, fs.FileInfo, error) {
+	st, err := fs.Stat(raiz, nombre)
+	if err != nil && delAnio != nil {
+		if st2, err2 := fs.Stat(delAnio, nombre); err2 == nil {
+			return delAnio, st2, nil
+		}
+	}
+	return raiz, st, err
 }
 
 func init() {
@@ -702,7 +752,7 @@ func manejarArchivos(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	nombre := strings.TrimPrefix(limpia, "/")
-	st, err := fs.Stat(raiz, nombre)
+	sis, st, err := buscarArchivo(nombre)
 	if err != nil {
 		http.Error(w, "no encontrado: "+ruta, http.StatusNotFound)
 		return
@@ -713,12 +763,12 @@ func manejarArchivos(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		nombre = path.Join(nombre, "index.html")
-		if st, err = fs.Stat(raiz, nombre); err != nil || st.IsDir() {
+		if st, err = fs.Stat(sis, nombre); err != nil || st.IsDir() {
 			http.NotFound(w, r)
 			return
 		}
 	}
-	f, err := raiz.Open(nombre)
+	f, err := sis.Open(nombre)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -797,7 +847,7 @@ func main() {
 	bitacora = log.New(io.MultiWriter(salidas...), "", log.Ltime)
 
 	if d := buscarWeb(); d != "" {
-		raiz, raizTxt, webDir = os.DirFS(d), d, d
+		usarWeb(d)
 	} else {
 		sub, _ := fs.Sub(incorporado, "incorporado")
 		raiz, raizTxt = sub, "(copia incorporada de Enjambres)"

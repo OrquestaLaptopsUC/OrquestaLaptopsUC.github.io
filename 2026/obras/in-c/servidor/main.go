@@ -3,9 +3,11 @@
 //
 // Una sola aplicación, sin dependencias ni instalación: doble clic y queda
 // funcionando. Hace dos cosas:
-//  1. Sirve la carpeta Web/ por HTTP para que las demás laptops abran
-//     http://<ip-de-esta-laptop>:8080 sin internet. Si la app no está dentro
-//     de Web/, sirve la copia de In C que lleva incorporada.
+//  1. Sirve el sitio de la orquesta (el repositorio OrquestaLaptopsUC.github.io)
+//     por HTTP para que las demás laptops abran http://<ip-de-esta-laptop>:8080
+//     sin internet; la obra queda en /<año>/obras/in-c/, igual que en GitHub
+//     Pages, y /obras/in-c/ sigue funcionando. Si no encuentra el repositorio,
+//     sirve la copia de In C que lleva incorporada.
 //  2. Mantiene por WebSocket (/conjunto) la tabla de quién está en qué
 //     patrón, el reloj de la obra y la paleta, y la difunde 4 veces por segundo.
 //
@@ -677,31 +679,77 @@ func manejarWS(w http.ResponseWriter, r *http.Request) {
    HTTP: archivos de Web/ (o la copia incorporada)
    ============================================================ */
 
-var raiz fs.FS // Web/ en disco o la copia incorporada
+var raiz fs.FS    // el sitio en disco (raíz del repositorio), la carpeta del año o la copia incorporada
+var delAnio fs.FS // la carpeta del año (2026/): mantiene válidas las direcciones /obras/... sin el año
 var raizTxt string
+var obra = "/obras/in-c/" // dirección de la obra; con el repositorio completo, /<año>/obras/in-c/
 
-// Busca hacia arriba desde el ejecutable una carpeta que contenga obras/in-c/index.html.
-// Así funciona igual dentro de "Servidor In C.app/Contents/MacOS/" que suelto.
+func tieneObra(d string) bool {
+	st, err := os.Stat(filepath.Join(d, "obras", "in-c", "index.html"))
+	return err == nil && !st.IsDir()
+}
+
+// Devuelve la carpeta que contiene obras/in-c/ (en el repositorio, la del año: 2026/).
+// Busca primero hacia arriba desde el ejecutable, así funciona igual dentro de
+// "Servidor In C.app/Contents/MacOS/" que suelto. Si la app se sacó del repositorio
+// (o macOS la abrió desde una copia aislada), busca el repositorio en la carpeta
+// personal: ~/Development/OrquestaLaptopsUC.github.io o ~/OrquestaLaptopsUC.github.io.
 func buscarWeb() string {
-	exe, err := os.Executable()
-	if err != nil {
-		return ""
-	}
-	if r, err := filepath.EvalSymlinks(exe); err == nil {
-		exe = r
-	}
-	d := filepath.Dir(exe)
-	for i := 0; i < 10; i++ {
-		if st, err := os.Stat(filepath.Join(d, "obras", "in-c", "index.html")); err == nil && !st.IsDir() {
-			return d
+	if exe, err := os.Executable(); err == nil {
+		if r, err := filepath.EvalSymlinks(exe); err == nil {
+			exe = r
 		}
-		p := filepath.Dir(d)
-		if p == d {
-			break
+		d := filepath.Dir(exe)
+		for i := 0; i < 10; i++ {
+			if tieneObra(d) {
+				return d
+			}
+			p := filepath.Dir(d)
+			if p == d {
+				break
+			}
+			d = p
 		}
-		d = p
+	}
+	if home, err := os.UserHomeDir(); err == nil {
+		for _, rep := range []string{
+			filepath.Join(home, "Development", "OrquestaLaptopsUC.github.io"),
+			filepath.Join(home, "OrquestaLaptopsUC.github.io"),
+		} {
+			hijas, _ := os.ReadDir(rep)
+			for i := len(hijas) - 1; i >= 0; i-- { // el año más reciente primero
+				if d := filepath.Join(rep, hijas[i].Name()); hijas[i].IsDir() && tieneObra(d) {
+					return d
+				}
+			}
+		}
 	}
 	return ""
+}
+
+// Si la carpeta del año está dentro del sitio (su carpeta madre tiene index.html),
+// se sirve el sitio completo con las mismas direcciones que GitHub Pages
+// (/2026/obras/in-c/); las direcciones antiguas sin el año (/obras/in-c/) siguen
+// funcionando a través de "delAnio".
+func usarWeb(d string) {
+	madre := filepath.Dir(d)
+	if st, err := os.Stat(filepath.Join(madre, "index.html")); err == nil && !st.IsDir() && madre != d {
+		raiz, delAnio, raizTxt = os.DirFS(madre), os.DirFS(d), madre
+		obra = "/" + filepath.Base(d) + "/obras/in-c/"
+		return
+	}
+	raiz, raizTxt = os.DirFS(d), d
+}
+
+// Busca el archivo en la raíz y, si no está, en la carpeta del año.
+func buscarArchivo(nombre string) (fs.FS, fs.FileInfo, error) {
+	st, err := fs.Stat(raiz, nombre)
+	if err != nil && delAnio != nil {
+		if st2, err2 := fs.Stat(delAnio, nombre); err2 == nil {
+			return delAnio, st2, nil
+		}
+	}
+	return raiz, st, err
 }
 
 func init() {
@@ -717,7 +765,7 @@ func manejarArchivos(w http.ResponseWriter, r *http.Request) {
 	}
 	ruta := r.URL.Path
 	if ruta == "/" || ruta == "/in-c" || ruta == "/in-c/" {
-		http.Redirect(w, r, "/obras/in-c/", http.StatusFound)
+		http.Redirect(w, r, obra, http.StatusFound)
 		return
 	}
 	limpia := path.Clean(ruta)
@@ -728,7 +776,7 @@ func manejarArchivos(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	nombre := strings.TrimPrefix(limpia, "/")
-	st, err := fs.Stat(raiz, nombre)
+	sis, st, err := buscarArchivo(nombre)
 	if err != nil {
 		http.Error(w, "no encontrado: "+ruta, http.StatusNotFound)
 		return
@@ -739,12 +787,12 @@ func manejarArchivos(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		nombre = path.Join(nombre, "index.html")
-		if st, err = fs.Stat(raiz, nombre); err != nil || st.IsDir() {
+		if st, err = fs.Stat(sis, nombre); err != nil || st.IsDir() {
 			http.NotFound(w, r)
 			return
 		}
 	}
-	f, err := raiz.Open(nombre)
+	f, err := sis.Open(nombre)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -819,7 +867,7 @@ func main() {
 	bitacora = log.New(io.MultiWriter(salidas...), "", log.Ltime)
 
 	if d := buscarWeb(); d != "" {
-		raiz, raizTxt = os.DirFS(d), d
+		usarWeb(d)
 	} else {
 		sub, _ := fs.Sub(incorporado, "incorporado")
 		raiz, raizTxt = sub, "(copia incorporada de In C)"
@@ -844,7 +892,7 @@ func main() {
 		if esNuestro(p) {
 			bitacora.Printf("ya hay un servidor de In C en el puerto %d; abro su página", p)
 			if !sinNavegador {
-				abrirNavegador(fmt.Sprintf("http://localhost:%d/obras/in-c/", p))
+				abrirNavegador(fmt.Sprintf("http://localhost:%d%s", p, obra))
 			}
 			return
 		}
@@ -914,13 +962,13 @@ func main() {
 	} else {
 		fmt.Println("  (no encontré una red: ¿está conectado el Wi-Fi o el cable?)")
 	}
-	fmt.Printf("\n  Esta laptop (controles de reloj, posición y paleta):\n     http://localhost:%d/obras/in-c/\n\n", puerto)
+	fmt.Printf("\n  Esta laptop (controles de reloj, posición y paleta):\n     http://localhost:%d%s\n\n", puerto, obra)
 	bitacora.Printf("sirviendo %s en el puerto %d", raizTxt, puerto)
 
 	if !sinNavegador {
 		go func() {
 			time.Sleep(300 * time.Millisecond)
-			abrirNavegador(fmt.Sprintf("http://localhost:%d/obras/in-c/", puerto))
+			abrirNavegador(fmt.Sprintf("http://localhost:%d%s", puerto, obra))
 		}()
 	}
 	if err := srv.Serve(ln); err != nil {
