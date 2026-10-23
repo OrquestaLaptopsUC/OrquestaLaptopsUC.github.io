@@ -1,9 +1,9 @@
 """Trae la última versión del código de Keyboard Instruments desde el repositorio personal
-(github.com/Ikilly0/ORQUESTRA-DE-LAPTOS) y reemplaza keyboard-instruments.zip en esta carpeta.
+(github.com/Ikilly0/ORQUESTRA-DE-LAPTOPS) y reemplaza keyboard-instruments.zip en esta carpeta.
 Uso:  python actualizar.py      (solo librería estándar; necesita internet)"""
 import io, pathlib, urllib.request, zipfile
 
-URL = "https://github.com/Ikilly0/ORQUESTRA-DE-LAPTOS/archive/refs/heads/main.zip"
+URL = "https://github.com/Ikilly0/ORQUESTRA-DE-LAPTOPS/archive/refs/heads/main.zip"
 AQUI = pathlib.Path(__file__).resolve().parent
 SALTAR = ("T1-propuesta-de-obra/", ".wav")
 
