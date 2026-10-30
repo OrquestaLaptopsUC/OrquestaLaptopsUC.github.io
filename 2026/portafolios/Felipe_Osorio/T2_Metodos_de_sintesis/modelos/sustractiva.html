@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelo B · Síntesis sustractiva del silbido</title>
+<link rel="stylesheet" href="estilo.css?v=202610300915">
+</head>
+<body>
+<main>
+  <p class="sub"><a href="index.html">← Modelos</a></p>
+  <h1>Modelo B · Síntesis sustractiva</h1>
+  <p class="sub">Parte de ruido blanco, como el aire, y lo pasa por un filtro resonante muy angosto, como la cavidad de las manos: el filtro deja pasar casi una sola frecuencia y el ruido se vuelve tono.</p>
+
+  <div class="botones">
+    <button id="tocar" class="prim">Mantener para tocar <kbd>Espacio</kbd></button>
+    <button id="nota">Tocar una nota</button>
+    <button id="render">Renderizar WAV</button>
+    <label class="nota" style="align-self:center;margin:0">Duración de la nota <input id="duracion" type="number" min="0.5" max="10" step="0.1" value="6.8" style="width:4.5em"> s</label>
+    <button id="restablecer" title="Vuelve a los valores calibrados para parecerse al silbido grabado">Perfil del silbido (restablecer)</button>
+  </div>
+
+  <div class="panel"><div id="controles"></div></div>
+  <p class="nota">Pasa el mouse sobre un control para ver qué hace; el detalle está en la tabla de parámetros. «Perfil del silbido» vuelve a los valores calibrados contra la grabación.</p>
+
+  <h2>Espectro en vivo (0 a 6000 Hz)</h2>
+  <div class="panel"><canvas id="espectro"></canvas></div>
+
+  <h2>Flujo de señal</h2>
+<div class="panel diagrama" id="flujo"></div>
+  <p class="nota">Cada resonador lleva su compensación de ganancia (∝ √Q), que no se dibuja para no cargar el diagrama.</p>
+  <div class="leyenda"><span class="lf">fuente de señal</span><span class="lc">donde está el principio del método</span><span class="lt">control de altura</span></div>
+
+  <h2>Parámetros</h2>
+  <table id="tabla"></table>
+  <p class="nota">Reglas fijas (no son parámetros): los mismos tiempos de envolvente que el modelo A; durante el soplo previo suena el resonador ancho, y al engancharse el tono este se desvanece mientras el resonador angosto sube. La «compensación» sube la ganancia cuando el filtro se angosta (∝ √Q), para que cambiar Q no cambie el volumen. El pasa bajos de 1,6 kHz quita el siseo que dejan pasar los flancos de los resonadores. El estabilizador es un control automático de ganancia: mide la potencia del tono (suavizada en ~0,3 s) y la corrige, con un máximo de +18 dB.</p>
+
+  <h2>Parte 4 · Tocar en vivo con el micrófono</h2>
+  <p class="nota" style="margin-top:0">Silba frente al micrófono y el modelo te sigue: cuánto soplas abre y cierra el modelo, y la nota que silbas fija su altura.</p>
+  <div id="vivo"></div>
+</main>
+
+<script src="comun.js?v=202610300915"></script>
+<script src="diagrama.js?v=202610300915"></script>
+<script src="vivo.js?v=202610300915"></script>
+<script>
+/* SOPLO_B: el resonador ancho reparte su energía alrededor de f0; este factor lo calibra para que el soplo medido coincida con la grabación. */
+const AIR_CAL = 4.3, MASTER = 0.25, SOPLO_B = 0.45;
+
+const grupos = [
+  { id: "tono", titulo: "1 · Tono", desc: "Ruido filtrado por dos resonadores angostos, en f0 y 2·f0." },
+  { id: "aire", titulo: "2 · Aire y entrada de la nota", desc: "El soplo y cómo aparece la nota." },
+  { id: "salida", titulo: "3 · Final y afinación", desc: "Cómo se corta la nota y cuánto se mueve su altura con el soplo." },
+];
+const spec = [
+  { grupo: "tono", id: "f0", nombre: "Centro del filtro (f0)", min: 300, max: 1200, step: 1, value: 540, unidad: "Hz", efecto: "Frecuencia a la que resuenan los filtros: la altura del silbido. El 2.º resonador va al doble." },
+  { grupo: "tono", id: "pureza", nombre: "Pureza del tono", min: 0, max: 100, step: 1, value: 80, unidad: "%", efecto: "Mueve juntos la resonancia (Q de 10 a 8000; 4000 en el perfil), el estabilizador (0 a 100 %) y el Q del soplo. Bajo: ruido soplado que tiembla. Alto: tono puro y parejo." },
+  { grupo: "tono", id: "p2", nombre: "2.º parcial", min: -60, max: 0, step: 1, value: -29, unidad: "dB", efecto: "Nivel del resonador en 2·f0 respecto del principal. Más alto: timbre menos puro, más brillante." },
+  { grupo: "aire", id: "aire", nombre: "Aire", min: -70, max: -10, step: 1, value: -36, unidad: "dB", efecto: "Nivel del ruido de soplo (banda centrada en 4 kHz) respecto del tono. Más alto: más soplado." },
+  { grupo: "aire", id: "inicio", nombre: "Inicio de la nota", min: 20, max: 1000, step: 10, value: 380, unidad: "ms", efecto: "Cuánto tarda la nota en aparecer: un 84 % es soplo previo (el resonador ancho) y un 16 % es el ataque del tono, la proporción medida en la grabación (320 + 60 ms). Corto: la nota parte de golpe. Largo: entra gradual." },
+  { grupo: "salida", id: "final", nombre: "Final", min: 10, max: 400, step: 5, value: 100, unidad: "ms", efecto: "Cuánto tarda el tono en apagarse al soltar. El aire tarda el doble." },
+  { grupo: "salida", id: "mov", nombre: "Altura que sigue al soplo", min: 0, max: 60, step: 1, value: 10, unidad: "cents", efecto: "Deriva lenta de ±este valor durante la nota y arrastre de 8,5 veces este valor (la nota parte la mitad más abajo y lo cae completo al final). 0: altura fija." },
+];
+
+/* Estabilizador: control automático de ganancia hecho con nodos nativos (funciona abriendo el archivo local).
+   1) eleva la señal al cuadrado (x·x), 2) la suaviza con un pasa bajos de un polo (constante de 0,3 s) para obtener
+   su potencia, 3) una curva convierte la potencia en ganancia g = (0,5 / potencia)^(fuerza/2), con máximo ×8 (+18 dB),
+   4) multiplica la señal por g. Así el RMS se acerca al de un seno de amplitud 1. */
+function Estabilizador(ctx) {
+  const entrada = ctx.createGain(), sq = ctx.createGain(), esc = ctx.createGain();
+  // pasa bajos de un polo (constante 0,3 s) como filtro IIR: un biquad a 0,5 Hz pierde precisión
+  const a = 1 - Math.exp(-1 / (ctx.sampleRate * 0.3)), lpE = ctx.createIIRFilter([a], [1, -(1 - a)]);
+  const curva = ctx.createWaveShaper(), vca = ctx.createGain();
+  sq.gain.value = 0; entrada.connect(sq); entrada.connect(sq.gain);           // x·x
+  esc.gain.value = 0.25;                                                       // potencia 0..4 → 0..1 para la curva
+  vca.gain.value = 0; entrada.connect(vca);
+  sq.connect(lpE).connect(esc).connect(curva).connect(vca.gain);
+  function fuerza(k) {
+    const n = 4096, c = new Float32Array(n);
+    for (let i = 0; i < n; i++) { const u = i / (n - 1) * 2 - 1, pot = Math.max(u, 0) * 4; c[i] = Math.min(8, Math.pow(0.5 / (pot + 1e-4), k / 2)); }
+    curva.curve = c;
+  }
+  return { entrada, salida: vca, fuerza };
+}
+
+/* Ganancia que deja la banda filtrada con el mismo RMS que un seno de amplitud 1.
+   Ancho de banda equivalente de ruido de un resonador de 2 polos ≈ (π/2)·f/Q. */
+function comp(ctx, f, Q) { return 1.225 * Math.sqrt(Q * (ctx.sampleRate / 2) / ((Math.PI / 2) * f)); }
+
+function Voice(ctx, p, dest) {
+  const mix = ctx.createGain(); mix.gain.value = MASTER; mix.connect(dest);
+  const nz = ctx.createBufferSource(); nz.buffer = noiseBuffer(ctx); nz.loop = true;
+  const bpf = () => { const f = ctx.createBiquadFilter(); f.type = "bandpass"; return f; };
+  // resonador ancho del soplo previo
+  const rs = bpf(), cs = ctx.createGain(), soploEnv = ctx.createGain(); soploEnv.gain.value = 0;
+  // resonadores angostos del tono
+  const r1 = bpf(), r2 = bpf(), c1 = ctx.createGain(), c2 = ctx.createGain(), lvl2 = ctx.createGain();
+  const est = Estabilizador(ctx);
+  const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1600; lp.Q.value = 0.707;
+  const toneEnv = ctx.createGain(), toneGate = ctx.createGain(); toneEnv.gain.value = 0;
+  nz.connect(rs).connect(cs).connect(soploEnv).connect(toneGate);
+  nz.connect(r1).connect(c1).connect(est.entrada); est.salida.connect(lp);
+  nz.connect(r2).connect(c2).connect(lvl2).connect(lp);
+  lp.connect(toneEnv).connect(toneGate).connect(mix);
+  // aire: misma fuente de ruido
+  const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 4000; bp.Q.value = 1;
+  const airEnv = ctx.createGain(), airLvl = ctx.createGain(), airGate = ctx.createGain(); airEnv.gain.value = 0;
+  nz.connect(bp).connect(airEnv).connect(airLvl).connect(airGate).connect(mix);
+  // altura: curva de deriva ±1 escalada a «Deriva» cents, hacia los tres resonadores
+  const drift = ctx.createConstantSource(), dg = ctx.createGain(); drift.offset.value = 0;
+  drift.connect(dg); [rs, r1, r2].forEach(r => dg.connect(r.detune));
+  const env = { tone: toneEnv, air: airEnv }, gates = { tone: toneGate, air: airGate };
+
+  function set(q, now, suave) {
+    const ap = (prm, v) => suave ? prm.setTargetAtTime(v, now, 0.01) : (prm.value = v);
+    ap(rs.frequency, q.f0); ap(r1.frequency, q.f0); ap(r2.frequency, 2 * q.f0);
+    ap(rs.Q, q.qs); ap(r1.Q, q.Q); ap(r2.Q, q.Q);
+    ap(cs.gain, comp(ctx, q.f0, q.qs)); ap(c1.gain, comp(ctx, q.f0, q.Q)); ap(c2.gain, comp(ctx, 2 * q.f0, q.Q));
+    ap(lvl2.gain, dbToGain(q.p2)); ap(airLvl.gain, dbToGain(q.aire) * AIR_CAL); ap(dg.gain, q.deriva);
+    est.fuerza(q.estab / 100);
+  }
+  set(p, 0, false);
+  return {
+    start(t) {
+      [nz, drift].forEach(n => n.start(t));
+      drift.offset.setValueCurveAtTime(driftCurve(DRIFT_SECONDS, 1), t, DRIFT_SECONDS);
+    },
+    on(t) {
+      const tl = scheduleOn(t, p, env, gates), a = p.ataque / 1000;
+      // el soplo suena por el resonador ancho y se desvanece cuando el tono angosto se engancha
+      toneEnv.gain.cancelScheduledValues(t); toneEnv.gain.setValueAtTime(0, t); toneEnv.gain.setValueAtTime(0, tl); toneEnv.gain.setTargetAtTime(1, tl, a / 3);
+      soploEnv.gain.cancelScheduledValues(t); soploEnv.gain.setValueAtTime(0, t);
+      soploEnv.gain.linearRampToValueAtTime(SOPLO_B * SOPLO_TONO, tl); soploEnv.gain.setTargetAtTime(0, tl, a / 3);
+      arrastreOn(t, tl, p, [rs.detune, r1.detune, r2.detune]);
+      return tl;
+    },
+    off(t) { arrastreOff(t, p, [rs.detune, r1.detune, r2.detune]); return scheduleOff(t, p, gates); },
+    update(q) { set(q, ctx.currentTime, true); },
+    // modo en vivo: el micrófono maneja el tono, el soplo (cuando no hay tono) y el aire
+    vivoInicio(t) {
+      toneGate.gain.cancelScheduledValues(t); toneGate.gain.setValueAtTime(1, t);
+      airEnv.gain.cancelScheduledValues(t); airEnv.gain.setValueAtTime(1, t);
+      for (const g of [toneEnv, soploEnv, airGate]) { g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(0, t); }
+      for (const r of [rs, r1, r2]) { r.detune.cancelScheduledValues(t); r.detune.setValueAtTime(0, t); }
+      dg.gain.setTargetAtTime(0, t, 0.05); // la deriva real viene del silbido
+    },
+    vivoNivel(t, tono, aire, soplo) {
+      toneEnv.gain.setTargetAtTime(tono, t, 0.01);
+      soploEnv.gain.setTargetAtTime(SOPLO_B * soplo, t, 0.01);
+      airGate.gain.setTargetAtTime(aire, t, 0.01);
+    },
+    // brillo en vivo: b de −1 a 1 sube o baja el 2.º parcial (±20 dB) y el aire (±15 dB)
+    vivoBrillo(t, b) { lvl2.gain.setTargetAtTime(dbToGain(p.p2 + 20 * b), t, 0.05); airLvl.gain.setTargetAtTime(dbToGain(p.aire + 15 * b) * AIR_CAL, t, 0.05); },
+    vivoAltura(t, f) {
+      for (const [r, c, ff, Q] of [[rs, cs, f, p.qs], [r1, c1, f, p.Q], [r2, c2, 2 * f, p.Q]]) {
+        r.frequency.setTargetAtTime(ff, t, 0.015); c.gain.setTargetAtTime(comp(ctx, ff, Q), t, 0.015);
+      }
+    },
+    vivoFin(t) {
+      for (const g of [toneEnv, soploEnv, airGate]) { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, 0.02); }
+      toneGate.gain.setTargetAtTime(0, t + 0.1, 0.02);
+      set(p, t, true);
+    },
+  };
+}
+
+
+diagrama(document.getElementById("flujo"), {
+  w: 910, h: 360, titulo: "Flujo de señal del modelo sustractivo",
+  cajas: [
+    { id: "ctrl", x: 174, y: 10, w: 190, t: ["Deriva + arrastre", "detune de los 3 resonadores"], tipo: "control" },
+    { id: "nz", x: 24, y: 190, t: ["Ruido blanco"], tipo: "fuente" },
+    { id: "rs", x: 174, y: 80, t: ["Resonador ancho", "f0 · Q del soplo"] },
+    { id: "r1", x: 174, y: 150, t: ["Resonador f0", "Q = 4000"], tipo: "clave" },
+    { id: "r2", x: 174, y: 220, t: ["Resonador 2·f0", "Q = 4000"], tipo: "clave" },
+    { id: "bpa", x: 174, y: 300, t: ["Pasa banda", "4 kHz"] },
+    { id: "es", x: 324, y: 150, t: ["Estabilizador", "control de ganancia"] },
+    { id: "n2", x: 324, y: 220, t: ["Nivel", "2.º parcial"] },
+    { id: "lp", x: 474, y: 185, t: ["Pasa bajos", "1,6 kHz"] },
+    { id: "es2", x: 624, y: 80, t: ["Envolvente", "del soplo"] },
+    { id: "et", x: 624, y: 185, t: ["Envolvente y", "compuerta del tono"] },
+    { id: "ea", x: 624, y: 300, t: ["Envolvente y", "compuerta del aire"] },
+    { id: "mx", x: 774, y: 185, t: ["Mezcla", "→ salida"], tipo: "salida" },
+  ],
+  flechas: [
+    { p: ["nz.r", [162, 213], [162, 103], "rs.l"] }, { p: [[162, 173], "r1.l"] },
+    { p: [[162, 213], [162, 243], "r2.l"] }, { p: [[162, 243], [162, 323], "bpa.l"] },
+    { p: ["rs.r", "es2.l"] }, { p: ["r1.r", "es.l"] }, { p: ["es.r", [462, 173], [462, 208], "lp.l"] },
+    { p: ["r2.r", "n2.l"] }, { p: ["n2.r", [462, 243], [462, 208], "lp.l"] },
+    { p: ["lp.r", "et.l"] }, { p: ["bpa.r", "ea.l"] },
+    { p: ["es2.r", [837, 103], "mx.t"] }, { p: ["et.r", "mx.l"] }, { p: ["ea.r", [837, 323], "mx.b"] },
+    { p: [[237, 56], "rs.t"], guion: true },
+  ],
+  rotulos: [{ x: 312, y: 74, t: "soplo previo: resonador ancho", negrita: true }, { x: 312, y: 294, t: "aire: la misma fuente de ruido", negrita: true }],
+});
+
+/* Sliders agrupados: cada uno alimenta varios valores internos, en las proporciones medidas en la grabación. */
+const derivar = p => {
+  p.deriva = p.mov; p.arrastre = 8.5 * p.mov;                         // 10 → 10 y 85 cents
+  p.soplo = p.inicio * 320 / 380; p.ataque = Math.max(3, p.inicio * 60 / 380); // 380 → 320 + 60 ms
+  // pureza: 0 → Q 10 · 80 → Q 4000 · 100 → Q 8000 (exponencial por tramos); estabilidad llega a 100 % en 80
+  const v = p.pureza;
+  p.Q = v >= 80 ? 4000 * Math.pow(2, (v - 80) / 20) : 4000 * Math.pow(10 / 4000, (80 - v) / 80);
+  p.estab = Math.min(100, v / 80 * 100);
+  p.qs = Math.min(30, Math.max(1, 4 * Math.pow(p.Q / 4000, 0.3)));  // 4 en el perfil
+};
+
+montarModelo({ spec, grupos, derivar, Voice, archivo: "modeloB_sustractiva.wav" });
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelos del silbido · T2</title>
+<link rel="stylesheet" href="estilo.css?v=202610300915">
+</head>
+<body>
+<main>
+  <h1>Dos modelos de un silbido con las manos</h1>
+  <p class="sub">T2 Métodos de síntesis · IEE2003 Orquesta de Laptops UC</p>
+  <p>La fuente es un silbido con las manos de ~540 Hz: casi una sinusoide pura, con un 2.º parcial unos 29 dB más abajo, ruido de aire en 3–5 kHz y un soplo que suena antes de que el tono se enganche.</p>
+  <div class="panel">
+    <p><a href="aditiva.html"><strong>Modelo A · Síntesis aditiva</strong></a><br>Construye el espectro pieza por pieza: un seno por parcial y una banda de ruido para el aire.</p>
+    <p><a href="sustractiva.html"><strong>Modelo B · Síntesis sustractiva</strong></a><br>Obtiene el tono de forma indirecta: filtra ruido con un resonador muy angosto, como la cavidad de las manos.</p>
+  </div>
+  <h2>Cómo usar</h2>
+  <p>Abre cualquiera de los dos en Chrome, Edge o Firefox de escritorio. «Mantener para tocar» (o la barra espaciadora) suena mientras lo mantienes apretado. «Nota» toca una nota de la duración configurada. «Renderizar WAV» descarga la misma nota calculada fuera de tiempo real, con los tiempos de la grabación original, lista para comparar.</p>
+  <h2>Parte 4 · En vivo</h2>
+  <p>Al final de cada página está el modo en vivo: activa el micrófono, silba con audífonos puestos y el modelo te sigue. Cuánto soplas (seguidor de envolvente) abre el modelo y la nota que silbas (detector de altura) fija su f0. «Grabar toma» guarda un WAV estéreo con tu micrófono en el canal izquierdo y el modelo en el derecho.</p>
+  <p class="nota">Si el navegador no deja usar el micrófono al abrir el archivo con doble clic, ábrelo desde GitHub Pages o con un servidor local.</p>
+  <p class="nota">Entorno: Web Audio API, sin dependencias ni instalación. No usa la grabación original como material.</p>
+</main>
+</body>
+</html>

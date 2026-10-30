@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T2 · Métodos de síntesis · Felipe Osorio</title>
+<meta name="description" content="Tarea 2 de la Orquesta de Laptops UC: un silbido con las manos imitado con síntesis aditiva y sustractiva, y tocado en vivo.">
+<style>
+  :root {
+    --fondo: #fbfaf7; --texto: #1f1f1f; --tenue: #66625b; --borde: #e2ddd3; --panel: #ffffff;
+    --acento: #2b6cb0; --acento-suave: #e8f0fa; --cita: #2b6cb0; --real: #f4f1ea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --fondo: #17181a; --texto: #ececec; --tenue: #a19d96; --borde: #33353a; --panel: #1f2023;
+      --acento: #6aa9ec; --acento-suave: #1c2a3b; --cita: #7fb4ee; --real: #24262a; }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--fondo); color: var(--texto);
+    font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 780px; margin: 0 auto; padding: 28px 16px 64px; }
+  a { color: var(--acento); }
+  .volver { font-size: .9rem; text-decoration: none; }
+  header { margin: 18px 0 8px; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 6px; letter-spacing: -.01em; }
+  .meta { color: var(--tenue); font-size: .95rem; margin: 0; }
+  nav.indice { display: flex; flex-wrap: wrap; gap: 6px 8px; margin: 22px 0 8px; padding: 0; list-style: none; }
+  nav.indice a { display: inline-block; font-size: .85rem; padding: 4px 10px; border: 1px solid var(--borde);
+    border-radius: 999px; text-decoration: none; color: var(--texto); background: var(--panel); }
+  nav.indice a:hover { border-color: var(--acento); color: var(--acento); }
+  section { scroll-margin-top: 16px; }
+  h2 { font-size: 1.45rem; line-height: 1.3; margin: 52px 0 14px; padding-top: 18px; border-top: 1px solid var(--borde); }
+  h3 { font-size: 1.1rem; margin: 30px 0 10px; }
+  p { margin: 0 0 14px; }
+  sup.cita { font-size: .72em; line-height: 0; margin-left: 1px; }
+  sup.cita a { text-decoration: none; color: var(--cita); }
+  figure { margin: 22px 0; }
+  figure img { display: block; width: 100%; height: auto; margin: 0 auto; border-radius: 8px; border: 1px solid var(--borde); background: #fff; }
+  figcaption { color: var(--tenue); font-size: .85rem; margin-top: 6px; text-align: center; }
+  .aviso { font-size: .92rem; color: var(--tenue); border-left: 3px solid var(--borde); padding-left: 12px; }
+  .nota { font-size: .88rem; color: var(--tenue); margin-top: -4px; }
+  .audio { background: var(--panel); border: 1px solid var(--borde); border-radius: 12px; padding: 12px 14px; margin: 16px 0 18px; }
+  .audio-cab { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .audio-cab .ico { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--acento-suave); color: var(--acento); font-size: .95rem; }
+  .audio-cab strong { display: block; font-size: .97rem; line-height: 1.3; }
+  .audio-cab small { display: block; color: var(--tenue); font-size: .82rem; line-height: 1.35; }
+  .audio audio { width: 100%; display: block; }
+  .boton { display: inline-block; margin-top: 10px; font-size: .88rem; padding: 6px 12px; border-radius: 8px;
+    border: 1px solid var(--acento); text-decoration: none; }
+  .boton:hover { background: var(--acento-suave); }
+  .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .trio .audio { margin: 6px 0 12px; padding: 10px; }
+  .trio .audio-cab { margin-bottom: 6px; }
+  @media (max-width: 640px) { .trio { grid-template-columns: 1fr; } }
+  .momento { display: grid; grid-template-columns: 74px 1fr; gap: 12px; margin: 14px 0 18px; }
+  .momento p { margin: 0 0 8px; }
+  .momento .real { background: var(--real); border-radius: 8px; padding: 10px 12px; font-size: .96rem; }
+  .momento .real .et { display: block; font-weight: 600; font-size: .8rem; color: var(--tenue); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+  button.salto { font: inherit; font-size: .85rem; font-variant-numeric: tabular-nums; cursor: pointer; align-self: start;
+    padding: 4px 8px; border-radius: 8px; border: 1px solid var(--acento); background: var(--acento-suave); color: var(--acento); }
+  button.salto:hover { filter: brightness(1.05); }
+  button.salto.en-linea { padding: 0 6px; font-size: .82rem; }
+  @media (max-width: 520px) { .momento { grid-template-columns: 1fr; gap: 6px; } button.salto { justify-self: start; } }
+  ol.refs { padding-left: 24px; font-size: .92rem; }
+  ol.refs li { margin-bottom: 8px; overflow-wrap: anywhere; }
+  ol.refs li:target { background: var(--acento-suave); border-radius: 6px; }
+  ol.prompts { padding-left: 24px; }
+  ol.prompts li { margin-bottom: 14px; }
+  ol.prompts blockquote { margin: 0 0 6px; padding: 8px 12px; border-left: 3px solid var(--acento); background: var(--panel); border-radius: 0 8px 8px 0; font-style: italic; }
+  ol.prompts p { margin: 0; color: var(--tenue); font-size: .95rem; }
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--borde); color: var(--tenue); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+<a class="volver" href="../">← Portafolio de Felipe Osorio</a>
+<header>
+  <h1>Tarea 2 · Métodos de síntesis</h1>
+  <p class="meta">Felipe Osorio · IEE2003 Orquesta de Laptops UC · 30 de octubre de 2026</p>
+</header>
+<nav class="indice" aria-label="Secciones">
+  <a href="#parte1">1 · La fuente</a><a href="#parte2">2 · Dos métodos</a><a href="#parte3">3 · Más allá del original</a>
+  <a href="#parte4">4 · En vivo</a><a href="#referencias">Referencias</a><a href="#ia">Uso de IA</a>
+</nav>
+
+<section id="parte1">
+<h2>Parte 1: La fuente. Cómo suena y de qué está hecha</h2>
+<div class="audio" id="a-original"><div class="audio-cab"><span class="ico" aria-hidden="true">♪</span><div><strong>Grabación original: silbido con las manos</strong><small>Mono, 44,1 kHz, 7,5 s</small></div></div><audio controls preload="metadata" src="audio/original_silbido.wav"></audio></div>
+
+<p>El silbido con manos fue grabado en un cuarto amplio a unos 35cm (distancia yo – micrófono), pareciera ser un sonido armónico<sup class="cita">[<a href="#ref-1">1</a>]</sup> el cual presenta una altura definida<sup class="cita">[<a href="#ref-2">2</a>]</sup> (aunque un poco inestable por error humano) la cual está alrededor de un 5Do en un piano o es decir alrededor de 523.25 Hz<sup class="cita">[<a href="#ref-3">3</a>]</sup>. En particular al utilizar las manos el timbre se ve afectado<sup class="cita">[<a href="#ref-1">1</a>]</sup>, sonando un poco más opaco o “sucio” en comparación a un silbido normal al tener acentuado, sobre todo al inicio, el sonido del viento pasando por las manos. La altura principal del sonido comienza tras un inicio en el que el aire entra a las manos mientras yo encuentro la posición perfecta para que suene, posterior a esto empieza a sonar la altura del sonido, la cual no se mantiene perfectamente constante (debido a que varía que tanto aire estoy usando) y luego finaliza desvaneciendo en poco tiempo, pero progresivamente cuando moví mis manos, pero sople un poco más.</p>
+
+<p class="aviso">Disclaimer, para el análisis las siguientes gráficas fueron creadas directamente por Claude y ajustadas por mí.</p>
+<figure><a href="img/fig1_forma_de_onda.png" title="Abrir en tamaño completo"><img src="img/fig1_forma_de_onda.png" alt="Forma de onda completa y zoom de 10 ms"></a><figcaption>Forma de onda completa y zoom de 10 ms en t = 3,85 s.</figcaption></figure>
+
+<figure><a href="img/fig3_espectrograma.png" title="Abrir en tamaño completo"><img src="img/fig3_espectrograma.png" alt="Espectrograma de la grabación"></a><figcaption>Espectrograma (ventana Hann de 2048 muestras, salto de 256).</figcaption></figure>
+
+<figure><a href="img/fig2_envolvente.png" title="Abrir en tamaño completo"><img src="img/fig2_envolvente.png" alt="Envolvente de amplitud"></a><figcaption>Envolvente de amplitud (RMS, ventana de 10 ms): inicio, durante el silbido y final.</figcaption></figure>
+
+<figure><a href="img/fig4_espectros.png" title="Abrir en tamaño completo"><img src="img/fig4_espectros.png" alt="Espectros en dos instantes"></a><figcaption>Espectros en t = 0,30 s (soplo previo) y t = 3,85 s (cuerpo estable).</figcaption></figure>
+
+<p>Con estos gráficos podemos observar que es casi un sonido sinusoidal<sup class="cita">[<a href="#ref-4">4</a>]</sup> al observar su forma de onda<sup class="cita">[<a href="#ref-5">5</a>]</sup> y corroborar la presencia de una parcial cercana al 5Do, en 542 Hz y de una segunda que pasa más desapercibida en 1086 Hz (casi teniendo una relación 1:2, una relación armónica<sup class="cita">[<a href="#ref-1">1</a>]</sup>). Por lo cual podemos asegurar correctamente que es un sonido con rasgos armónicos, pero no completamente puro, por la presencia del ruido causado por el aire, observable claramente desde los 3 kHz en adelante<sup class="cita">[<a href="#ref-1">1</a>]</sup>, que es lo que le da este carácter “sucio" al sonido.</p>
+
+<p>En el espectrograma<sup class="cita">[<a href="#ref-6">6</a>]</sup> se pueden distinguir claramente las tres secciones del sonido.<br>-Inicio: En la que no estoy soplando y estoy posicionando mis manos solamente, la cual está relacionada con el espacio negro que hay al inicio. Luego empiezo a soplar, pero no estoy en la posición correcta, se observa como aparece color, pero los parciales no se marcan fuerte.</p>
+
+<p>-Durante el silbido: Intento mantener un constante del sonido con leves variaciones y se ven claramente marcados los armónicos con el ruido.</p>
+
+<p>-Final: En el cual muevo un poco mis manos antes de dejar de soplar, lo cual se puede observar al ver como dejan de estar marcados los parciales y el ruido se mantiene hasta que paro de soplar.</p>
+
+</section>
+
+<section id="parte2">
+<h2>Parte 2: Un sonido, dos métodos</h2>
+<h3>Modelo A · síntesis aditiva</h3>
+<div class="audio" id="a-modeloA"><div class="audio-cab"><span class="ico" aria-hidden="true">♪</span><div><strong>Modelo A: imitación del silbido</strong><small>Render con el perfil por defecto</small></div></div><audio controls preload="metadata" src="audio/modeloA_aditiva.wav"></audio><a class="boton" href="modelos/aditiva.html">Abrir el controlador del modelo A ↗</a></div>
+
+<p>Modelo A síntesis aditiva: En este método se utilizan dos sinusoides, la principal y su múltiplo de dos<sup class="cita">[<a href="#ref-7">7</a>]</sup>, con esto se puede obtener los dos parciales principales en el sonido. Luego para emular el aire, a un ruido blanco se le colocó un filtro pasa banda en los 4 kHz y finalmente para emular la inestabilidad del sonido se le agregó una deriva y arrastre los cuales modifican en un rango de “movimiento” la frecuencia<sup class="cita">[<a href="#ref-3">3</a>]</sup>. Como limitación que se puede observar con este método es que aún faltan más parciales, aunque con menos volumen y se siente “vacío” (en el sentido de que faltan sonidos en comparación al original) al solo tener las dos sinusoidales como sonidos principales en las frecuencias más bajas y el ruido blanco suena muy como ruido blanco, no como un ruido natural.</p>
+
+<figure><a href="img/flujo_modeloA.png" title="Abrir en tamaño completo"><img src="img/flujo_modeloA.png" alt="Flujo de señal del modelo A" style="max-width:900px"></a><figcaption>Flujo de señal del modelo A.</figcaption></figure>
+
+<h3>Modelo B · síntesis sustractiva</h3>
+<div class="audio" id="a-modeloB"><div class="audio-cab"><span class="ico" aria-hidden="true">♪</span><div><strong>Modelo B: imitación del silbido</strong><small>Render con el perfil por defecto</small></div></div><audio controls preload="metadata" src="audio/modeloB_sustractiva.wav"></audio><a class="boton" href="modelos/sustractiva.html">Abrir el controlador del modelo B ↗</a></div>
+
+<p>Modelo B, síntesis sustractiva: Se acerca más al sonido original, al punto que, si hubiera grabado con un buen micrófono y en un estudio, probablemente habría sonado muy cercano. Este modelo funciona a partir de ruido blanco, al cual se le aplican distintos filtros pasa banda, comenzando por uno que da el soplo inicial antes de que los armónicos suenen con intensidad, luego dos filtros más, de las parciales principales, uno en 1.6 kHz que limpia el audio y uno en 4 kHz que modula el ruido en el audio original. El principal problema/límite que veo en este audio es en el ajuste de db de los distintos componentes del sonido<sup class="cita">[<a href="#ref-8">8</a>]</sup> (las parciales deberían estar un poco más bajas, es mejor que en el modelo A, pero aún no es suficiente) y en el ruido de fondo que no llega a sonar natural.</p>
+
+<figure><a href="img/flujo_modeloB.png" title="Abrir en tamaño completo"><img src="img/flujo_modeloB.png" alt="Flujo de señal del modelo B" style="max-width:900px"></a><figcaption>Flujo de señal del modelo B.</figcaption></figure>
+
+<h3>Comparación</h3>
+<div class="trio">
+<div class="audio" id="a-orig-ig"><div class="audio-cab"><span class="ico" aria-hidden="true">♪</span><div><strong>Original</strong></div></div><audio controls preload="metadata" src="audio/comparacion/original_igualado.wav"></audio></div>
+
+<div class="audio" id="a-A-ig"><div class="audio-cab"><span class="ico" aria-hidden="true">♪</span><div><strong>Modelo A</strong></div></div><audio controls preload="metadata" src="audio/comparacion/modeloA_aditiva_igualado.wav"></audio></div>
+
+<div class="audio" id="a-B-ig"><div class="audio-cab"><span class="ico" aria-hidden="true">♪</span><div><strong>Modelo B</strong></div></div><audio controls preload="metadata" src="audio/comparacion/modeloB_sustractiva_igualado.wav"></audio></div>
+
+</div>
+<p class="nota">Los tres audios con la sonoridad igualada a −21,2 LUFS, para compararlos de oído.</p>
+<p>Al analizar los espectros y compararlos<sup class="cita">[<a href="#ref-6">6</a>]</sup> se confirman los aspectos descritos por encima antes, partiendo por el ruido que no se parece al ruido “natural” de la grabación, ya que a los de los modelos les falta mayor variación de db en distintos rangos de frecuencia (observable en el espectro<sup class="cita">[<a href="#ref-6">6</a>]</sup>). A su vez como mencioné antes las dos parciales más identificables no son las únicas, hay trazas de las otras por más que no puedan observarse en el espectro claramente. La forma que se me ocurre que podrían mejorar estos modelos es añadiendo más parciales (ondas sinusoidales)<sup class="cita">[<a href="#ref-7">7</a>]</sup> y modificando aún más el ruido blanco con más filtros. Pero en definitiva el ganador es el modelo B de síntesis sustractiva, ya que es un sonido mucho más rico en frecuencias y “variaciones” que pueden seguir pareciendo ruido blanco, pero suman a que el sonido se sienta más completo.</p>
+
+<figure><a href="img/collage_comparacion.png" title="Abrir en tamaño completo"><img src="img/collage_comparacion.png" alt="Original contra modelo A y modelo B"></a><figcaption>Original, modelo A y modelo B con los mismos análisis y la sonoridad igualada.</figcaption></figure>
+
+</section>
+
+<section id="parte3">
+<h2>Parte 3: Más allá del original</h2>
+<h3>Modelo A</h3>
+<div class="audio" id="a-masA"><div class="audio-cab"><span class="ico" aria-hidden="true">♪</span><div><strong>35 s más allá: modelo A</strong><small>Toca ▶ junto a cada momento para escucharlo desde ahí</small></div></div><audio controls preload="metadata" src="audio/mas_alla_modeloA_35s.wav"></audio></div>
+
+<p>Modelo A: Render de 35s, el cual parte con la configuración de mi silbido.</p>
+
+<div class="momento"><button class="salto" data-audio="a-masA" data-t="5" title="Escuchar desde 5 s">▶ 0:05</button><div><p class="pred">-5s: “Aire” al mínimo: Sonará solo las parciales principales como sinusoides.</p><p class="real"><span class="et">Realidad y ¿por qué?</span> Es exactamente lo que ocurre, este sonido tiene tres componentes las dos sinusoidales y el ruido blanco<sup class="cita">[<a href="#ref-7">7</a>]</sup>, así que al eliminar el ruido quedan solo las ondas principales.</p></div></div>
+<div class="momento"><button class="salto" data-audio="a-masA" data-t="10" title="Escuchar desde 10 s">▶ 0:10</button><div><p class="pred">-10s: “Aire” -42dB y “Altura” 1 kHz: Mucho más agudo con el ruido de fondo</p><p class="real"><span class="et">Realidad y ¿por qué?</span> Es lo que ocurre, ya que restauramos el ruido de fondo y aumentamos la frecuencia de ambas parciales<sup class="cita">[<a href="#ref-3">3</a>]</sup>.</p></div></div>
+<div class="momento"><button class="salto" data-audio="a-masA" data-t="15" title="Escuchar desde 15 s">▶ 0:15</button><div><p class="pred">-15s: Movimientos al azar de “2.º parcial” y “Altura”: Al cambiar la “Altura” cambiara que tan grave o agudo es el sonido y al cambiar el 2ndo parcial no se notara tanto el cambio.</p><p class="real"><span class="et">Realidad y ¿por qué?</span> En este caso es parcialmente correcto ya que la altura si cambia qué tan grave o agudo es al modificar la frecuencia<sup class="cita">[<a href="#ref-2">2</a>,<a href="#ref-3">3</a>]</sup>. Pero la presencia o ausencia del 2ndo parcial si hace una diferencia al bajar o subir los db<sup class="cita">[<a href="#ref-8">8</a>]</sup>.</p></div></div>
+
+<h3>Modelo B</h3>
+<div class="audio" id="a-masB"><div class="audio-cab"><span class="ico" aria-hidden="true">♪</span><div><strong>35 s más allá: modelo B</strong><small>Toca ▶ junto a cada momento para escucharlo desde ahí</small></div></div><audio controls preload="metadata" src="audio/mas_alla_modeloB_35s.wav"></audio></div>
+
+<p>Modelo B: Render de 35s, el cual parte con la configuración de mi silbido.</p>
+
+<div class="momento"><button class="salto" data-audio="a-masB" data-t="0" title="Escuchar desde 0 s">▶ 0:00</button><div><p class="pred">-0s: “inicio de la nota” al mínimo con “centro del filtro” a 300 Hz: Comenzarán instantáneamente a sonar las parciales en comparación al original en un tono más grave.</p><p class="real"><span class="et">Realidad y ¿por qué?</span> Es exactamente lo que ocurre, ya que solo se redujo el tiempo en que empieza la nota mientras se cambió la frecuencia, dando una sensación de mayor ataque.</p></div></div>
+<div class="momento"><button class="salto" data-audio="a-masB" data-t="10" title="Escuchar desde 10 s">▶ 0:10</button><div><p class="pred">-10s: “Aire” al mínimo: Al igual que con el modelo A, sonarán las parciales principales parecidas a sinusoides.</p><p class="real"><span class="et">Realidad y ¿por qué?</span> Similar a lo que ocurre, a diferencia del modelo A, no tenemos solamente una onda sinusoidal sonando, si no que el ruido blanco, que en este caso al bajar “aire” solo silenciamos la región superior del ruido, por lo cual no suena como solo dos sinusoides.</p></div></div>
+<div class="momento"><button class="salto" data-audio="a-masB" data-t="20" title="Escuchar desde 20 s">▶ 0:20</button><div><p class="pred">-20s: Cambios en “Pureza del tono” y “Centro del filtro”: Espero que se dejen de distinguir completamente las parciales principales (al bajar la pureza al mínimo) y que el cambio en el centro no le afecte. Aparte que cuando la pureza este al máximo se parezca más a una sinusoide pura.</p><p class="real"><span class="et">Realidad y ¿por qué?</span> Al disminuir la pureza del tono (más ruido), ya que hay distintos filtros sobre el ruido blanco, se sigue distinguiendo una zona con mayores amplitudes la cual se vuelve más aguda o grave al mover el filtro. Por otro lado, cuando la pureza aumenta al máximo, el ruido no se elimina completamente, pero si suena más cercano a lo que se apreció en el modelo A.</p></div></div>
+
+<p>Los parámetros que más modifican los sonidos fueron los discutidos en esta sección, altura en el caso del modelo A, centro del filtro y pureza del tono en el caso del modelo B, aire y el volumen de la 2nda parcial. En cambio, los que menos cambios realizan (más que nada porque abarcan segmentos muy pequeños de los sonidos), son los parámetros que controlan los inicios y fines de los sonidos.</p>
+
+</section>
+
+<section id="parte4">
+<h2>Parte 4: El modelo tocado por la fuente</h2>
+<div class="audio" id="a-vivo"><div class="audio-cab"><span class="ico" aria-hidden="true">♪</span><div><strong>En vivo: el modelo B tocado por mi silbido</strong><small>Toma estéreo: canal izquierdo, mi silbido; canal derecho, el modelo B</small></div></div><audio controls preload="metadata" src="audio/en_vivo_modeloB.wav"></audio><a class="boton" href="modelos/sustractiva.html#vivo">Abrir el modo en vivo del modelo B ↗</a></div>
+
+<figure><a href="img/cadena_escucha.png" title="Abrir en tamaño completo"><img src="img/cadena_escucha.png" alt="Cadena de escucha del modo en vivo" style="max-width:900px"></a><figcaption>Cadena de escucha del modo en vivo (modelo B).</figcaption></figure>
+
+<p>En este caso con este modelo, resalta más lo artificial del ruido ya que no sabe cuando voy a parar de silbar por lo que en cualquier momento que esto pare o baje la intensidad aplica ruido como fue descrito el final de mi sonido original. En esta área de igual manera imita algo bastante bien al no ser un ruido blanco constante y es que no limita que cualquier sonido que no sea un tono suene solo ruido, el ruido también se mueve en las frecuencias (como al bajar la pureza al mínimo y mover el centro del filtro). A su vez al ir cambiando de tonos, se nota nuevamente lo artificial y que no actúa como una onda sinusoidal si no más como una cuadrada (<button class="salto en-linea" data-audio="a-vivo" data-t="70" title="Escuchar desde 1:10">▶ 01:10</button>), ya que busca mantener un sonido estable, en la muestra en vivo no desafiné, pero por cómo funciona este modelo se puede concluir que desafinaría conmigo, ya que detecta e imita exactamente la misma altura que éste sonando.</p>
+
+</section>
+
+<section id="referencias">
+<h2>Referencias</h2>
+<ol class="refs">
+<li id="ref-1" value="1">Cádiz RF. Timbre y estructura armónica [video en Internet]. YouTube; 2023 mar 2 [citado 30 oct 2026]. Disponible en: <a href="https://www.youtube.com/watch?v=MNnpa8rktqE">https://www.youtube.com/watch?v=MNnpa8rktqE</a></li>
+<li id="ref-2" value="2">Cádiz RF. El sonido como fenómeno perceptual [video en Internet]. YouTube; 2023 mar 2 [citado 30 oct 2026]. Disponible en: <a href="https://www.youtube.com/watch?v=7zWkLg6SOhI">https://www.youtube.com/watch?v=7zWkLg6SOhI</a></li>
+<li id="ref-3" value="3">Cádiz RF. Período, frecuencia y fase [video en Internet]. YouTube; 2023 mar 2 [citado 30 oct 2026]. Disponible en: <a href="https://www.youtube.com/watch?v=BpYcdc8Suxg">https://www.youtube.com/watch?v=BpYcdc8Suxg</a></li>
+<li id="ref-4" value="4">Cádiz RF. Sinusoides [video en Internet]. YouTube; 2023 mar 2 [citado 30 oct 2026]. Disponible en: <a href="https://www.youtube.com/watch?v=AAlYw4H9wcA">https://www.youtube.com/watch?v=AAlYw4H9wcA</a></li>
+<li id="ref-5" value="5">Cádiz RF. El sonido como fenómeno físico [video en Internet]. YouTube; 2023 mar 2 [citado 30 oct 2026]. Disponible en: <a href="https://www.youtube.com/watch?v=ubX84cuM-40">https://www.youtube.com/watch?v=ubX84cuM-40</a></li>
+<li id="ref-6" value="6">Cádiz RF. Representación gráfica tiempo vs frecuencia [video en Internet]. YouTube; 2023 mar 2 [citado 30 oct 2026]. Disponible en: <a href="https://www.youtube.com/watch?v=YRJbi1r0LQ0">https://www.youtube.com/watch?v=YRJbi1r0LQ0</a></li>
+<li id="ref-7" value="7">Cádiz RF. Superposición de sonidos [video en Internet]. YouTube; 2023 mar 2 [citado 30 oct 2026]. Disponible en: <a href="https://www.youtube.com/watch?v=2mxhc8bNsBw">https://www.youtube.com/watch?v=2mxhc8bNsBw</a></li>
+<li id="ref-8" value="8">Cádiz RF. Amplitud e intensidad [video en Internet]. YouTube; 2023 mar 2 [citado 30 oct 2026]. Disponible en: <a href="https://www.youtube.com/watch?v=b_cYSUS4mQw">https://www.youtube.com/watch?v=b_cYSUS4mQw</a></li>
+</ol>
+</section>
+
+<section id="ia">
+<h2>Declaración de uso de IA</h2>
+<p>Claude fue utilizado para los siguientes propósitos de forma resumida:</p>
+
+<p>Herramienta: Claude (Anthropic), en claude.ai, usado entre el 29 y el 30 de octubre de 2026.</p>
+
+<ul>
+<li>Resumir y organizar la playlist del curso «Sonidos digitales» (temas por video y minuto) y explicarme conceptos de la tarea: ventanas de análisis, armónicos y parciales, filtros resonantes y envolventes, con el fin de poder utilizarlos en este trabajo.</li>
+<li>Proponer un plan de trabajo a partir del enunciado.</li>
+<li>Analizar grabación de la fuente: generar con Python (NumPy, SciPy y Matplotlib) la forma de onda, la envolvente, el espectrograma, los espectros y medir sus valores. Una vez generados los espectros también, le pedí que me ayudara a corregir algunas etiquetas de ellos.</li>
+<li>Programar los dos modelos con Web Audio API (HTML y JavaScript): síntesis aditiva y sustractiva, con sus controles, diagramas de flujo, tabla de parámetros, render a WAV, grabación en tiempo real con registro de parámetros y el modo en vivo con micrófono (seguidor de envolvente, detector de altura y brillo).</li>
+<li>Calibrar los modelos contra mi grabación (generar y definir los parámetros del botón default) y generar figuras de comparación (sonoridad igualada a −21,2 LUFS, espectrogramas).</li>
+<li>Relacionar las explicaciones con los videos del curso y agregar las citas en formato Vancouver a este documento, sin modificar la redacción.</li>
+</ul>
+<h3>Prompts relevantes (textuales)</h3>
+<ol class="prompts">
+<li><blockquote>«Analízame esta playlist de clases, organizando e identificando en que video se dice cada topico o que materia explica, generame una explicacion resumida de esto, para posteriormente apoyarnos en este contenido para trabajar».</blockquote><p>Este prompt, fue utilizado para poder saber que videos me eran mas relevantes para repasar y alimentar mis explicaciones.</p></li>
+<li><blockquote>«En base a esos contenidos como harias esta tarea, no quiero que la hagas necesariamente, si no un esquema explicativo de que deberia hacer o como hacerlo».</blockquote><p>Este prompt fue utilizado, porque no entendía muy bien que es lo que el trabajo quería de mi / que tenia que hacer (mucho estrés estas semanas y me cuesta entender lo que leo).</p></li>
+<li><blockquote>«Dime todo lo que tengo que hacer en audacity con mi audio o hazlo tomando control de mi computadora, extrae las imagenes necesarias saca capturas de espectros. lo que necesites».</blockquote><p>Este prompt fue utilizado para extraer los gráficos del mismo Audacity, pero luego Claude decidió generarlos por su propia cuenta y esos fueron los que utilice</p></li>
+<li><blockquote>«Ayudame con la creacion de los dos modelos para recrear el sonido, hazme unos prototipos y los vamos mejorando juntos».</blockquote><p>Prompt inicial para la creación de los dos modelos, ya había decidido hacer uno de aditiva y el otro de sustractiva, por lo cual no se encuentra en este texto.</p></li>
+<li><blockquote>«Mejora los mapas de flujo y agrega la opción de tocar en vivo del micrófono o algo así que pide la tarea».</blockquote><p>Prompt utilizado para generar en ambos modelos el modo en vivo de grabación y en el cual se puede ver que no estaba entendiendo muy bien que es lo que me pedían, tenia una confusión muy grande con el que sonara en vivo y que tenia que grabar.</p></li>
+<li><blockquote>«Quiero que me generes los espectros para el modelo A y el B, tal como creaste estos del original».</blockquote><p>Prompt utilizado para generar los espectros de las grabaciones imitativas obtenidas de cada modelo.</p></li>
+<li><blockquote>«Agrega en la seccion referencias los videos que consideres pertinentes y luego cita como en vancouver con corchetes cuando sea necesario en el texto y completa la seccion declaración de uso de ia».</blockquote><p>Prompt utilizado para finalizar el trabajo, posterior a esto escribí estas explicaciones de cada prompt, corregí el formato resumido del segmento anterior y finalmente verifiqué los videos y referencias que agregó en cada segmento (eliminando y moviendo un par).</p></li>
+</ol>
+</section>
+
+<footer>
+  Todos los audios, figuras y los dos modelos están guardados junto a esta página, así que funciona sin internet.
+  Los controladores de los modelos están en <a href="modelos/">modelos/</a>.
+</footer>
+</main>
+<script>
+  // botones ▶ de tiempo: saltan al segundo indicado del audio y lo reproducen (y pausan los demás)
+  document.querySelectorAll("button.salto").forEach(b => b.addEventListener("click", () => {
+    const a = document.querySelector("#" + b.dataset.audio + " audio");
+    document.querySelectorAll("audio").forEach(o => { if (o !== a) o.pause(); });
+    const ir = () => { a.currentTime = +b.dataset.t; a.play(); };
+    if (a.readyState >= 1) ir(); else { a.addEventListener("loadedmetadata", ir, { once: true }); a.load(); }
+  }));
+  // al reproducir un audio, se pausan los otros
+  document.addEventListener("play", e => document.querySelectorAll("audio").forEach(o => { if (o !== e.target) o.pause(); }), true);
+</script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelo A · Síntesis aditiva del silbido</title>
+<link rel="stylesheet" href="estilo.css?v=202610300915">
+</head>
+<body>
+<main>
+  <p class="sub"><a href="index.html">← Modelos</a></p>
+  <h1>Modelo A · Síntesis aditiva</h1>
+  <p class="sub">Construye el silbido pieza por pieza: un seno por cada parcial medido, más una banda de ruido para el aire.</p>
+
+  <div class="botones">
+    <button id="tocar" class="prim">Mantener para tocar <kbd>Espacio</kbd></button>
+    <button id="nota">Tocar una nota</button>
+    <button id="render">Renderizar WAV</button>
+    <label class="nota" style="align-self:center;margin:0">Duración de la nota <input id="duracion" type="number" min="0.5" max="10" step="0.1" value="6.8" style="width:4.5em"> s</label>
+    <button id="restablecer" title="Vuelve a los valores calibrados para parecerse al silbido grabado">Perfil del silbido (restablecer)</button>
+  </div>
+
+  <div class="panel"><div id="controles"></div></div>
+  <p class="nota">Pasa el mouse sobre un control para ver qué hace; el detalle está en la tabla de parámetros. «Perfil del silbido» vuelve a los valores calibrados contra la grabación.</p>
+
+  <h2>Espectro en vivo (0 a 6000 Hz)</h2>
+  <div class="panel"><canvas id="espectro"></canvas></div>
+
+  <h2>Flujo de señal</h2>
+<div class="panel diagrama" id="flujo"></div>
+  <div class="leyenda"><span class="lf">fuente de señal</span><span class="lc">donde está el principio del método</span><span class="lt">control de altura</span></div>
+
+  <h2>Parámetros</h2>
+  <table id="tabla"></table>
+  <p class="nota">Reglas fijas (no son parámetros): durante el soplo previo el aire sube hasta 0,7 y el tono hasta 0,15 de su nivel pleno (calibrado contra la grabación); al final, el aire tarda el doble que el tono en apagarse.</p>
+
+  <h2>Parte 4 · Tocar en vivo con el micrófono</h2>
+  <p class="nota" style="margin-top:0">Silba frente al micrófono y el modelo te sigue: cuánto soplas abre y cierra el modelo, y la nota que silbas fija su altura.</p>
+  <div id="vivo"></div>
+</main>
+
+<script src="comun.js?v=202610300915"></script>
+<script src="diagrama.js?v=202610300915"></script>
+<script src="vivo.js?v=202610300915"></script>
+<script>
+/* Calibración: con «Aire» = x dB, la banda 3–5 kHz queda x dB bajo el tono (medido en la banda del fundamental). */
+const AIR_CAL = 4.3, MASTER = 0.25;
+
+const grupos = [
+  { id: "tono", titulo: "1 · Tono", desc: "Los dos senos del silbido." },
+  { id: "aire", titulo: "2 · Aire y entrada de la nota", desc: "El soplo y cómo aparece la nota." },
+  { id: "salida", titulo: "3 · Final y afinación", desc: "Cómo se corta la nota y cuánto se mueve su altura con el soplo." },
+];
+const spec = [
+  { grupo: "tono", id: "f0", nombre: "Altura (f0)", min: 300, max: 1200, step: 1, value: 540, unidad: "Hz", efecto: "Frecuencia del seno principal. El 2.º seno va siempre al doble." },
+  { grupo: "tono", id: "p2", nombre: "2.º parcial", min: -60, max: 0, step: 1, value: -29, unidad: "dB", efecto: "Nivel del seno en 2·f0 respecto del principal. Más alto: timbre menos puro, más brillante." },
+  { grupo: "aire", id: "aire", nombre: "Aire", min: -70, max: -10, step: 1, value: -36, unidad: "dB", efecto: "Nivel del ruido de soplo (banda centrada en 4 kHz) respecto del tono. Más alto: más soplado." },
+  { grupo: "aire", id: "inicio", nombre: "Inicio de la nota", min: 20, max: 1000, step: 10, value: 380, unidad: "ms", efecto: "Cuánto tarda la nota en aparecer: un 84 % es soplo previo (solo aire) y un 16 % es el ataque del tono, la proporción medida en la grabación (320 + 60 ms). Corto: la nota parte de golpe. Largo: entra gradual." },
+  { grupo: "salida", id: "final", nombre: "Final", min: 10, max: 400, step: 5, value: 100, unidad: "ms", efecto: "Cuánto tarda el tono en apagarse al soltar. El aire tarda el doble." },
+  { grupo: "salida", id: "mov", nombre: "Altura que sigue al soplo", min: 0, max: 60, step: 1, value: 10, unidad: "cents", efecto: "Deriva lenta de ±este valor durante la nota y arrastre de 8,5 veces este valor (la nota parte la mitad más abajo y lo cae completo al final). 0: altura fija." },
+];
+
+function Voice(ctx, p, dest) {
+  const mix = ctx.createGain(); mix.gain.value = MASTER; mix.connect(dest);
+  // tono: dos senos
+  const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), lvl2 = ctx.createGain();
+  const toneEnv = ctx.createGain(), toneGate = ctx.createGain();
+  toneEnv.gain.value = 0;
+  o1.connect(toneEnv); o2.connect(lvl2).connect(toneEnv); toneEnv.connect(toneGate).connect(mix);
+  // aire: ruido filtrado
+  const nz = ctx.createBufferSource(); nz.buffer = noiseBuffer(ctx); nz.loop = true;
+  const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 4000; bp.Q.value = 1;
+  const airEnv = ctx.createGain(), airLvl = ctx.createGain(), airGate = ctx.createGain();
+  airEnv.gain.value = 0;
+  nz.connect(bp).connect(airEnv).connect(airLvl).connect(airGate).connect(mix);
+  // altura: deriva (fuente constante con curva) + arrastre (automatización del detune)
+  // la curva de deriva vale ±1 y una ganancia la escala a «Deriva» cents (así se puede cambiar en vivo)
+  const drift = ctx.createConstantSource(), dg = ctx.createGain(); drift.offset.value = 0; dg.gain.value = p.deriva;
+  drift.connect(dg); dg.connect(o1.detune); dg.connect(o2.detune);
+  const env = { tone: toneEnv, air: airEnv }, gates = { tone: toneGate, air: airGate };
+
+  o1.frequency.value = p.f0; o2.frequency.value = 2 * p.f0;
+  lvl2.gain.value = dbToGain(p.p2); airLvl.gain.value = dbToGain(p.aire) * AIR_CAL;
+  return {
+    start(t) {
+      [o1, o2, nz, drift].forEach(n => n.start(t));
+      drift.offset.setValueCurveAtTime(driftCurve(DRIFT_SECONDS, 1), t, DRIFT_SECONDS);
+    },
+    on(t) { const tl = scheduleOn(t, p, env, gates); arrastreOn(t, tl, p, [o1.detune, o2.detune]); return tl; },
+    off(t) { arrastreOff(t, p, [o1.detune, o2.detune]); return scheduleOff(t, p, gates); },
+    update(q) {
+      const now = ctx.currentTime;
+      o1.frequency.setTargetAtTime(q.f0, now, 0.01); o2.frequency.setTargetAtTime(2 * q.f0, now, 0.01);
+      lvl2.gain.setTargetAtTime(dbToGain(q.p2), now, 0.01);
+      airLvl.gain.setTargetAtTime(dbToGain(q.aire) * AIR_CAL, now, 0.01);
+      dg.gain.setTargetAtTime(q.deriva, now, 0.05);
+    },
+    // modo en vivo: las envolventes quedan abiertas y el micrófono maneja las compuertas y la altura
+    vivoInicio(t) {
+      for (const g of [toneEnv, airEnv]) { g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(1, t); }
+      for (const g of [toneGate, airGate]) { g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(0, t); }
+      for (const d of [o1.detune, o2.detune]) { d.cancelScheduledValues(t); d.setValueAtTime(0, t); }
+      dg.gain.setTargetAtTime(0, t, 0.05); // la deriva real viene del silbido
+    },
+    vivoNivel(t, tono, aire) { toneGate.gain.setTargetAtTime(tono, t, 0.01); airGate.gain.setTargetAtTime(aire, t, 0.01); },
+    vivoAltura(t, f) { o1.frequency.setTargetAtTime(f, t, 0.015); o2.frequency.setTargetAtTime(2 * f, t, 0.015); },
+    // brillo en vivo: b de −1 a 1 sube o baja el 2.º parcial (±20 dB) y el aire (±15 dB)
+    vivoBrillo(t, b) { lvl2.gain.setTargetAtTime(dbToGain(p.p2 + 20 * b), t, 0.05); airLvl.gain.setTargetAtTime(dbToGain(p.aire + 15 * b) * AIR_CAL, t, 0.05); },
+    vivoFin(t) {
+      for (const g of [toneGate, airGate]) { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, 0.02); }
+      o1.frequency.setTargetAtTime(p.f0, t, 0.02); o2.frequency.setTargetAtTime(2 * p.f0, t, 0.02);
+      lvl2.gain.setTargetAtTime(dbToGain(p.p2), t, 0.05); airLvl.gain.setTargetAtTime(dbToGain(p.aire) * AIR_CAL, t, 0.05);
+      dg.gain.setTargetAtTime(p.deriva, t, 0.05);
+    },
+  };
+}
+
+
+diagrama(document.getElementById("flujo"), {
+  w: 780, h: 292, titulo: "Flujo de señal del modelo aditivo",
+  cajas: [
+    { id: "ctrl", x: 24, y: 12, t: ["Deriva + arrastre", "altura (cents)"], tipo: "control" },
+    { id: "s1", x: 24, y: 82, t: ["Seno", "f0"], tipo: "clave" },
+    { id: "s2", x: 24, y: 152, t: ["Seno", "2·f0"], tipo: "clave" },
+    { id: "n2", x: 174, y: 152, t: ["Nivel", "2.º parcial"] },
+    { id: "et", x: 324, y: 82, t: ["Envolvente", "del tono"] },
+    { id: "gt", x: 474, y: 82, t: ["Compuerta", "del tono"] },
+    { id: "mx", x: 624, y: 152, t: ["Mezcla", "→ salida"], tipo: "salida" },
+    { id: "nz", x: 24, y: 232, t: ["Ruido blanco"], tipo: "fuente" },
+    { id: "bp", x: 174, y: 232, t: ["Pasa banda", "4 kHz"] },
+    { id: "ea", x: 324, y: 232, t: ["Envolvente", "del aire"] },
+    { id: "ga", x: 474, y: 232, t: ["Compuerta", "y nivel del aire"] },
+  ],
+  flechas: [
+    { p: ["s1.r", "et.l"] }, { p: ["s2.r", "n2.l"] }, { p: ["n2.r", [387, 175], "et.b"] },
+    { p: ["et.r", "gt.l"] }, { p: ["gt.r", [687, 105], "mx.t"] },
+    { p: ["nz.r", "bp.l"] }, { p: ["bp.r", "ea.l"] }, { p: ["ea.r", "ga.l"] }, { p: ["ga.r", [687, 255], "mx.b"] },
+    { p: ["ctrl.b", "s1.t"], guion: true, rotulo: { x: 95, y: 74, t: "detune" } },
+    { p: ["ctrl.l", [12, 35], [12, 175], "s2.l"], guion: true },
+  ],
+  rotulos: [{ x: 160, y: 98, t: "parte tonal: suma de senos", negrita: true }, { x: 160, y: 226, t: "parte de aire", negrita: true }],
+});
+
+/* Sliders agrupados: cada uno alimenta varios valores internos, en las proporciones medidas en la grabación. */
+const derivar = p => {
+  p.deriva = p.mov; p.arrastre = 8.5 * p.mov;                         // 10 → 10 y 85 cents
+  p.soplo = p.inicio * 320 / 380; p.ataque = Math.max(3, p.inicio * 60 / 380); // 380 → 320 + 60 ms
+};
+
+montarModelo({ spec, grupos, derivar, Voice, archivo: "modeloA_aditiva.wav" });
+</script>
+</body>
+</html>
