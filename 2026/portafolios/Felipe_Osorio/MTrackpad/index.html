@@ -1,0 +1,1153 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="MTrackpad: instrumento musical para el trackpad o el mouse, con síntesis, muestras, efectos y luces.">
+<title>MTrackpad</title>
+<link rel="stylesheet" href="fuentes/fuentes.css">
+<style>
+/* Layout: barra con la marca y los controles de escena · columna del instrumento (recuadro, Z, osciloscopio, muestras) · columna de configuración por pestañas. Las luces pintan el fondo detrás de todo. */
+:root{
+  color-scheme:dark;
+  --bg:#0a0c12; --panel:rgba(17,20,30,.86); --panel2:rgba(255,255,255,.045); --campo:rgba(0,0,0,.4);
+  --text:#ebeef5; --muted:#9097ab; --accent:#ffb547; --accent2:#6ad1ff; --tinta:#1a1203;
+  --border:rgba(255,255,255,.1); --peligro:#ff5d6c;
+  --x:#ffb547; --y:#6ad1ff; --z:#c39bff; --r:#5eead4; --a:#ff8fb8; --v:#a3e635; --p:#f8fafc;
+  --display:"Sora",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Helvetica,Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text)}
+body{font:15px/1.5 var(--sans)}
+button,select,input,textarea{font:inherit;color:inherit}
+h1,h2,h3{margin:0;line-height:1.15;text-wrap:balance}
+p{margin:0}
+.muted{color:var(--muted)} .small{font-size:13px}
+canvas#luces{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+.contenido{position:relative;z-index:1}
+.wrap{max-width:1260px;margin:0 auto;padding-inline:16px;padding-block:14px 60px}
+
+.barra{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(10,12,18,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.barra .in{max-width:1260px;margin:0 auto;padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
+.marca{display:flex;align-items:baseline;gap:10px;min-width:0;flex-wrap:wrap}
+.marca h1{font:800 24px/1 var(--display);letter-spacing:-.5px}
+.marca h1 span{color:var(--accent)}
+.marca small{font:500 12px var(--mono);color:var(--muted);letter-spacing:.5px}
+.escena{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.estado{font:700 12px var(--mono);padding:4px 9px;border-radius:999px;border:1px solid var(--border);color:var(--muted);letter-spacing:.5px}
+.estado.on{background:var(--accent);color:var(--tinta);border-color:transparent}
+.estado.rec{background:var(--peligro);color:#fff;border-color:transparent}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 13px;border-radius:11px;border:1px solid var(--border);background:rgba(255,255,255,.06);cursor:pointer;font-weight:600;font-size:14px;color:var(--text);user-select:none;touch-action:manipulation}
+.btn:hover{background:rgba(255,255,255,.12)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,.xy:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.btn.primario{background:var(--accent);border-color:transparent;color:var(--tinta)}
+.btn.on{background:var(--accent);color:var(--tinta);border-color:transparent}
+.btn.rec{background:var(--peligro);color:#fff;border-color:transparent}
+.btn.peq{padding:4px 9px;font-size:13px;border-radius:8px}
+.btn.grande{font-size:16px;padding:13px 10px}
+.botonera{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+kbd{font:600 11px var(--mono);padding:1px 5px;border-radius:5px;border:1px solid var(--border);background:rgba(255,255,255,.07);color:var(--muted)}
+.btn.on kbd,.btn.primario kbd,.btn.rec kbd{color:inherit;border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.25)}
+select,input[type=text],input[type=number],textarea{background:var(--campo);border:1px solid var(--border);border-radius:9px;padding:6px 8px;min-width:0}
+input[type=number]{width:84px;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+.layout{display:grid;gap:14px;grid-template-columns:minmax(300px,440px) minmax(0,1fr);margin-top:4px;align-items:start}
+@media (max-width:920px){.layout{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;backdrop-filter:blur(8px);min-width:0}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.fila{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.xy{position:relative;aspect-ratio:1.2;max-width:100%;border-radius:18px;border:1px solid var(--border);overflow:hidden;touch-action:none;cursor:crosshair;background:var(--campo)}
+.xy.tocando{border-color:var(--accent)}
+.xy .punto{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:#fff;box-shadow:0 0 22px #fff;pointer-events:none;transition:transform .08s}
+.xy.tocando .punto{transform:scale(1.25)}
+.xy .rejilla{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);background-size:12.5% 12.5%}
+.xy .centro{position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px;border-radius:50%;border:1px solid rgba(255,255,255,.3);pointer-events:none}
+.xy .eje{position:absolute;font-size:11px;line-height:1.35;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.95);max-width:calc(100% - 150px)}
+.xy .eje b{font-family:var(--mono)}
+.xy .ex{left:10px;bottom:7px;color:var(--x);max-width:calc(100% - 20px)}
+.xy .ey{left:10px;top:8px;color:var(--y)}
+.xy .lect{position:absolute;right:10px;top:8px;font:600 11px/1.45 var(--mono);color:rgba(255,255,255,.8);text-align:right;pointer-events:none;font-variant-numeric:tabular-nums;text-shadow:0 1px 3px rgba(0,0,0,.95)}
+.zfila{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center}
+.zfila .et{font:700 13px var(--mono);color:var(--z)}
+.zfila .val{font:600 12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.dest{font-size:12px;color:var(--muted);line-height:1.5}
+.dest b{font-family:var(--mono)}
+canvas#osc{width:100%;height:56px;display:block;border-radius:10px;background:var(--campo);border:1px solid var(--border)}
+.slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.slot-btn{display:flex;flex-direction:column;align-items:flex-start;gap:0;padding:7px 9px;border-radius:10px;border:1px solid var(--border);background:var(--panel2);cursor:pointer;text-align:left;min-width:0}
+.slot-btn b{font:700 13px var(--mono)}
+.slot-btn span{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.slot-btn.vacio{opacity:.55}
+.slot-btn.golpe{background:var(--accent);color:var(--tinta)}
+.slot-btn.golpe span{color:var(--tinta)}
+.ayuda{font-size:12.5px;color:var(--muted);line-height:1.85}
+.toma{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.toma audio{height:34px;max-width:100%}
+
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:14px}
+.tabs button{background:none;border:1px solid transparent;border-radius:9px;padding:6px 12px;cursor:pointer;font-weight:600;color:var(--muted)}
+.tabs button[aria-selected=true]{background:var(--panel2);border-color:var(--border);color:var(--text)}
+.sub{font:700 11px var(--sans);text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);margin:18px 0 8px}
+.sub:first-child{margin-top:0}
+.nota{font-size:13px;color:var(--muted);max-width:70ch}
+
+.asig-lista{display:flex;flex-direction:column;gap:8px}
+.asig,.asig-cab{display:grid;grid-template-columns:22px 62px minmax(150px,1.6fr) 80px 80px minmax(104px,1fr) auto 92px 26px;gap:6px;align-items:center}
+.asig{padding:7px 8px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--c,var(--border))}
+.asig.apagada{opacity:.5}
+.asig-cab{padding:0 8px 0 11px;font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+.asig select,.asig input[type=number]{width:100%}
+.asig label.inv{font-size:12px;display:flex;gap:3px;align-items:center;color:var(--muted);white-space:nowrap}
+.medidor{display:flex;flex-direction:column;gap:2px;font:600 11px var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden}
+.medidor .b{height:4px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden}
+.medidor .b i{display:block;height:100%;width:0;background:var(--c,var(--accent))}
+.quitar{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:6px}
+.quitar:hover{color:var(--text);background:rgba(255,255,255,.08)}
+@media (max-width:760px){
+  .asig-cab{display:none}
+  .asig{grid-template-columns:22px repeat(3,minmax(0,1fr)) auto;grid-template-areas:"on src p p x" ". min max cur inv" ". med med med med"}
+  .asig>:nth-child(1){grid-area:on} .asig>:nth-child(2){grid-area:src} .asig>:nth-child(3){grid-area:p}
+  .asig>:nth-child(4){grid-area:min} .asig>:nth-child(5){grid-area:max} .asig>:nth-child(6){grid-area:cur}
+  .asig>:nth-child(7){grid-area:inv} .asig>:nth-child(8){grid-area:med} .asig>:nth-child(9){grid-area:x}
+}
+.tabla-scroll{overflow-x:auto}
+.fuentes-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px 16px;font-size:13px;color:var(--muted);margin-bottom:10px}
+.fuentes-lista b{font-family:var(--mono)}
+
+.params{display:grid;gap:4px 18px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.param{display:flex;flex-direction:column;gap:1px;padding:4px 0;min-width:0}
+.param .cab{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.param .cab span:first-child{color:var(--muted)}
+.param .cab .v{font:600 12px var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.param.mapeado input{accent-color:var(--muted);opacity:.75}
+.chip{display:inline-block;font:700 10px var(--mono);padding:0 5px;border-radius:5px;margin-left:5px;color:var(--tinta);background:var(--c,var(--muted));vertical-align:1px}
+
+.ajustes{display:grid;gap:10px 18px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.ajustes label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.check{display:flex!important;flex-direction:row!important;gap:8px;align-items:flex-start;color:var(--text)!important}
+.check input{margin-top:3px}
+.voces{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.voz{display:grid;grid-template-columns:auto minmax(0,1fr) 74px;gap:6px;align-items:center;padding:8px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);font-size:13px}
+.voz b{font-family:var(--mono);color:var(--accent)}
+.slot{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:12px;background:var(--panel2);border:1px solid var(--border)}
+.slot h3{font:700 15px var(--display);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.slot h3 small{font:500 12px var(--sans);color:var(--accent2)}
+.slots-cfg{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.slot .ajustes{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+textarea{width:100%;min-height:110px;font:12px/1.45 var(--mono);resize:vertical}
+.msg{font-size:12.5px;color:var(--accent2)}
+
+.pantalla-completa canvas#luces{z-index:50}
+.salir{display:none;position:fixed;top:12px;right:12px;z-index:60;opacity:.45}
+.pantalla-completa .salir{display:inline-flex}
+@media (prefers-reduced-motion:reduce){.xy .punto{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="luces" aria-hidden="true"></canvas>
+<button class="btn salir" id="salir">Salir de pantalla completa <kbd>V</kbd></button>
+
+<div class="contenido">
+  <header class="barra">
+    <div class="in">
+      <div class="marca">
+        <h1>M<span>Trackpad</span></h1>
+        <small>musical trackpad · síntesis · muestras · efectos · luces</small>
+      </div>
+      <div class="escena">
+        <span class="estado" id="estPuerta">SILENCIO</span>
+        <span class="estado" id="estRec" hidden>● GRABANDO 0:00</span>
+        <select id="selPresetBarra" aria-label="Preset rápido"></select>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="layout">
+      <!-- ============ Instrumento ============ -->
+      <section class="card col" aria-label="Instrumento">
+        <div class="botonera">
+          <button class="btn primario grande" id="btnOn">Encender <kbd>Espacio</kbd></button>
+          <button class="btn grande" id="btnDestello">✦ Destello <kbd>F</kbd></button>
+          <button class="btn grande" id="btnFull">⛶ Luces <kbd>V</kbd></button>
+          <button class="btn grande" id="btnRec">● Grabar <kbd>G</kbd></button>
+        </div>
+        <div class="xy" id="xy" tabindex="0" aria-label="Recuadro XY: flechas para mover">
+          <div class="rejilla"></div><div class="centro"></div>
+          <div class="eje ey" id="ejeY"></div>
+          <div class="eje ex" id="ejeX"></div>
+          <div class="lect" id="lect"></div>
+          <div class="punto" id="punto"></div>
+        </div>
+        <div class="zfila">
+          <span class="et">Z</span>
+          <input type="range" id="zEje" min="0" max="1" step="0.005" value="0.5" aria-label="Eje Z auxiliar">
+          <span class="val" id="zVal">0.50</span>
+        </div>
+        <div class="dest" id="destOtros"></div>
+        <canvas id="osc" aria-hidden="true"></canvas>
+        <div class="slots" id="slotsRapidos"></div>
+        <div class="toma" id="toma" hidden></div>
+        <p class="ayuda"><kbd>Espacio</kbd> encender (en modo «al tocar», mantener) · <kbd>←</kbd><kbd>→</kbd> X · <kbd>↑</kbd><kbd>↓</kbd> Y (<kbd>Shift</kbd> fino) · <kbd>Q</kbd><kbd>E</kbd> o rueda sobre el recuadro: Z · <kbd>1</kbd>–<kbd>4</kbd> disparar muestras · <kbd>F</kbd> destello · <kbd>V</kbd> luces a pantalla completa · <kbd>G</kbd> grabar</p>
+      </section>
+
+      <!-- ============ Configuración ============ -->
+      <section class="card" aria-label="Configuración">
+        <div class="tabs" role="tablist">
+          <button role="tab" data-tab="ejes" aria-selected="true">Ejes</button>
+          <button role="tab" data-tab="base" aria-selected="false">Parámetros</button>
+          <button role="tab" data-tab="fuente" aria-selected="false">Osciladores y altura</button>
+          <button role="tab" data-tab="muestras" aria-selected="false">Muestras</button>
+          <button role="tab" data-tab="luces" aria-selected="false">Luces</button>
+          <button role="tab" data-tab="guardar" aria-selected="false">Guardar</button>
+        </div>
+
+        <!-- Ejes -->
+        <div data-panel="ejes">
+          <div class="sub">Preset</div>
+          <div class="fila">
+            <select id="selPreset" aria-label="Preset de ejes"></select>
+            <button class="btn peq" id="btnCargarPreset">Cargar</button>
+            <input type="text" id="nombrePreset" placeholder="Nombre del preset" aria-label="Nombre del preset" style="width:170px">
+            <button class="btn peq" id="btnGuardarPreset">Guardar como preset</button>
+            <button class="btn peq" id="btnBorrarPreset">Borrar preset</button>
+            <span class="msg" id="msgPreset"></span>
+          </div>
+          <p class="nota" id="descPreset" style="margin-top:8px"></p>
+
+          <div class="sub">Fuentes de control</div>
+          <div class="fuentes-lista">
+            <span><b style="color:var(--x)">X</b> horizontal del recuadro</span>
+            <span><b style="color:var(--y)">Y</b> vertical del recuadro</span>
+            <span><b style="color:var(--z)">Z</b> deslizador auxiliar, rueda, <kbd>Q</kbd>/<kbd>E</kbd></span>
+            <span><b style="color:var(--r)">R</b> distancia al centro (0 centro, 1 esquina)</span>
+            <span><b style="color:var(--a)">A</b> ángulo alrededor del centro (0 arriba, en sentido horario)</span>
+            <span><b style="color:var(--v)">V</b> velocidad del gesto (vuelve a 0 al quedarte quieto)</span>
+            <span><b style="color:var(--p)">P</b> presión o toque (con mouse: 0,5 mientras aprietas)</span>
+          </div>
+
+          <div class="sub">Asignaciones</div>
+          <p class="nota" style="margin-bottom:10px">Cada fila conecta una fuente con un parámetro. Mín. y máx. son los valores en los extremos de la fuente (si mín. es mayor que máx., el sentido se invierte). Si varias filas controlan el mismo parámetro, se promedian. Lo que no está asignado queda en su valor de la pestaña <i>Parámetros</i>.</p>
+          <div class="tabla-scroll">
+            <div class="asig-cab"><span>On</span><span>Fuente</span><span>Parámetro</span><span>Mín.</span><span>Máx.</span><span>Curva</span><span>Inv.</span><span>Ahora</span><span></span></div>
+            <div class="asig-lista" id="asigLista"></div>
+          </div>
+          <div class="fila" style="margin-top:10px">
+            <button class="btn peq" id="btnAgregar">+ Añadir asignación</button>
+            <button class="btn peq" id="btnLimpiar">Quitar todas</button>
+          </div>
+          <div class="sub">Curvas</div>
+          <p class="nota"><b>Lineal</b> reparte el recorrido parejo. <b>x²</b> y <b>x³</b> dejan más recorrido fino al comienzo. <b>√x</b> sube rápido y luego se aplana. <b>S</b> es suave en los extremos. <b>Exponencial</b> multiplica en vez de sumar: cada tramo igual del eje es el mismo intervalo, ideal para frecuencias y velocidades (mín. y máx. mayores que 0). <b>5 escalones</b> salta entre cinco valores fijos.</p>
+        </div>
+
+        <!-- Parámetros -->
+        <div data-panel="base" hidden>
+          <p class="nota" style="margin-bottom:6px">Valor de cada parámetro cuando ningún eje lo controla. Los asignados muestran su fuente y el valor en vivo.</p>
+          <div id="paramsBase"></div>
+          <div class="fila" style="margin-top:12px"><button class="btn peq" id="btnResetBase">Restablecer todos</button></div>
+        </div>
+
+        <!-- Osciladores y altura -->
+        <div data-panel="fuente" hidden>
+          <div class="sub">Altura</div>
+          <div class="ajustes">
+            <label>Nota base<select id="ajNota"></select></label>
+            <label>Escala del parámetro «Altura»
+              <select id="ajEscala"><option value="cont">Continua (sin escala)</option><option value="crom">Cromática</option><option value="mayor">Mayor</option><option value="menor">Menor natural</option><option value="penta">Pentatónica mayor</option><option value="pentam">Pentatónica menor</option><option value="blues">Blues</option><option value="dorica">Dórica</option></select></label>
+          </div>
+          <p class="nota" style="margin-top:6px">Asigna <b>Altura</b> a un eje para tocar melodías; con una escala, el valor salta a la nota más cercana de la escala sobre la nota base y el <b>glide</b> decide qué tan ligado suena.</p>
+          <div class="sub">Puerta</div>
+          <div class="ajustes">
+            <label>Cuándo suena
+              <select id="ajPuerta"><option value="mantener">Encendido / apagado (botón o Espacio)</option><option value="tocar">Solo mientras tocas el recuadro (o mantienes Espacio)</option></select></label>
+            <label>Respuesta del recuadro (suavizado)
+              <select id="ajResp"><option value="0.015">Inmediata (15 ms)</option><option value="0.05">Normal (50 ms)</option><option value="0.15">Lenta (150 ms)</option><option value="0.5">Muy lenta (0,5 s)</option></select></label>
+          </div>
+          <p class="nota" style="margin-top:6px">El <b>ataque</b> y la <b>suelta</b> de la puerta están en <i>Parámetros → Envolvente</i>.</p>
+          <div class="sub">Osciladores</div>
+          <div class="voces" id="voces"></div>
+          <div class="sub">Efectos</div>
+          <div class="ajustes">
+            <label>Tipo de filtro
+              <select id="ajFiltro"><option value="lowpass">Pasa-bajos</option><option value="bandpass">Pasa-banda</option><option value="highpass">Pasa-altos</option><option value="notch">Rechaza-banda</option><option value="peaking">Realce (+12 dB)</option></select></label>
+            <label>Tamaño de la reverb
+              <select id="ajSala"><option value="1.4">Pieza (1,4 s)</option><option value="3.5">Sala (3,5 s)</option><option value="7">Catedral (7 s)</option></select></label>
+            <label>Tempo del eco (BPM)<input type="number" id="ajBpm" min="40" max="240" step="1"></label>
+          </div>
+        </div>
+
+        <!-- Muestras -->
+        <div data-panel="muestras" hidden>
+          <p class="nota" style="margin-bottom:10px">Cuatro ranuras (M1 a M4). Carga un archivo de audio (wav, mp3, ogg) o genera un ejemplo. Cada una puede sonar como <b>loop</b>, como <b>nube granular</b> (granos de la grabación cuya posición, tamaño, densidad y dispersión puedes asignar a los ejes) o como <b>disparo</b> (suena entera con <kbd>1</kbd>–<kbd>4</kbd>, el botón de la ranura o al tocar el recuadro). Los loops y las nubes pasan por la puerta; los disparos suenan siempre. Todas pasan por el filtro y los efectos.</p>
+          <div class="slots-cfg" id="slotsCfg"></div>
+        </div>
+
+        <!-- Luces -->
+        <div data-panel="luces" hidden>
+          <div class="ajustes">
+            <label>Dibujo
+              <select id="ajLuz"><option value="manchas">Manchas de color</option><option value="anillos">Anillos (pulsan con los golpes)</option><option value="espectro">Espectro del sonido</option><option value="cortina">Cortina (color plano)</option></select></label>
+            <label class="check"><input type="checkbox" id="ajLuzPad"> <span>Teñir también el recuadro</span></label>
+          </div>
+          <p class="nota" style="margin-top:10px">El color, la intensidad, la velocidad, el tamaño y la reacción al sonido son parámetros como cualquier otro: puedes fijarlos en <i>Parámetros → Luces</i> o asignarlos a los ejes (por ejemplo, <b style="color:var(--a)">A</b> → tono del color da una rueda cromática al girar alrededor del centro). Con <kbd>V</kbd> las luces ocupan toda la pantalla para proyectarlas; clic en ellas o <kbd>F</kbd> hace un destello.</p>
+        </div>
+
+        <!-- Guardar -->
+        <div data-panel="guardar" hidden>
+          <p class="nota" style="margin-bottom:10px">La configuración completa (asignaciones, parámetros, osciladores, modos de las ranuras y luces) se guarda sola en este navegador. Los archivos de audio no se guardan: vuelve a cargarlos. Para pasar la configuración a otro computador, copia el texto y pégalo allá con <b>Aplicar</b>, o abre un archivo .json.</p>
+          <textarea id="json" spellcheck="false" aria-label="Configuración en JSON"></textarea>
+          <div class="fila" style="margin-top:8px">
+            <button class="btn peq" id="btnCopiarJson">Copiar</button>
+            <button class="btn peq" id="btnDescargar">Descargar .json</button>
+            <button class="btn peq" id="btnAplicarJson">Aplicar</button>
+            <label class="btn peq" for="abrirJson">Abrir .json</label><input type="file" id="abrirJson" accept=".json,application/json" hidden>
+            <span class="msg" id="msgJson"></span>
+          </div>
+          <div class="sub">Empezar de cero</div>
+          <button class="btn peq" id="btnFabrica">Volver a la configuración de fábrica</button>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+"use strict";
+const $ = id => document.getElementById(id);
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const PREF = "mtrackpad:";
+const guardar = (k, v) => { try { localStorage.setItem(PREF + k, JSON.stringify(v)); } catch (e) {} };
+const leer = (k, d) => { try { const v = localStorage.getItem(PREF + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } };
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+const NOMBRES = ["Do", "Do♯", "Re", "Mi♭", "Mi", "Fa", "Fa♯", "Sol", "La♭", "La", "Si♭", "Si"];
+const nombreNota = m => NOMBRES[((Math.round(m) % 12) + 12) % 12] + (Math.floor(Math.round(m) / 12) - 1);
+const SLOTS = ["1", "2", "3", "4"];
+
+/* =================================================================== PARÁMETROS */
+const PARAMS = [
+  { id: "nivel", g: "Salida", n: "Nivel del instrumento", min: 0, max: 1, def: 0.6 },
+  { id: "vol", g: "Salida", n: "Volumen general", min: 0, max: 1, def: 0.6 },
+  { id: "altura", g: "Altura", n: "Altura", min: -24, max: 24, def: 0, u: " st" },
+  { id: "glide", g: "Altura", n: "Glide (ligado)", min: 0.005, max: 4, def: 0.12, u: " s", log: true },
+  { id: "desaf", g: "Altura", n: "Desafinación (abanico)", min: 0, max: 50, def: 9, u: " ¢" },
+  { id: "ancho", g: "Altura", n: "Ancho estéreo", min: 0, max: 1, def: 0.4 },
+  { id: "ataque", g: "Envolvente", n: "Ataque de la puerta", min: 0.005, max: 4, def: 0.25, u: " s", log: true },
+  { id: "suelta", g: "Envolvente", n: "Suelta de la puerta", min: 0.02, max: 8, def: 0.8, u: " s", log: true },
+  { id: "sintesis", g: "Osciladores", n: "Nivel de los osciladores", min: 0, max: 1, def: 1 },
+  { id: "osc1", g: "Osciladores", n: "Oscilador 1", min: 0, max: 1.5, def: 1 },
+  { id: "osc2", g: "Osciladores", n: "Oscilador 2", min: 0, max: 1.5, def: 1 },
+  { id: "osc3", g: "Osciladores", n: "Oscilador 3", min: 0, max: 1.5, def: 1 },
+  { id: "osc4", g: "Osciladores", n: "Oscilador 4", min: 0, max: 1.5, def: 1 },
+  { id: "ruido", g: "Osciladores", n: "Ruido", min: 0, max: 1, def: 0 },
+];
+SLOTS.forEach(S => PARAMS.push(
+  { id: `m${S}.nivel`, g: "Muestra " + S, n: `M${S} · nivel`, min: 0, max: 1.5, def: 1 },
+  { id: `m${S}.tono`, g: "Muestra " + S, n: `M${S} · transposición`, min: -24, max: 24, def: 0, u: " st" },
+  { id: `m${S}.pos`, g: "Muestra " + S, n: `M${S} · posición (nube / inicio)`, min: 0, max: 1, def: 0.3 },
+  { id: `m${S}.grano`, g: "Muestra " + S, n: `M${S} · tamaño del grano`, min: 0.01, max: 0.6, def: 0.09, u: " s", log: true },
+  { id: `m${S}.dens`, g: "Muestra " + S, n: `M${S} · densidad`, min: 1, max: 80, def: 14, u: " /s", log: true },
+  { id: `m${S}.disp`, g: "Muestra " + S, n: `M${S} · dispersión`, min: 0, max: 1, def: 0.15 },
+));
+PARAMS.push(
+  { id: "corte", g: "Filtro", n: "Corte del filtro", min: 40, max: 16000, def: 2400, u: "Hz", log: true },
+  { id: "q", g: "Filtro", n: "Resonancia (Q)", min: 0.3, max: 20, def: 1, log: true },
+  { id: "lfoF", g: "Filtro", n: "Barrido del filtro · profundidad", min: 0, max: 3, def: 0, u: " oct" },
+  { id: "lfoFVel", g: "Filtro", n: "Barrido del filtro · velocidad", min: 0.02, max: 12, def: 0.3, u: "Hz", log: true },
+  { id: "dist", g: "Distorsión", n: "Distorsión · mezcla", min: 0, max: 1, def: 0 },
+  { id: "drive", g: "Distorsión", n: "Distorsión · dureza", min: 1, max: 60, def: 20, log: true },
+  { id: "tono", g: "Distorsión", n: "Tono (pasa-bajos final)", min: 300, max: 18000, def: 18000, u: "Hz", log: true },
+  { id: "trem", g: "Modulación", n: "Trémolo · profundidad", min: 0, max: 1, def: 0 },
+  { id: "tremVel", g: "Modulación", n: "Trémolo · velocidad", min: 0.05, max: 16, def: 4, u: "Hz", log: true },
+  { id: "chorus", g: "Modulación", n: "Chorus · mezcla", min: 0, max: 1, def: 0 },
+  { id: "chorusVel", g: "Modulación", n: "Chorus · velocidad", min: 0.05, max: 6, def: 0.7, u: "Hz", log: true },
+  { id: "reverb", g: "Espacio", n: "Envío a reverb", min: 0, max: 1.5, def: 0.45 },
+  { id: "eco", g: "Espacio", n: "Envío a eco", min: 0, max: 1, def: 0 },
+  { id: "ecoFb", g: "Espacio", n: "Eco · repeticiones", min: 0, max: 0.92, def: 0.4 },
+  { id: "ecoT", g: "Espacio", n: "Eco · tiempo", min: 0.125, max: 2, def: 0.75, u: " tiempos" },
+  { id: "lucTono", g: "Luces", n: "Luces · color (tono)", min: 0, max: 360, def: 215, u: "°" },
+  { id: "lucSat", g: "Luces", n: "Luces · saturación", min: 0, max: 1, def: 0.75 },
+  { id: "lucInt", g: "Luces", n: "Luces · intensidad", min: 0, max: 1, def: 0.6 },
+  { id: "lucVel", g: "Luces", n: "Luces · velocidad", min: 0, max: 2, def: 0.4 },
+  { id: "lucTam", g: "Luces", n: "Luces · tamaño", min: 0.3, max: 2, def: 1 },
+  { id: "lucAudio", g: "Luces", n: "Luces · reacción al sonido", min: 0, max: 3, def: 1 },
+);
+const P = Object.fromEntries(PARAMS.map(p => [p.id, p]));
+const GRUPOS = [...new Set(PARAMS.map(p => p.g))];
+function fmtV(id, v) {
+  const p = P[id];
+  if (p.u === "Hz") return v >= 1000 ? (v / 1000).toFixed(2) + " kHz" : v >= 100 ? Math.round(v) + " Hz" : v.toFixed(2) + " Hz";
+  if (p.u === "°") return Math.round(v) + "°";
+  if (p.u === " st") return (v > 0 ? "+" : "") + v.toFixed(1) + " st";
+  return (Math.abs(v) >= 10 ? v.toFixed(1) : v.toFixed(2)) + (p.u || "");
+}
+const FUENTES = { x: "X", y: "Y", z: "Z", r: "R", a: "A", v: "V", p: "P" };
+const COLF = { x: "var(--x)", y: "var(--y)", z: "var(--z)", r: "var(--r)", a: "var(--a)", v: "var(--v)", p: "var(--p)" };
+const CURVAS = { lin: "Lineal", cuad: "x²", cub: "x³", raiz: "√x", s: "S (suave)", exp: "Exponencial", esc: "5 escalones" };
+const ESCALAS = { cont: null, crom: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], mayor: [0, 2, 4, 5, 7, 9, 11], menor: [0, 2, 3, 5, 7, 8, 10],
+  penta: [0, 2, 4, 7, 9], pentam: [0, 3, 5, 7, 10], blues: [0, 3, 5, 6, 7, 10], dorica: [0, 2, 3, 5, 7, 9, 10] };
+function cuantizar(st) {
+  const esc_ = ESCALAS[cfg.aj.escala]; if (!esc_) return st;
+  const oct = Math.floor(st / 12), r = st - oct * 12; let mejor = 0, dist = 99;
+  for (const g of esc_.concat(12)) { const d = Math.abs(r - g); if (d < dist) { dist = d; mejor = g; } }
+  return oct * 12 + mejor;
+}
+
+/* =================================================================== PRESETS */
+const A_ = (src, p, min, max, curva = "lin", inv = false) => ({ on: true, src, p, min, max, curva, inv });
+const PRESETS = [
+  { nombre: "Drone filtrado", desc: "Un colchón grave que no se detiene. X abre el filtro y mete distorsión (curva x²) y acelera las luces; Y es el nivel y la intensidad de la luz.",
+    asign: [A_("x", "corte", 200, 8200, "cuad"), A_("x", "dist", 0, 1, "cuad"), A_("x", "lucVel", 0.1, 1), A_("y", "nivel", 0, 1), A_("y", "lucInt", 0.25, 1)],
+    base: { corte: 1480, dist: 0.16, reverb: 0.9, glide: 0.8, drive: 25, ataque: 0.9, suelta: 1.8 }, aj: { puerta: "mantener", escala: "cont" } },
+  { nombre: "Theremin", desc: "Suena solo mientras tocas. X es la altura en la escala pentatónica (dos octavas y media), Y es el nivel con un vibrato que crece hacia arriba. El color de la luz sigue la nota.",
+    asign: [A_("x", "altura", -12, 19), A_("y", "nivel", 0.15, 1), A_("y", "trem", 0, 0.35, "cuad"), A_("x", "lucTono", 160, 340), A_("y", "lucInt", 0.3, 1)],
+    base: { glide: 0.06, osc2: 0, osc3: 0.4, osc4: 0.3, tremVel: 5.5, ataque: 0.03, suelta: 0.35, reverb: 0.7, eco: 0.25, corte: 5000, desaf: 4 },
+    aj: { puerta: "tocar", escala: "penta", voces: [{ forma: "triangle", iv: 0 }, { forma: "sine", iv: 7 }, { forma: "sine", iv: 12 }, { forma: "sine", iv: -12 }] } },
+  { nombre: "Filtro resonante", desc: "X barre el corte en escala musical (80 Hz a 6 kHz), Y sube la resonancia hasta silbar. Z es el nivel: deja el punto quieto y haz fundidos.",
+    asign: [A_("x", "corte", 80, 6000, "exp"), A_("y", "q", 0.7, 16, "exp"), A_("y", "lucInt", 0.3, 1), A_("z", "nivel", 0, 1), A_("x", "lucVel", 0.1, 1)], aj: { puerta: "mantener" } },
+  { nombre: "Respiración", desc: "Trémolo: X es la velocidad (0,1 a 8 Hz) y Y la profundidad. Z es el nivel. La luz respira con el sonido.",
+    asign: [A_("x", "tremVel", 0.1, 8, "exp"), A_("y", "trem", 0, 0.95), A_("x", "lucVel", 0.1, 1.2), A_("z", "nivel", 0, 1)], base: { lucAudio: 2.5, corte: 1800 }, aj: { puerta: "mantener" } },
+  { nombre: "Muro de distorsión", desc: "X es la dureza y la mezcla de la distorsión, Y abre la reverb y el nivel, Z oscurece o abre el tono final. La luz se pone roja al apretar.",
+    asign: [A_("x", "drive", 2, 60, "exp"), A_("x", "dist", 0.2, 1), A_("y", "reverb", 0.3, 1.5), A_("y", "nivel", 0.2, 1), A_("z", "tono", 800, 18000, "exp"), A_("x", "lucTono", 230, 360), A_("y", "lucInt", 0.35, 1)],
+    base: { corte: 2600 }, aj: { puerta: "mantener" } },
+  { nombre: "Nube granular", desc: "Usa la muestra 1 como nube de granos (si la ranura está vacía, carga un acorde de ejemplo). X recorre la grabación, Y es la densidad, Z el tamaño del grano y R la dispersión.",
+    asign: [A_("x", "m1.pos", 0, 1), A_("y", "m1.dens", 2, 60, "exp"), A_("z", "m1.grano", 0.02, 0.4, "exp"), A_("r", "m1.disp", 0, 1), A_("y", "lucInt", 0.3, 1), A_("x", "lucTono", 180, 300)],
+    base: { sintesis: 0, reverb: 1, corte: 9000 }, aj: { puerta: "mantener" }, muestraA: { modo: "granular", ejemplo: "acorde" } },
+  { nombre: "Coro y eco", desc: "X abre el abanico de desafinación y el ancho estéreo, Y sube el chorus, Z manda al eco. Para texturas amplias.",
+    asign: [A_("x", "desaf", 0, 45), A_("x", "ancho", 0, 1), A_("y", "chorus", 0, 1), A_("z", "eco", 0, 0.7), A_("y", "lucTam", 0.6, 1.8)], aj: { puerta: "mantener" } },
+  { nombre: "Oleaje", desc: "Usa R: en el centro el filtro está quieto y hacia las bordes se mueve como ola. X es la velocidad de la ola, Y el corte, Z el nivel.",
+    asign: [A_("r", "lfoF", 0, 2.5, "cuad"), A_("x", "lfoFVel", 0.05, 4, "exp"), A_("y", "corte", 150, 5000, "exp"), A_("z", "nivel", 0, 1), A_("r", "lucInt", 0.3, 1)], aj: { puerta: "mantener" } },
+  { nombre: "Gesto", desc: "Responde a cómo te mueves, no a dónde estás: V (velocidad del gesto) sube la distorsión y la luz, A (ángulo) gira el color y la altura cromática, P (presión) abre el filtro.",
+    asign: [A_("v", "dist", 0, 1, "raiz"), A_("v", "lucInt", 0.2, 1, "raiz"), A_("v", "nivel", 0.25, 1, "raiz"), A_("a", "lucTono", 0, 360), A_("a", "altura", 0, 12), A_("p", "corte", 400, 9000, "exp")],
+    base: { glide: 0.2, lucAudio: 1.5 }, aj: { puerta: "mantener", escala: "mayor" } },
+];
+
+/* =================================================================== ESTADO */
+const baseDef = () => Object.fromEntries(PARAMS.map(p => [p.id, p.def]));
+const VOCES_DEF = [{ forma: "sawtooth", iv: 0 }, { forma: "sawtooth", iv: 7 }, { forma: "sawtooth", iv: 12 }, { forma: "sine", iv: -12 }];
+const MUESTRAS_DEF = () => SLOTS.map(() => ({ modo: "loop", sigue: true, base: 48, alTocar: false }));
+const AJ_DEF = () => ({ nota: 36, escala: "cont", puerta: "mantener", resp: 0.05, voces: VOCES_DEF.map(v => ({ ...v })), filtro: "lowpass", sala: 3.5, bpm: 120, luz: "manchas", luzPad: true, muestras: MUESTRAS_DEF() });
+const fabrica = () => ({ asign: PRESETS[0].asign.map(a => ({ ...a })), base: Object.assign(baseDef(), PRESETS[0].base), aj: Object.assign(AJ_DEF(), PRESETS[0].aj), preset: "b0" });
+function normalizar(c) {
+  const d = AJ_DEF();
+  c.base = Object.assign(baseDef(), c.base || {});
+  c.aj = Object.assign(d, c.aj || {});
+  if (!Array.isArray(c.aj.voces) || c.aj.voces.length !== 4) c.aj.voces = d.voces;
+  if (!Array.isArray(c.aj.muestras) || c.aj.muestras.length !== 4) c.aj.muestras = d.muestras;
+  c.aj.muestras = c.aj.muestras.map(m => Object.assign({ modo: "loop", sigue: true, base: 48, alTocar: false }, m));
+  c.asign = (c.asign || []).filter(a => P[a.p] && FUENTES[a.src]);
+  return c;
+}
+let cfg = leer("config", null);
+cfg = cfg && Array.isArray(cfg.asign) ? normalizar(cfg) : fabrica();
+let presetsUsuario = leer("presets", []);
+const E = { x: 0.4, y: 0.5, z: 0.5, v: 0, vRaw: 0, p: 0, encendido: false, tocando: false, espacio: false, vals: {} };
+const guardarCfg = () => { guardar("config", cfg); refrescarJson(); };
+
+/* =================================================================== MAPEO */
+function curva(c, t) {
+  switch (c) { case "cuad": return t * t; case "cub": return t * t * t; case "raiz": return Math.sqrt(t); case "s": return t * t * (3 - 2 * t);
+    case "esc": return Math.min(4, Math.floor(t * 5)) / 4; default: return t; }
+}
+function mapear(a, t) {
+  t = clamp(t); if (a.inv) t = 1 - t;
+  const mn = +a.min, mx = +a.max;
+  if (a.curva === "exp" && mn > 0 && mx > 0) return mn * Math.pow(mx / mn, t);
+  return mn + (mx - mn) * curva(a.curva === "exp" ? "cuad" : a.curva, t);
+}
+function fuentes() {
+  const dx = E.x - 0.5, dy = E.y - 0.5;
+  return { x: E.x, y: E.y, z: E.z, r: clamp(Math.hypot(dx, dy) / Math.SQRT1_2), a: ((Math.atan2(dx, dy) / (2 * Math.PI)) + 1) % 1, v: E.v, p: E.p };
+}
+function calcular() {
+  const f = fuentes(), suma = {}, n = {};
+  cfg.asign.forEach(a => {
+    a._v = null; if (!a.on || !P[a.p]) return;
+    const v = mapear(a, f[a.src]);
+    a._v = v; suma[a.p] = (suma[a.p] || 0) + v; n[a.p] = (n[a.p] || 0) + 1;
+  });
+  const out = {};
+  PARAMS.forEach(p => { out[p.id] = n[p.id] ? suma[p.id] / n[p.id] : cfg.base[p.id]; });
+  E.vals = out; return out;
+}
+const asignadoA = id => cfg.asign.filter(a => a.on && a.p === id).map(a => a.src);
+const usaFuente = s => cfg.asign.some(a => a.on && a.src === s);
+
+/* =================================================================== AUDIO */
+const NOM = { sawtooth: 0.08, square: 0.06, triangle: 0.14, sine: 0.2 };
+const DESAF = [-1, -1 / 3, 1 / 3, 1], PANS = [-0.35, 0.75, -0.75, 0];
+const KMAX = 60;
+const A = { ctx: null, slots: SLOTS.map(() => ({ buffer: null, nombre: "", loop: null, gain: null, sigGrano: 0 })) };
+function iniciarAudio() {
+  if (A.ctx) { if (A.ctx.state === "suspended") A.ctx.resume(); return; }
+  const ctx = new (window.AudioContext || window.webkitAudioContext)(); A.ctx = ctx;
+  const G = v => { const g = ctx.createGain(); g.gain.value = v; return g; };
+  const pan = v => { if (!ctx.createStereoPanner) return G(1); const p = ctx.createStereoPanner(); p.pan.value = v; return p; };
+  A.comp = ctx.createDynamicsCompressor(); A.comp.threshold.value = -14; A.comp.ratio.value = 4; A.comp.connect(ctx.destination);
+  A.analizador = ctx.createAnalyser(); A.analizador.fftSize = 1024; A.comp.connect(A.analizador);
+  if (ctx.createMediaStreamDestination) { A.grabDest = ctx.createMediaStreamDestination(); A.comp.connect(A.grabDest); }
+  // Salida y envíos
+  A.vol = G(0.6); A.vol.connect(A.comp);
+  A.conv = ctx.createConvolver(); A.conv.buffer = respuestaReverb(+cfg.aj.sala, 2.2);
+  A.revSend = G(0); const revOut = G(0.8); A.vol.connect(A.revSend); A.revSend.connect(A.conv); A.conv.connect(revOut); revOut.connect(A.comp);
+  A.delay = ctx.createDelay(6); A.ecoSend = G(0); A.ecoFb = G(0.4);
+  A.vol.connect(A.ecoSend); A.ecoSend.connect(A.delay); A.delay.connect(A.ecoFb); A.ecoFb.connect(A.delay); A.delay.connect(A.comp);
+  // Chorus estéreo (dos retardos modulados en contrafase)
+  A.post = G(1); A.post.connect(A.vol);
+  A.chorus = G(0); A.chorus.connect(A.vol);
+  A.lfoC = ctx.createOscillator(); A.lfoC.frequency.value = 0.7; A.lfoC.start();
+  [1, -1].forEach(s => {
+    const d = ctx.createDelay(0.1); d.delayTime.value = 0.018; const g = G(0.004 * s), p = pan(0.8 * s);
+    A.lfoC.connect(g); g.connect(d.delayTime); A.post.connect(d); d.connect(p); p.connect(A.chorus);
+  });
+  // Cadena: fuentes → puerta → filtro → distorsión paralela → tono → nivel → trémolo → (seco + chorus) → volumen
+  A.trem = G(1); A.trem.connect(A.post);
+  A.nivel = G(0.6); A.nivel.connect(A.trem);
+  A.tono = ctx.createBiquadFilter(); A.tono.type = "lowpass"; A.tono.Q.value = 0.7; A.tono.connect(A.nivel);
+  const ent = G(1), sal = G(1); A.seco = G(1); A.moj = G(0); A.drive = G(20 / KMAX);
+  const pre = ctx.createBiquadFilter(); pre.type = "highpass"; pre.frequency.value = 80;
+  const ws = ctx.createWaveShaper(); const N = 8192, c = new Float32Array(N);
+  for (let i = 0; i < N; i++) { const x = (i * 2) / (N - 1) - 1; c[i] = Math.tanh(KMAX * x) / Math.tanh(KMAX); }
+  ws.curve = c; ws.oversample = "2x";
+  ent.connect(A.seco); A.seco.connect(sal); ent.connect(pre); pre.connect(A.drive); A.drive.connect(ws); ws.connect(A.moj); A.moj.connect(sal); sal.connect(A.tono);
+  A.filtro = ctx.createBiquadFilter(); A.filtro.gain.value = 12; A.filtro.connect(ent);
+  A.puerta = G(0); A.puerta.connect(A.filtro);
+  A.sintesis = G(1); A.sintesis.connect(A.puerta);
+  // LFOs
+  A.lfoF = ctx.createOscillator(); A.lfoFG = G(0); A.lfoF.connect(A.lfoFG); A.lfoFG.connect(A.filtro.detune); A.lfoF.start();
+  A.lfoT = ctx.createOscillator(); A.tremG = G(0); A.lfoT.connect(A.tremG); A.tremG.connect(A.trem.gain); A.lfoT.start();
+  // Osciladores
+  A.voces = cfg.aj.voces.map((v, i) => {
+    const osc = ctx.createOscillator(); osc.type = v.forma; const g = G(0), p = pan(0);
+    osc.connect(g); g.connect(p); p.connect(A.sintesis); osc.start(); return { osc, g, pan: p.pan ? p : null };
+  });
+  // Ruido
+  const n = ctx.sampleRate * 2; A.ruidoBuf = ctx.createBuffer(1, n, ctx.sampleRate);
+  const d = A.ruidoBuf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  const rs = ctx.createBufferSource(); rs.buffer = A.ruidoBuf; rs.loop = true; A.ruido = G(0); rs.connect(A.ruido); A.ruido.connect(A.puerta); rs.start();
+  // Ranuras de muestras: loops y nubes → puerta; disparos → filtro
+  A.slots.forEach(s => { s.gain = G(0); s.gain.connect(A.puerta); s.gainDisparo = G(1); s.gainDisparo.connect(A.filtro); });
+  aplicarAjustes(); aplicarAudio(calcular(), 0.01);
+  setInterval(granular, 25);
+  cargarMuestrasDefecto();
+}
+function respuestaReverb(seg, caida) {
+  const ctx = A.ctx, len = Math.floor(ctx.sampleRate * seg), b = ctx.createBuffer(2, len, ctx.sampleRate);
+  for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, caida); }
+  return b;
+}
+const alturaQ = v => cuantizar(v.altura);
+// Transposición de una muestra: lleva su nota base a la nota del instrumento por el camino más corto, más la altura y su transposición
+function tasaMuestra(i, v) {
+  const m = cfg.aj.muestras[i]; let st = v[`m${SLOTS[i]}.tono`];
+  if (m.sigue) { let d = ((cfg.aj.nota - m.base) % 12 + 12) % 12; if (d > 6) d -= 12; st += d + alturaQ(v); }
+  return Math.pow(2, st / 12);
+}
+function aplicarAudio(v, tau) {
+  if (!A.ctx) return;
+  const t = A.ctx.currentTime, k = tau == null ? +cfg.aj.resp : tau;
+  const S = (param, val, kk = k) => param.setTargetAtTime(val, t, kk);
+  const base = cfg.aj.nota + alturaQ(v), gl = tau == null ? Math.max(0.003, v.glide / 3) : tau;
+  S(A.sintesis.gain, v.sintesis); S(A.ruido.gain, v.ruido * 0.3);
+  A.voces.forEach((o, i) => {
+    const vz = cfg.aj.voces[i];
+    S(o.g.gain, NOM[vz.forma] * v["osc" + (i + 1)]); S(o.osc.detune, DESAF[i] * v.desaf);
+    if (o.pan) S(o.pan.pan, PANS[i] * v.ancho);
+    S(o.osc.frequency, mtof(base + +vz.iv), gl);
+  });
+  A.slots.forEach((s, i) => {
+    const m = cfg.aj.muestras[i];
+    S(s.gain.gain, s.buffer && m.modo !== "disparo" ? v[`m${SLOTS[i]}.nivel`] * (m.modo === "granular" ? 0.6 : 1) : 0);
+    if (s.loop) S(s.loop.playbackRate, tasaMuestra(i, v), gl);
+  });
+  S(A.filtro.frequency, v.corte); S(A.filtro.Q, v.q);
+  S(A.lfoFG.gain, v.lfoF * 1200); S(A.lfoF.frequency, v.lfoFVel);
+  S(A.seco.gain, 1 - v.dist * 0.85); S(A.moj.gain, v.dist * 0.35); S(A.drive.gain, v.drive / KMAX);
+  S(A.tono.frequency, v.tono);
+  S(A.trem.gain, 1 - v.trem / 2); S(A.tremG.gain, v.trem / 2); S(A.lfoT.frequency, v.tremVel);
+  S(A.post.gain, 1 - v.chorus * 0.5); S(A.chorus.gain, v.chorus * 0.8); S(A.lfoC.frequency, v.chorusVel);
+  S(A.revSend.gain, v.reverb); S(A.ecoSend.gain, v.eco); S(A.ecoFb.gain, v.ecoFb); S(A.delay.delayTime, v.ecoT * 60 / cfg.aj.bpm, 0.2);
+  S(A.nivel.gain, v.nivel, Math.max(k, 0.03)); S(A.vol.gain, v.vol);
+}
+function aplicarAjustes() {
+  if (!A.ctx) return;
+  A.voces.forEach((o, i) => { o.osc.type = cfg.aj.voces[i].forma; });
+  A.filtro.type = cfg.aj.filtro;
+}
+// Puerta: abierta si está encendido, o (en modo «al tocar») mientras tocas el recuadro o mantienes Espacio
+function puertaAbierta() { return E.encendido || (cfg.aj.puerta === "tocar" && (E.tocando || E.espacio)); }
+let puertaPrev = false;
+function actualizarPuerta() {
+  const ab = puertaAbierta();
+  $("estPuerta").textContent = ab ? "SUENA" : "SILENCIO"; $("estPuerta").classList.toggle("on", ab);
+  $("btnOn").innerHTML = (E.encendido ? "Apagar" : "Encender") + " <kbd>Espacio</kbd>"; $("btnOn").classList.toggle("on", E.encendido);
+  if (!A.ctx || ab === puertaPrev) return; puertaPrev = ab;
+  const t = A.ctx.currentTime, v = E.vals;
+  A.puerta.gain.cancelScheduledValues(t);
+  A.puerta.gain.setTargetAtTime(ab ? 1 : 0, t, ab ? v.ataque / 3 : v.suelta / 3);
+}
+function encender(v) { iniciarAudio(); E.encendido = v; actualizarPuerta(); }
+
+/* ---------- Muestras ---------- */
+function ponerMuestra(i, buffer, nombre) {
+  const s = A.slots[i];
+  if (s.loop) { try { s.loop.stop(); } catch (e) {} s.loop.disconnect(); s.loop = null; }
+  s.buffer = buffer; s.nombre = buffer ? nombre : ""; s.sigGrano = 0;
+  rearmarSlot(i);
+  dibujarSlots(); actualizar();
+}
+function rearmarSlot(i) {
+  const s = A.slots[i], m = cfg.aj.muestras[i];
+  if (s.loop) { try { s.loop.stop(); } catch (e) {} s.loop.disconnect(); s.loop = null; }
+  if (s.buffer && m.modo === "loop" && A.ctx) {
+    const src = A.ctx.createBufferSource(); src.buffer = s.buffer; src.loop = true; src.playbackRate.value = tasaMuestra(i, E.vals);
+    src.connect(s.gain); src.start(); s.loop = src;
+  }
+}
+function disparar(i) {
+  iniciarAudio();
+  const s = A.slots[i], m = cfg.aj.muestras[i]; if (!s.buffer || m.modo !== "disparo") return;
+  const v = E.vals, S = SLOTS[i], t = A.ctx.currentTime;
+  const src = A.ctx.createBufferSource(); src.buffer = s.buffer; src.playbackRate.value = tasaMuestra(i, v);
+  const g = A.ctx.createGain(); g.gain.value = v[`m${S}.nivel`];
+  src.connect(g); g.connect(s.gainDisparo); src.start(t, v[`m${S}.pos`] * s.buffer.duration * 0.95);
+  src.onended = () => g.disconnect();
+  const b = document.querySelector(`.slot-btn[data-i="${i}"]`); if (b) { b.classList.add("golpe"); setTimeout(() => b.classList.remove("golpe"), 140); }
+  Luces.pulso(0.6);
+}
+// Motor granular: cada 25 ms programa los granos de los próximos 100 ms
+function granular() {
+  if (!A.ctx || !puertaAbierta() && A.puerta.gain.value < 0.001) return;
+  const ahora = A.ctx.currentTime, hasta = ahora + 0.1, v = E.vals;
+  A.slots.forEach((s, i) => {
+    const m = cfg.aj.muestras[i], S = SLOTS[i];
+    if (!s.buffer || m.modo !== "granular" || v[`m${S}.nivel`] <= 0) return;
+    if (s.sigGrano < ahora) s.sigGrano = ahora + 0.01;
+    const dens = v[`m${S}.dens`], gr = v[`m${S}.grano`], disp = v[`m${S}.disp`], dur = s.buffer.duration, tasa = tasaMuestra(i, v);
+    let n = 0;
+    while (s.sigGrano < hasta && n++ < 40) {
+      const t = s.sigGrano;
+      const pos = clamp(v[`m${S}.pos`] + (Math.random() - 0.5) * disp * 0.5) * Math.max(0, dur - gr * tasa);
+      const src = A.ctx.createBufferSource(); src.buffer = s.buffer; src.playbackRate.value = tasa * Math.pow(2, (Math.random() - 0.5) * disp * 0.15);
+      const g = A.ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.5, t + gr / 2); g.gain.linearRampToValueAtTime(0, t + gr);
+      const p = A.ctx.createStereoPanner ? A.ctx.createStereoPanner() : null;
+      src.connect(g); if (p) { p.pan.value = (Math.random() - 0.5) * disp * 1.6; g.connect(p); p.connect(s.gain); } else g.connect(s.gain);
+      src.start(t, pos, gr * 1.05); src.onended = () => { g.disconnect(); if (p) p.disconnect(); };
+      s.sigGrano += (1 / dens) * (1 + (Math.random() - 0.5) * disp);
+    }
+  });
+}
+// Ejemplos generados en el navegador (sin archivos externos)
+const EJEMPLOS = { acorde: "Acorde de pad (Do mayor 7)", campana: "Campana FM (Do4)", viento: "Viento (ruido filtrado)", golpe: "Golpe grave (bombo)", voz: "Vocal sintética «a» (Do3)" };
+const BASE_EJ = { acorde: 48, campana: 60, viento: 48, golpe: 36, voz: 48 };
+function generarEjemplo(tipo) {
+  const sr = A.ctx.sampleRate, dur = { acorde: 4, campana: 3, viento: 4, golpe: 0.7, voz: 3 }[tipo], n = Math.floor(sr * dur);
+  const b = A.ctx.createBuffer(2, n, sr), L = b.getChannelData(0), R = b.getChannelData(1);
+  let lp = [0, 0], f1 = 0, f2 = 0, seed = 1;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 1073741823.5 - 1;
+  for (let i = 0; i < n; i++) {
+    const t = i / sr; let l = 0, r = 0;
+    if (tipo === "acorde") {
+      [48, 52, 55, 59, 64].forEach((m, k) => { const f = mtof(m); [-0.004, 0.004].forEach((dt, j) => { const ph = (t * f * (1 + dt * (k % 2 ? 1 : -1))) % 1; const s = (2 * ph - 1) * 0.06; if (j) r += s; else l += s; }); });
+      const env = Math.min(1, t / 0.8) * Math.min(1, (dur - t) / 0.6); lp[0] += (l - lp[0]) * 0.08; lp[1] += (r - lp[1]) * 0.08; l = lp[0] * env * 2.2; r = lp[1] * env * 2.2;
+    } else if (tipo === "campana") {
+      const f = mtof(60), mod = Math.sin(2 * Math.PI * f * 3.5 * t) * 4 * Math.exp(-t * 1.5);
+      l = r = Math.sin(2 * Math.PI * f * t + mod) * Math.exp(-t * 1.2) * 0.5 * Math.min(1, t / 0.003);
+      r *= 0.9 + 0.1 * Math.sin(t * 5);
+    } else if (tipo === "viento") {
+      const c = 0.02 + 0.06 * (0.5 + 0.5 * Math.sin(2 * Math.PI * t / dur)); lp[0] += (rnd() - lp[0]) * c; lp[1] += (rnd() - lp[1]) * c;
+      const env = Math.min(1, t / 0.5) * Math.min(1, (dur - t) / 0.5); l = lp[0] * env * 2; r = lp[1] * env * 2;
+    } else if (tipo === "golpe") {
+      const ph = 2 * Math.PI * (45 * t + (110 / 18) * (1 - Math.exp(-t * 18)));
+      l = r = Math.sin(ph) * Math.exp(-t * 6) * 0.9 + (t < 0.004 ? rnd() * 0.3 : 0);
+    } else if (tipo === "voz") {
+      const f = mtof(48) * (1 + 0.006 * Math.sin(2 * Math.PI * 5.2 * t)); const ph = (t * f) % 1; const pulso = ph < 0.08 ? Math.sin(Math.PI * ph / 0.08) : 0;
+      f1 += (pulso - f1) * 0.18; f2 += (f1 - f2) * 0.5; // formantes aproximados con dos polos simples
+      const env = Math.min(1, t / 0.15) * Math.min(1, (dur - t) / 0.3); l = r = (f1 * 1.4 - f2 * 0.6) * env;
+    }
+    L[i] = l; R[i] = r;
+  }
+  return b;
+}
+async function cargarMuestrasDefecto() {
+  // Si junto a la página hay sonidos/muestras.json, carga esas muestras en las ranuras (ver sonidos/LEEME.md)
+  if (!/^https?:/.test(location.protocol) || /claude(usercontent)?\.(ai|com)$/.test(location.hostname)) return;
+  try {
+    const r = await fetch("sonidos/muestras.json"); if (!r.ok) return;
+    const man = await r.json();
+    for (const [k, o] of Object.entries(man)) {
+      const i = SLOTS.indexOf(k.toUpperCase()); if (i < 0 || !o || !o.archivo || A.slots[i].buffer) continue;
+      try {
+        const rr = await fetch("sonidos/" + o.archivo); if (!rr.ok) continue;
+        const b = await A.ctx.decodeAudioData(await rr.arrayBuffer());
+        if (o.modo) cfg.aj.muestras[i].modo = o.modo; if (o.base) cfg.aj.muestras[i].base = +o.base;
+        ponerMuestra(i, b, o.archivo);
+      } catch (e) {}
+    }
+    dibujarSlotsCfg();
+  } catch (e) {}
+}
+
+/* ---------- Grabación ---------- */
+let grabador = null, trozos = [], tGrab = 0;
+function grabar() {
+  iniciarAudio();
+  if (!A.grabDest || !window.MediaRecorder) { $("toma").hidden = false; $("toma").innerHTML = `<span class="msg">Este navegador no permite grabar el audio.</span>`; return; }
+  if (grabador && grabador.state === "recording") { grabador.stop(); return; }
+  const tipos = ["audio/webm;codecs=opus", "audio/ogg;codecs=opus", "audio/mp4", ""];
+  const tipo = tipos.find(t => !t || MediaRecorder.isTypeSupported(t));
+  try { grabador = new MediaRecorder(A.grabDest.stream, tipo ? { mimeType: tipo } : undefined); } catch (e) { return; }
+  trozos = []; tGrab = performance.now();
+  grabador.ondataavailable = e => { if (e.data.size) trozos.push(e.data); };
+  grabador.onstop = () => {
+    const blob = new Blob(trozos, { type: grabador.mimeType }), url = URL.createObjectURL(blob);
+    const ext = /ogg/.test(blob.type) ? "ogg" : /mp4/.test(blob.type) ? "m4a" : "webm";
+    const nombre = "mtrackpad-" + new Date().toISOString().slice(0, 19).replace(/[T:]/g, "-") + "." + ext;
+    $("toma").hidden = false;
+    $("toma").innerHTML = `<audio controls src="${url}"></audio>` + (enMarco ? "" : `<a class="btn peq" href="${url}" download="${nombre}">Descargar toma</a>`);
+    $("btnRec").innerHTML = "● Grabar <kbd>G</kbd>"; $("btnRec").classList.remove("rec"); $("estRec").hidden = true;
+  };
+  grabador.start(250);
+  $("btnRec").innerHTML = "■ Detener <kbd>G</kbd>"; $("btnRec").classList.add("rec"); $("estRec").hidden = false;
+}
+
+/* =================================================================== LUCES */
+function hslRgb(h, s, l) {
+  h = ((h % 360) + 360) % 360 / 360; const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+  const f = t => { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < 0.5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
+  return [f(h + 1 / 3) * 255, f(h) * 255, f(h - 1 / 3) * 255];
+}
+const Luces = (() => {
+  const canvas = $("luces"), c2 = canvas.getContext("2d");
+  let fase = 0, dest = 0, anillos = [], nivelPrev = 0, tonoSuave = null;
+  const espectro = new Uint8Array(512);
+  function cuadro(dt, nivel) {
+    const w = canvas.width = canvas.clientWidth * devicePixelRatio, h = canvas.height = canvas.clientHeight * devicePixelRatio;
+    const v = E.vals, suena = puertaAbierta();
+    if (tonoSuave == null) tonoSuave = v.lucTono;
+    let dh = v.lucTono - tonoSuave; dh = ((dh + 540) % 360) - 180; tonoSuave += dh * (1 - Math.exp(-dt * 6));
+    const intens = suena ? v.lucInt : v.lucInt * 0.3;
+    const brillo = Math.min(1.6, intens + nivel * v.lucAudio);
+    const col = hslRgb(tonoSuave, v.lucSat, 0.5).map(c => Math.min(255, c * brillo));
+    const col2 = hslRgb(tonoSuave + 40, v.lucSat, 0.45).map(c => Math.min(255, c * brillo));
+    fase += dt * v.lucVel;
+    const modo = cfg.aj.luz, tam = v.lucTam;
+    c2.fillStyle = `rgb(${col[0] * 0.18},${col[1] * 0.18},${col[2] * 0.18})`; c2.fillRect(0, 0, w, h);
+    if (modo === "manchas") {
+      for (let i = 0; i < 3; i++) {
+        const cx = w * (0.5 + 0.32 * Math.sin(fase * (0.7 + i * 0.3) + i * 2)), cy = h * (0.5 + 0.28 * Math.cos(fase * (0.5 + i * 0.25) + i));
+        const rad = Math.max(w, h) * (0.35 + 0.15 * i + nivel * 0.3) * tam, c = i === 1 ? col2 : col;
+        const gr = c2.createRadialGradient(cx, cy, 0, cx, cy, rad);
+        gr.addColorStop(0, `rgba(${c[0]},${c[1]},${c[2]},${0.55 * intens + 0.1})`); gr.addColorStop(1, "rgba(0,0,0,0)");
+        c2.fillStyle = gr; c2.fillRect(0, 0, w, h);
+      }
+    } else if (modo === "anillos") {
+      if (nivel - nivelPrev > 0.06 * (1.2 - Math.min(1, v.lucAudio / 3))) anillos.push({ r: 0, a: Math.min(1, 0.4 + nivel * 2) });
+      if (Math.random() < dt * v.lucVel * 1.5) anillos.push({ r: 0, a: 0.35 * intens + 0.1 });
+      const g = c2.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.6 * tam);
+      g.addColorStop(0, `rgba(${col[0]},${col[1]},${col[2]},${0.4 * intens})`); g.addColorStop(1, "rgba(0,0,0,0)"); c2.fillStyle = g; c2.fillRect(0, 0, w, h);
+      c2.lineWidth = 6 * devicePixelRatio * tam;
+      anillos = anillos.filter(a => (a.r += dt * (0.25 + v.lucVel * 0.6), a.r < 1.2));
+      anillos.forEach(a => {
+        const c = a.r < 0.6 ? col : col2;
+        c2.strokeStyle = `rgba(${c[0]},${c[1]},${c[2]},${a.a * (1 - a.r / 1.2)})`;
+        c2.beginPath(); c2.arc(w / 2, h / 2, a.r * Math.max(w, h) * 0.7 * tam, 0, Math.PI * 2); c2.stroke();
+      });
+      if (anillos.length > 60) anillos.splice(0, anillos.length - 60);
+    } else if (modo === "espectro") {
+      if (A.analizador) A.analizador.getByteFrequencyData(espectro);
+      const nb = 48, bw = w / nb;
+      for (let i = 0; i < nb; i++) {
+        const idx = Math.floor(Math.pow(i / nb, 1.8) * 200) + 1, val = (A.analizador ? espectro[idx] / 255 : 0) * Math.min(1.5, 0.4 + v.lucAudio * 0.4);
+        const bh = Math.min(1, val * tam) * h * (0.3 + intens * 0.7), c = i % 2 ? col : col2;
+        c2.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${0.35 + intens * 0.6})`;
+        const x = (Math.sin(fase * 0.3) * 0.02 * w) + i * bw;
+        c2.fillRect(x + 1, (h - bh) / 2, bw - 2, bh);
+      }
+    } else {
+      c2.fillStyle = `rgba(${col[0]},${col[1]},${col[2]},${0.2 + intens * 0.8 * (0.85 + 0.15 * Math.sin(fase * 4))})`; c2.fillRect(0, 0, w, h);
+    }
+    nivelPrev = nivel;
+    if (dest > 0.01) { c2.fillStyle = `rgba(255,255,255,${dest * 0.8})`; c2.fillRect(0, 0, w, h); }
+    const xy = $("xy");
+    if (cfg.aj.luzPad) xy.style.background = `radial-gradient(circle at ${E.x * 100}% ${(1 - E.y) * 100}%, rgba(${col[0]},${col[1]},${col[2]},${0.3 + intens * 0.6}), rgba(${col[0] * 0.12},${col[1] * 0.12},${col[2] * 0.12},.92) 75%)`;
+    else xy.style.background = "";
+    xy.style.boxShadow = dest > 0.01 ? `inset 0 0 0 999px rgba(255,255,255,${dest * 0.6})` : "";
+    dest *= Math.exp(-dt * 4);
+  }
+  function pantalla(v) {
+    document.body.classList.toggle("pantalla-completa", v);
+    try { if (v && canvas.requestFullscreen) canvas.requestFullscreen().catch(() => {}); if (!v && document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (e) {}
+  }
+  document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement) document.body.classList.remove("pantalla-completa"); });
+  canvas.addEventListener("click", () => { if (document.body.classList.contains("pantalla-completa")) destello(); });
+  return { cuadro, pantalla, destellar: (f = 1) => { dest = Math.max(dest, f); anillos.push({ r: 0, a: 1 }); }, pulso: f => anillos.push({ r: 0, a: f }) };
+})();
+function destello() {
+  Luces.destellar();
+  if (!A.ctx) return;
+  const ctx = A.ctx, t = ctx.currentTime;
+  const s = ctx.createBufferSource(); s.buffer = A.ruidoBuf; s.loop = true;
+  const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 3000; bp.Q.value = 0.8;
+  const g = ctx.createGain(); g.gain.setValueAtTime(0.3, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+  s.connect(bp); bp.connect(g); g.connect(A.vol); s.start(t); s.stop(t + 1.3);
+}
+
+/* =================================================================== RECUADRO + Z */
+const xy = $("xy");
+let ultimoMov = null;
+function ponerXY(x, y) { E.x = clamp(x); E.y = clamp(y); $("punto").style.left = E.x * 100 + "%"; $("punto").style.top = (1 - E.y) * 100 + "%"; actualizar(); }
+function ponerZ(z) { E.z = clamp(z); $("zEje").value = E.z; $("zVal").textContent = E.z.toFixed(2); actualizar(); }
+function moverXY(e) {
+  const r = xy.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = 1 - (e.clientY - r.top) / r.height, ahora = performance.now();
+  if (ultimoMov) { const dt = Math.max(1, ahora - ultimoMov.t) / 1000; E.vRaw = Math.max(E.vRaw, clamp(Math.hypot(x - ultimoMov.x, y - ultimoMov.y) / dt / 3)); }
+  ultimoMov = { x, y, t: ahora };
+  E.p = e.pressure || (e.buttons ? 0.5 : 0);
+  ponerXY(x, y);
+}
+xy.addEventListener("pointerdown", e => {
+  e.preventDefault(); iniciarAudio(); xy.focus({ preventScroll: true }); xy.setPointerCapture(e.pointerId);
+  E.tocando = true; xy.classList.add("tocando"); ultimoMov = null; moverXY(e); actualizarPuerta();
+  cfg.aj.muestras.forEach((m, i) => { if (m.modo === "disparo" && m.alTocar) disparar(i); });
+});
+xy.addEventListener("pointermove", e => { if (e.buttons || e.pointerType === "pen") moverXY(e); });
+const soltar = () => { E.tocando = false; E.p = 0; xy.classList.remove("tocando"); ultimoMov = null; actualizar(); actualizarPuerta(); };
+xy.addEventListener("pointerup", soltar); xy.addEventListener("pointercancel", soltar);
+xy.addEventListener("wheel", e => { e.preventDefault(); ponerZ(E.z - Math.sign(e.deltaY) * 0.03); }, { passive: false });
+$("zEje").addEventListener("input", e => ponerZ(+e.target.value));
+
+function etiquetasEjes() {
+  const lista = src => { const xs = cfg.asign.filter(a => a.on && a.src === src && P[a.p]).map(a => P[a.p].n + (a.inv ? " (inv.)" : "")); return xs.length ? xs.join(" · ") : ""; };
+  $("ejeX").innerHTML = `<b>X →</b> ${esc(lista("x") || "sin asignar")}`;
+  $("ejeY").innerHTML = `<b>Y ↑</b> ${esc(lista("y") || "sin asignar")}`;
+  $("destOtros").innerHTML = ["z", "r", "a", "v", "p"].filter(s => s === "z" || lista(s)).map(s => `<div><b style="color:${COLF[s]}">${FUENTES[s]} →</b> ${esc(lista(s) || "sin asignar")}</div>`).join("");
+}
+
+/* =================================================================== EDITOR DE ASIGNACIONES */
+const opcionesParam = sel => GRUPOS.map(g => `<optgroup label="${esc(g)}">` + PARAMS.filter(p => p.g === g).map(p => `<option value="${p.id}"${p.id === sel ? " selected" : ""}>${esc(p.n)}</option>`).join("") + "</optgroup>").join("");
+const num = v => +(+v).toPrecision(4);
+function dibujarAsign() {
+  const cont = $("asigLista"); cont.innerHTML = "";
+  if (!cfg.asign.length) cont.innerHTML = `<p class="nota">No hay asignaciones: el recuadro no controla nada y todo queda en sus valores fijos. Añade una o carga un preset.</p>`;
+  cfg.asign.forEach((a, i) => {
+    const d = document.createElement("div"); d.className = "asig" + (a.on ? "" : " apagada"); d.style.setProperty("--c", COLF[a.src]);
+    d.innerHTML = `<input type="checkbox" id="a${i}on" aria-label="Activa"${a.on ? " checked" : ""}>
+      <select id="a${i}src" aria-label="Fuente">${Object.entries(FUENTES).map(([k, n]) => `<option value="${k}"${k === a.src ? " selected" : ""}>${n}</option>`).join("")}</select>
+      <select id="a${i}p" aria-label="Parámetro">${opcionesParam(a.p)}</select>
+      <input type="number" id="a${i}min" aria-label="Mínimo" step="any" value="${num(a.min)}">
+      <input type="number" id="a${i}max" aria-label="Máximo" step="any" value="${num(a.max)}">
+      <select id="a${i}cur" aria-label="Curva">${Object.entries(CURVAS).map(([k, n]) => `<option value="${k}"${k === a.curva ? " selected" : ""}>${n}</option>`).join("")}</select>
+      <label class="inv"><input type="checkbox" id="a${i}inv"${a.inv ? " checked" : ""}> inv.</label>
+      <div class="medidor"><span data-v>—</span><div class="b"><i></i></div></div>
+      <button class="quitar" aria-label="Quitar asignación" title="Quitar">✕</button>`;
+    const q = s => d.querySelector(s);
+    const cambio = () => { guardarCfg(); etiquetasEjes(); dibujarBase(); actualizar(); };
+    q(`#a${i}on`).onchange = e => { a.on = e.target.checked; d.classList.toggle("apagada", !a.on); cambio(); };
+    q(`#a${i}src`).onchange = e => { a.src = e.target.value; d.style.setProperty("--c", COLF[a.src]); cambio(); };
+    q(`#a${i}p`).onchange = e => {
+      a.p = e.target.value; const p = P[a.p]; a.min = p.min; a.max = p.max; a.curva = p.log ? "exp" : "lin";
+      q(`#a${i}min`).value = num(a.min); q(`#a${i}max`).value = num(a.max); q(`#a${i}cur`).value = a.curva; cambio();
+    };
+    q(`#a${i}min`).oninput = e => { if (e.target.value !== "" && isFinite(+e.target.value)) { a.min = +e.target.value; cambio(); } };
+    q(`#a${i}max`).oninput = e => { if (e.target.value !== "" && isFinite(+e.target.value)) { a.max = +e.target.value; cambio(); } };
+    q(`#a${i}cur`).onchange = e => { a.curva = e.target.value; cambio(); };
+    q(`#a${i}inv`).onchange = e => { a.inv = e.target.checked; cambio(); };
+    q(".quitar").onclick = () => { cfg.asign.splice(i, 1); dibujarAsign(); cambio(); };
+    a._el = d; cont.appendChild(d);
+  });
+  etiquetasEjes();
+}
+function medidores() {
+  cfg.asign.forEach(a => {
+    if (!a._el) return; const p = P[a.p]; const vEl = a._el.querySelector("[data-v]"), bar = a._el.querySelector(".b i");
+    if (a._v == null || !p) { vEl.textContent = "—"; bar.style.width = "0"; return; }
+    vEl.textContent = fmtV(a.p, a._v);
+    bar.style.width = clamp(posDe(p, a._v)) * 100 + "%";
+  });
+}
+$("btnAgregar").onclick = () => {
+  const usados = new Set(cfg.asign.map(a => a.p)); const p = PARAMS.find(p => !usados.has(p.id)) || PARAMS[0];
+  cfg.asign.push({ on: true, src: "x", p: p.id, min: p.min, max: p.max, curva: p.log ? "exp" : "lin", inv: false });
+  dibujarAsign(); guardarCfg(); dibujarBase(); actualizar();
+};
+function confirmar(b, texto, accion) {
+  if (b.dataset.conf !== "1") { const orig = b.textContent; b.dataset.conf = "1"; b.dataset.orig = orig; b.textContent = texto; setTimeout(() => { if (b.dataset.conf === "1") { b.dataset.conf = ""; b.textContent = orig; } }, 2500); return; }
+  b.dataset.conf = ""; b.textContent = b.dataset.orig; accion();
+}
+$("btnLimpiar").onclick = e => confirmar(e.currentTarget, "¿Seguro? Clic otra vez", () => { cfg.asign = []; dibujarAsign(); guardarCfg(); dibujarBase(); actualizar(); });
+
+/* =================================================================== PRESETS */
+function listaPresets() { return PRESETS.map((p, i) => ({ ...p, id: "b" + i, propio: false })).concat(presetsUsuario.map((p, i) => ({ ...p, id: "u" + i, propio: true }))); }
+function dibujarPresets(sel) {
+  const html = `<optgroup label="Incluidos">${PRESETS.map((p, i) => `<option value="b${i}">${esc(p.nombre)}</option>`).join("")}</optgroup>` +
+    (presetsUsuario.length ? `<optgroup label="Tuyos">${presetsUsuario.map((p, i) => `<option value="u${i}">${esc(p.nombre)}</option>`).join("")}</optgroup>` : "");
+  $("selPreset").innerHTML = html; $("selPresetBarra").innerHTML = `<option value="">Preset…</option>` + html;
+  if (sel) $("selPreset").value = sel; descPreset();
+}
+function descPreset() {
+  const p = listaPresets().find(p => p.id === $("selPreset").value);
+  $("descPreset").textContent = p ? (p.desc || "Preset guardado: " + p.asign.length + " asignaciones.") : "";
+  $("btnBorrarPreset").hidden = !(p && p.propio);
+}
+$("selPreset").onchange = descPreset;
+$("selPresetBarra").onchange = e => { const p = listaPresets().find(p => p.id === e.target.value); if (p) { $("selPreset").value = p.id; descPreset(); cargarPreset(p); } e.target.value = ""; };
+function cargarPreset(p) {
+  const muestras = cfg.aj.muestras;
+  cfg.asign = p.asign.map(a => ({ ...a }));
+  cfg.base = Object.assign(baseDef(), p.base || {});
+  if (p.propio) cfg.aj = normalizar({ aj: JSON.parse(JSON.stringify(p.aj || {})) }).aj;
+  else { const aj = AJ_DEF(); cfg.aj = Object.assign(aj, JSON.parse(JSON.stringify(p.aj || {})), { muestras }); ["luz", "luzPad", "sala", "bpm", "nota", "resp"].forEach(k => { if (!(p.aj && k in p.aj)) cfg.aj[k] = cfgPrevAj[k]; }); }
+  if (!p.propio) cfg.aj.muestras = muestras;
+  if (p.muestraA) {
+    cfg.aj.muestras[0].modo = p.muestraA.modo;
+    if (!A.slots[0].buffer && p.muestraA.ejemplo) { iniciarAudio(); cfg.aj.muestras[0].base = BASE_EJ[p.muestraA.ejemplo]; ponerMuestra(0, generarEjemplo(p.muestraA.ejemplo), EJEMPLOS[p.muestraA.ejemplo]); }
+  }
+  cfg.preset = p.id; cfgPrevAj = { ...cfg.aj };
+  if (cfg.aj.puerta === "tocar") E.encendido = false;
+  if (A.ctx) { aplicarAjustes(); A.slots.forEach((s, i) => rearmarSlot(i)); }
+  guardarCfg(); dibujarTodo(); actualizar(); actualizarPuerta();
+  $("msgPreset").textContent = "Cargado: " + p.nombre; setTimeout(() => $("msgPreset").textContent = "", 2000);
+}
+let cfgPrevAj = { ...cfg.aj };
+$("btnCargarPreset").onclick = () => { const p = listaPresets().find(p => p.id === $("selPreset").value); if (p) cargarPreset(p); };
+$("btnGuardarPreset").onclick = () => {
+  const nombre = $("nombrePreset").value.trim();
+  if (!nombre) { $("msgPreset").textContent = "Escribe un nombre primero."; $("nombrePreset").focus(); return; }
+  const nuevo = { nombre, asign: cfg.asign.map(limpiarAsign), base: { ...cfg.base }, aj: JSON.parse(JSON.stringify(cfg.aj)) };
+  const i = presetsUsuario.findIndex(p => p.nombre === nombre);
+  if (i >= 0) presetsUsuario[i] = nuevo; else presetsUsuario.push(nuevo);
+  guardar("presets", presetsUsuario); dibujarPresets("u" + (i >= 0 ? i : presetsUsuario.length - 1));
+  $("nombrePreset").value = ""; $("msgPreset").textContent = (i >= 0 ? "Actualizado: " : "Guardado: ") + nombre;
+};
+$("btnBorrarPreset").onclick = e => {
+  const v = $("selPreset").value; if (!v.startsWith("u")) return;
+  confirmar(e.currentTarget, "¿Borrar? Clic otra vez", () => { presetsUsuario.splice(+v.slice(1), 1); guardar("presets", presetsUsuario); dibujarPresets("b0"); });
+};
+const limpiarAsign = a => ({ on: a.on, src: a.src, p: a.p, min: +a.min, max: +a.max, curva: a.curva, inv: !!a.inv });
+
+/* =================================================================== PARÁMETROS */
+const posDe = (p, v) => p.log ? Math.log(v / p.min) / Math.log(p.max / p.min) : (v - p.min) / (p.max - p.min);
+const valDe = (p, pos) => p.log ? p.min * Math.pow(p.max / p.min, pos) : p.min + (p.max - p.min) * pos;
+const idSeguro = id => id.replace(".", "_");
+function dibujarBase() {
+  const cont = $("paramsBase"); cont.innerHTML = "";
+  GRUPOS.forEach(g => {
+    const h = document.createElement("div"); h.className = "sub"; h.textContent = g; cont.appendChild(h);
+    const grid = document.createElement("div"); grid.className = "params"; cont.appendChild(grid);
+    PARAMS.filter(p => p.g === g).forEach(p => {
+      const src = asignadoA(p.id);
+      const d = document.createElement("div"); d.className = "param" + (src.length ? " mapeado" : "");
+      d.innerHTML = `<div class="cab"><span>${esc(p.n)}${src.map(s => `<span class="chip" style="--c:${COLF[s]}">${FUENTES[s]}</span>`).join("")}</span><span class="v" data-pv="${p.id}"></span></div>
+        <input type="range" id="pb_${idSeguro(p.id)}" min="0" max="1" step="0.001" aria-label="${esc(p.n)}"${src.length ? " disabled" : ""}>`;
+      const r = d.querySelector("input"); r.value = clamp(posDe(p, cfg.base[p.id]));
+      r.oninput = () => { cfg.base[p.id] = valDe(p, +r.value); actualizar(); };
+      r.onchange = guardarCfg;
+      grid.appendChild(d);
+    });
+  });
+  valoresBase();
+}
+function valoresBase() {
+  document.querySelectorAll("[data-pv]").forEach(el => {
+    const id = el.dataset.pv, v = E.vals[id]; if (v == null) return;
+    el.textContent = id === "altura" && ESCALAS[cfg.aj.escala] ? fmtV(id, v) + " → " + nombreNota(cfg.aj.nota + cuantizar(v)) : fmtV(id, v);
+    if (asignadoA(id).length) { const r = $("pb_" + idSeguro(id)); if (r) r.value = clamp(posDe(P[id], v)); }
+  });
+}
+$("btnResetBase").onclick = e => confirmar(e.currentTarget, "¿Seguro? Clic otra vez", () => { cfg.base = baseDef(); guardarCfg(); dibujarBase(); actualizar(); });
+
+/* =================================================================== OSCILADORES, ALTURA, EFECTOS */
+for (let m = 24; m <= 72; m++) $("ajNota").add(new Option(nombreNota(m) + " (MIDI " + m + ")", m));
+const FORMAS = { sawtooth: "Sierra", square: "Cuadrada", triangle: "Triángulo", sine: "Seno" };
+function dibujarVoces() {
+  const cont = $("voces"); cont.innerHTML = "";
+  cfg.aj.voces.forEach((vz, i) => {
+    const d = document.createElement("div"); d.className = "voz";
+    d.innerHTML = `<b>${i + 1}</b><select id="vf${i}" aria-label="Forma de onda del oscilador ${i + 1}">${Object.entries(FORMAS).map(([k, n]) => `<option value="${k}"${k === vz.forma ? " selected" : ""}>${n}</option>`).join("")}</select>
+      <input type="number" id="vi${i}" min="-36" max="36" step="1" value="${vz.iv}" aria-label="Intervalo en semitonos" title="Intervalo en semitonos sobre la nota (12 = octava, 7 = quinta)">`;
+    d.querySelector("select").onchange = e => { vz.forma = e.target.value; guardarCfg(); aplicarAjustes(); actualizar(); };
+    d.querySelector("input").oninput = e => { if (e.target.value !== "" && isFinite(+e.target.value)) { vz.iv = +e.target.value; guardarCfg(); actualizar(); } };
+    cont.appendChild(d);
+  });
+}
+function dibujarAjustes() {
+  $("ajNota").value = cfg.aj.nota; $("ajEscala").value = cfg.aj.escala; $("ajPuerta").value = cfg.aj.puerta; $("ajResp").value = cfg.aj.resp;
+  $("ajFiltro").value = cfg.aj.filtro; $("ajSala").value = cfg.aj.sala; $("ajBpm").value = cfg.aj.bpm; $("ajLuz").value = cfg.aj.luz; $("ajLuzPad").checked = cfg.aj.luzPad;
+  dibujarVoces();
+}
+const ajuste = (id, clave, conv, despues) => $(id).addEventListener("change", e => {
+  const v = e.target.type === "checkbox" ? e.target.checked : conv(e.target.value); if (typeof v === "number" && !isFinite(v)) return;
+  cfg.aj[clave] = v; cfgPrevAj[clave] = v; guardarCfg(); despues && despues(); actualizar();
+});
+ajuste("ajNota", "nota", Number);
+ajuste("ajEscala", "escala", String, valoresBase);
+ajuste("ajPuerta", "puerta", String, () => { if (cfg.aj.puerta === "tocar") E.encendido = false; actualizarPuerta(); });
+ajuste("ajResp", "resp", Number);
+ajuste("ajFiltro", "filtro", String, aplicarAjustes);
+ajuste("ajSala", "sala", Number, () => { if (A.ctx) A.conv.buffer = respuestaReverb(+cfg.aj.sala, 2.2); });
+ajuste("ajBpm", "bpm", v => clamp(Math.round(+v), 40, 240));
+ajuste("ajLuz", "luz", String);
+ajuste("ajLuzPad", "luzPad");
+
+/* =================================================================== MUESTRAS */
+const MODOS = { loop: "Loop", granular: "Nube granular", disparo: "Disparo" };
+function dibujarSlotsCfg() {
+  const cont = $("slotsCfg"); cont.innerHTML = "";
+  SLOTS.forEach((S, i) => {
+    const m = cfg.aj.muestras[i], s = A.slots[i];
+    const d = document.createElement("div"); d.className = "slot";
+    d.innerHTML = `<h3>Muestra M${S} <small data-est>${s.buffer ? esc(s.nombre) : "vacía"}</small></h3>
+      <div class="fila"><input type="file" id="mf${i}" accept="audio/*" aria-label="Archivo de audio para M${S}" style="max-width:100%"></div>
+      <div class="fila"><select id="me${i}" aria-label="Generar ejemplo"><option value="">Generar un ejemplo…</option>${Object.entries(EJEMPLOS).map(([k, n]) => `<option value="${k}">${n}</option>`).join("")}</select>
+        <button class="btn peq" id="mq${i}">Vaciar</button>${m.modo === "disparo" ? `<button class="btn peq" id="md${i}">Disparar <kbd>${i + 1}</kbd></button>` : ""}</div>
+      <div class="ajustes">
+        <label>Modo<select id="mm${i}">${Object.entries(MODOS).map(([k, n]) => `<option value="${k}"${k === m.modo ? " selected" : ""}>${n}</option>`).join("")}</select></label>
+        <label>Nota base<select id="mb${i}"></select></label>
+        <label class="check"><input type="checkbox" id="ms${i}"${m.sigue ? " checked" : ""}> <span>Sigue la altura</span></label>
+        ${m.modo === "disparo" ? `<label class="check"><input type="checkbox" id="mt${i}"${m.alTocar ? " checked" : ""}> <span>Disparar al tocar el recuadro</span></label>` : ""}
+      </div>`;
+    const sb = d.querySelector(`#mb${i}`); for (let n = 24; n <= 96; n++) sb.add(new Option(nombreNota(n), n, false, n === m.base));
+    const est = d.querySelector("[data-est]");
+    d.querySelector(`#mf${i}`).onchange = async e => {
+      const f = e.target.files[0]; if (!f) return; iniciarAudio(); est.textContent = "Cargando…";
+      try { ponerMuestra(i, await A.ctx.decodeAudioData(await f.arrayBuffer()), f.name); est.textContent = f.name; }
+      catch (err) { est.textContent = "No se pudo leer ese archivo. Prueba con wav, mp3 u ogg."; }
+    };
+    d.querySelector(`#me${i}`).onchange = e => {
+      const k = e.target.value; if (!k) return; iniciarAudio(); m.base = BASE_EJ[k]; sb.value = m.base;
+      if (k === "golpe" && m.modo !== "disparo") m.modo = "disparo";
+      guardarCfg(); ponerMuestra(i, generarEjemplo(k), EJEMPLOS[k]); dibujarSlotsCfg();
+    };
+    d.querySelector(`#mq${i}`).onclick = () => { if (A.ctx) ponerMuestra(i, null); dibujarSlotsCfg(); };
+    if (m.modo === "disparo") d.querySelector(`#md${i}`).onclick = () => disparar(i);
+    d.querySelector(`#mm${i}`).onchange = e => { m.modo = e.target.value; guardarCfg(); rearmarSlot(i); dibujarSlotsCfg(); dibujarSlots(); actualizar(); };
+    sb.onchange = () => { m.base = +sb.value; guardarCfg(); actualizar(); };
+    d.querySelector(`#ms${i}`).onchange = e => { m.sigue = e.target.checked; guardarCfg(); actualizar(); };
+    if (m.modo === "disparo") d.querySelector(`#mt${i}`).onchange = e => { m.alTocar = e.target.checked; guardarCfg(); };
+    cont.appendChild(d);
+  });
+}
+function dibujarSlots() {
+  const cont = $("slotsRapidos"); cont.innerHTML = "";
+  SLOTS.forEach((S, i) => {
+    const s = A.slots[i], m = cfg.aj.muestras[i];
+    const b = document.createElement("button"); b.className = "slot-btn" + (s.buffer ? "" : " vacio"); b.dataset.i = i;
+    b.innerHTML = `<b>M${S} <kbd>${S}</kbd></b><span>${s.buffer ? MODOS[m.modo] + " · " + esc(s.nombre) : "vacía"}</span>`;
+    b.title = s.buffer ? (m.modo === "disparo" ? "Disparar" : "Ir a la ranura") : "Cargar una muestra";
+    b.onclick = () => { if (s.buffer && m.modo === "disparo") disparar(i); else document.querySelector('[data-tab="muestras"]').click(); };
+    cont.appendChild(b);
+  });
+}
+
+/* =================================================================== GUARDAR */
+let enMarco = true; try { enMarco = window.top !== window.self; } catch (e) {}
+function textoCfg() { return JSON.stringify({ tipo: "mtrackpad", version: 1, asign: cfg.asign.map(limpiarAsign), base: cfg.base, aj: cfg.aj }, (k, v) => typeof v === "number" ? +v.toPrecision(5) : v, 2); }
+function refrescarJson() { if (document.activeElement !== $("json")) $("json").value = textoCfg(); }
+function copiar(txt, msg, area) {
+  const ok = () => { msg.textContent = "Copiado"; setTimeout(() => msg.textContent = "", 2000); };
+  const manual = () => { if (area) { area.focus(); area.select(); } msg.textContent = "Selecciona el texto y cópialo con Ctrl+C"; };
+  try { navigator.clipboard.writeText(txt).then(ok, manual); } catch (e) { manual(); }
+}
+function aplicarConfig(o) {
+  cfg = normalizar({ asign: o.asign, base: o.base, aj: o.aj, preset: null }); cfgPrevAj = { ...cfg.aj };
+  if (A.ctx) { aplicarAjustes(); A.conv.buffer = respuestaReverb(+cfg.aj.sala, 2.2); A.slots.forEach((s, i) => rearmarSlot(i)); }
+  guardarCfg(); dibujarTodo(); actualizar(); actualizarPuerta();
+}
+function aplicarTexto(txt, msg) {
+  try {
+    const o = JSON.parse(txt); if (!o || !Array.isArray(o.asign)) throw new Error("falta la lista de asignaciones");
+    aplicarConfig(o); msg.textContent = "Configuración aplicada: " + cfg.asign.length + " asignaciones.";
+  } catch (e) { msg.textContent = "El texto no es una configuración válida (" + e.message + ")."; }
+}
+$("btnCopiarJson").onclick = () => copiar($("json").value, $("msgJson"), $("json"));
+$("btnAplicarJson").onclick = () => aplicarTexto($("json").value, $("msgJson"));
+$("abrirJson").onchange = async e => { const f = e.target.files[0]; if (f) aplicarTexto(await f.text(), $("msgJson")); e.target.value = ""; };
+$("btnDescargar").hidden = enMarco;
+$("btnDescargar").onclick = () => {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([textoCfg()], { type: "application/json" }));
+  a.download = "mtrackpad.json"; document.body.appendChild(a); a.click(); a.remove();
+};
+$("btnFabrica").onclick = e => confirmar(e.currentTarget, "¿Seguro? Clic otra vez", () => { const f = fabrica(); aplicarConfig(f); dibujarPresets("b0"); });
+
+/* =================================================================== PESTAÑAS */
+document.querySelectorAll("[role=tab]").forEach(b => b.onclick = () => {
+  document.querySelectorAll("[role=tab]").forEach(x => x.setAttribute("aria-selected", x === b));
+  document.querySelectorAll("[data-panel]").forEach(p => p.hidden = p.dataset.panel !== b.dataset.tab);
+  try { localStorage.setItem(PREF + "tab", b.dataset.tab); } catch (e) {}
+});
+try { const t = localStorage.getItem(PREF + "tab"); const b = t && document.querySelector(`[data-tab="${t}"]`); if (b) b.click(); } catch (e) {}
+
+/* =================================================================== BOTONES Y TECLAS */
+$("btnOn").onclick = () => encender(!E.encendido);
+$("btnDestello").onclick = destello;
+$("btnFull").onclick = () => Luces.pantalla(true);
+$("btnRec").onclick = grabar;
+$("salir").onclick = () => Luces.pantalla(false);
+const escribiendo = e => /INPUT|SELECT|TEXTAREA/.test(e.target.tagName) && !["range", "checkbox"].includes(e.target.type);
+document.addEventListener("keydown", e => {
+  if (escribiendo(e) || e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key.toLowerCase(), paso = e.shiftKey ? 0.01 : 0.05;
+  if (e.code === "Space") {
+    e.preventDefault(); if (e.repeat) return;
+    if (cfg.aj.puerta === "tocar") { iniciarAudio(); E.espacio = true; actualizarPuerta(); } else encender(!E.encendido);
+  }
+  else if (k === "f" && !e.repeat) destello();
+  else if (k === "v" && !e.repeat) Luces.pantalla(!document.body.classList.contains("pantalla-completa"));
+  else if (k === "g" && !e.repeat) grabar();
+  else if (e.key === "ArrowUp") { e.preventDefault(); ponerXY(E.x, E.y + paso); }
+  else if (e.key === "ArrowDown") { e.preventDefault(); ponerXY(E.x, E.y - paso); }
+  else if (e.key === "ArrowRight") { e.preventDefault(); ponerXY(E.x + paso, E.y); }
+  else if (e.key === "ArrowLeft") { e.preventDefault(); ponerXY(E.x - paso, E.y); }
+  else if (k === "e") ponerZ(E.z + paso);
+  else if (k === "q") ponerZ(E.z - paso);
+  else if (/^[1-4]$/.test(e.key) && !e.repeat) disparar(+e.key - 1);
+});
+document.addEventListener("keyup", e => { if (e.code === "Space" && E.espacio) { E.espacio = false; actualizarPuerta(); } });
+
+/* =================================================================== BUCLE */
+function actualizar() { aplicarAudio(calcular()); }
+const oscC = $("osc"), oscX = oscC.getContext("2d"), datos = new Float32Array(1024);
+let tPrev = performance.now(), ultimoTexto = 0;
+const colorAcento = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#ffb547";
+function cuadro(now) {
+  const dt = Math.min(0.1, (now - tPrev) / 1000); tPrev = now;
+  // Velocidad del gesto: sube con el movimiento y cae sola
+  const vAntes = E.v; E.v += (E.vRaw - E.v) * (1 - Math.exp(-dt * 12)); E.vRaw *= Math.exp(-dt * 5);
+  if (usaFuente("v") && Math.abs(E.v - vAntes) > 0.002) actualizar();
+  let nivel = 0;
+  if (A.analizador) {
+    A.analizador.getFloatTimeDomainData(datos); let sum = 0; for (let i = 0; i < datos.length; i++) sum += datos[i] * datos[i];
+    nivel = Math.min(1, Math.sqrt(sum / datos.length) * 2.5);
+  }
+  Luces.cuadro(dt, nivel);
+  const w = oscC.width = oscC.clientWidth * devicePixelRatio, h = oscC.height = oscC.clientHeight * devicePixelRatio;
+  oscX.strokeStyle = colorAcento; oscX.lineWidth = 1.5 * devicePixelRatio; oscX.beginPath();
+  for (let i = 0; i < 512; i++) { const x = i / 511 * w, y = h / 2 - (A.analizador ? datos[i] : 0) * h * 0.45; i ? oscX.lineTo(x, y) : oscX.moveTo(x, y); }
+  oscX.stroke();
+  if (now - ultimoTexto > 100) {
+    ultimoTexto = now; const f = fuentes();
+    $("lect").innerHTML = ["x", "y", "z", "r", "a", "v", "p"].map((s, i) => `<span style="color:${COLF[s]}">${FUENTES[s]} ${f[s].toFixed(2)}</span>${i % 2 ? "<br>" : " · "}`).join("") +
+      `nota ${nombreNota(cfg.aj.nota + cuantizar(E.vals.altura || 0))}`;
+    medidores(); valoresBase();
+    if (grabador && grabador.state === "recording") $("estRec").textContent = "● GRABANDO " + Math.floor((now - tGrab) / 60000) + ":" + String(Math.floor((now - tGrab) / 1000) % 60).padStart(2, "0");
+  }
+  requestAnimationFrame(cuadro);
+}
+
+/* =================================================================== INICIO */
+function dibujarTodo() { dibujarAjustes(); dibujarAsign(); dibujarBase(); dibujarSlotsCfg(); dibujarSlots(); refrescarJson(); }
+calcular(); dibujarPresets(typeof cfg.preset === "string" ? cfg.preset : "b0"); dibujarTodo();
+ponerXY(E.x, E.y); ponerZ(E.z); actualizarPuerta();
+requestAnimationFrame(cuadro);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Estudio de Síntesis: un programa para crear y procesar sonidos | Felipe Osorio</title>
+<meta name="description" content="Estudio de Síntesis es un programa de escritorio, hecho en Python, para crear sonidos con los métodos de síntesis más conocidos, pasarlos por filtros y efectos, y editarlos como en un editor de audio. Lo pensé como un…">
+<link rel="stylesheet" href="../../assets/css/blog.css">
+<link rel="stylesheet" href="../../assets/css/codigo.css">
+<script>try{var t=localStorage.getItem("modo");if(t)document.documentElement.dataset.mode=t;}catch(e){}</script>
+</head>
+<body>
+<aside id="sidebar">
+  <div class="perfil">
+    <a href="../../index.html" class="avatar" aria-label="Inicio">FO</a>
+    <a href="../../index.html" class="site-title">Felipe Osorio</a>
+    <p class="site-subtitle">Bitacora Orquesta de Laptops UC</p>
+  </div>
+  <nav><ul><li class="nav-item"><a href="../../index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h13V9.5"/></svg><span>Inicio</span></a></li><li class="nav-item"><a href="../../categories/index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Categorías</span></a></li><li class="nav-item"><a href="../../tags/index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.5" cy="8.5" r="1.3"/></svg><span>Etiquetas</span></a></li><li class="nav-item"><a href="../../archives/index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18v4H3zM5 9v10h14V9M10 13h4"/></svg><span>Archivo</span></a></li><li class="nav-item"><a href="../../about/index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg><span>Acerca de</span></a></li></ul></nav>
+  <a class="volver-portafolio" href="../../../index.html" target="_top"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h6l2 2h10v11H3z"/></svg><span>Portafolio en la orquesta</span></a>
+  <div class="sidebar-bottom">
+    <button id="modo" type="button" title="Cambiar modo claro/oscuro"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></button>
+    <a href="https://github.com/eepyysspp" target="_blank" rel="noopener" title="GitHub (necesita internet)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-4 1.3-4-2-6-2.5M15 21v-3.5a3 3 0 0 0-.9-2.4c3-.3 6-1.5 6-6.6a5.2 5.2 0 0 0-1.4-3.6 4.8 4.8 0 0 0-.1-3.6s-1.1-.3-3.7 1.4a12.7 12.7 0 0 0-6.6 0C5.7 1 4.6 1.3 4.6 1.3a4.8 4.8 0 0 0-.1 3.6A5.2 5.2 0 0 0 3 8.5c0 5.1 3 6.3 6 6.6a3 3 0 0 0-.9 2.4V21"/></svg></a>
+    <a href="mailto:felipeosorio@uc.cl" title="Correo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="m3 7 9 6 9-6"/></svg></a>
+  </div>
+</aside>
+<div id="main-wrapper">
+  <header id="topbar">
+    <button id="abrir-menu" type="button" aria-label="Menú"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <nav class="migas"><a href="../../index.html">Inicio</a> <span class='sep'>›</span> <span>Estudio de Síntesis: un programa para crear y procesar sonidos</span></nav>
+    <div class="buscador"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input id="buscar" type="search" placeholder="Buscar…" autocomplete="off" aria-label="Buscar"></div>
+  </header>
+  <div id="resultados" hidden></div>
+  <div id="contenido">
+    <main><article class="post">
+<header class="post-header">
+  <h1>Estudio de Síntesis: un programa para crear y procesar sonidos</h1>
+  <div class="post-meta">
+    <span>Por <strong>Felipe Osorio</strong></span>
+    <time datetime="2026-10-16T17:30:00-03:00">16 de octubre de 2026</time>
+    <span>6 min de lectura</span>
+    <span class="post-cats"><a href="../../categories/instrumentos/index.html">Instrumentos</a></span>
+  </div>
+</header>
+<div class="preview-img"><img src="../../assets/img/estudio-sintesis/02-sintesis-osciladores.webp" alt="Estudio de Síntesis, pestaña de síntesis con el banco de osciladores"></div>
+<div class="contenido-post">
+<p><strong>Estudio de Síntesis</strong> es un programa de escritorio, hecho en Python, para crear sonidos con los métodos de síntesis más conocidos, pasarlos por filtros y efectos, y editarlos como en un editor de audio. Lo pensé como un laboratorio para el curso: se puede escuchar al momento qué hace cada parámetro y ver el resultado en la forma de onda, en el espectrograma y en la curva de cada filtro.</p>
+<h2 id="descarga">Descarga</h2>
+<p><strong><a href="../../../EstudioSintesis/EstudioSintesis.zip">Descargar EstudioSintesis.zip (Windows, 91 KB) →</a></strong></p>
+<ol>
+<li>Descomprime el <code>.zip</code> (clic derecho → <em>Extraer todo</em>).</li>
+<li>Doble clic en <code>instalar.bat</code>. Crea un entorno de Python aparte e instala numpy, scipy, matplotlib, sounddevice, soundfile y numba. Si el computador no tiene Python, intenta instalarlo con <code>winget</code>. Esto se hace una sola vez.</li>
+<li>Desde entonces, se abre con <code>ejecutar.bat</code>.</li>
+</ol>
+<p>En macOS o Linux funciona igual desde la terminal: <code>pip install -r requirements.txt numba</code> y luego <code>python main.py</code> (con Python 3.10 o superior que incluya tkinter).</p>
+<h2 id="como-se-usa">Cómo se usa</h2>
+<p>La ventana tiene tres pestañas a la izquierda y el editor a la derecha.</p>
+<figure class="img shadow"><a href="../../assets/img/estudio-sintesis/01-biblioteca.webp" class="img-link"><img src="../../assets/img/estudio-sintesis/01-biblioteca.webp" alt="Pestaña Biblioteca con la campana FM seleccionada y su espectrograma" loading="lazy"></a><figcaption>La biblioteca: cada sonido explica qué se puede esperar de él.</figcaption></figure>
+<ul>
+<li><strong>Biblioteca:</strong> 24 sonidos de partida ordenados por categoría (bajos, leads, pads, teclas, campanas y metales, cuerdas y percusión, voces, texturas) y 8 cadenas de efectos. Cada uno trae una descripción de cómo suena. Con doble clic se escucha.</li>
+<li><strong>Síntesis:</strong> se elige el método y se ajustan sus parámetros. Cada método muestra su carácter, para qué sirve y un consejo para probar. Hay un piano para tocarlo con el mouse o con el teclado del computador (<code>A W S E D F T G Y H U J K</code>, y <code>Z</code> / <code>X</code> cambian de octava), y una opción de <strong>escucha automática</strong> que vuelve a tocar el sonido cada vez que se mueve un parámetro.</li>
+<li><strong>Efectos:</strong> una cadena de filtros y efectos que procesa el audio del editor de arriba hacia abajo. Cada efecto se puede reordenar, apagar o duplicar, escuchar antes de aplicarlo y aplicar al audio entero o solo a la selección.</li>
+</ul>
+<p>Con <strong>Usar en el editor</strong> el sonido pasa a la derecha, donde se puede reemplazar, añadir al final, insertar o mezclar con lo que ya hay. Ahí se selecciona con el mouse, se hace zoom con la rueda, se copia, se corta y se pega, y todo se puede deshacer. Se guarda en WAV, FLAC u OGG.</p>
+<h2 id="metodos-de-sintesis">Métodos de síntesis</h2>
+<figure class="img shadow"><a href="../../assets/img/estudio-sintesis/02-sintesis-osciladores.webp" class="img-link"><img src="../../assets/img/estudio-sintesis/02-sintesis-osciladores.webp" alt="Banco de osciladores, teclado y espectro de un pad" loading="lazy"></a><figcaption>El banco de osciladores: se pueden añadir, duplicar, silenciar o quitar.</figcaption></figure>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>Método</th>
+<th>Qué se escucha</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Osciladores + filtro</strong> (sustractiva)</td>
+<td>El sonido de los sintetizadores analógicos. De 1 a 8 osciladores (sierra, cuadrada, pulso, triangular, seno, ruido), cada uno con su nivel, paneo, afinación y voces de unísono, que pasan por un filtro resonante o tipo Moog con envolvente y LFO.</td>
+</tr>
+<tr>
+<td><strong>Aditiva</strong></td>
+<td>Sonidos limpios construidos parcial a parcial: órganos, flautas y la campana de Risset.</td>
+</tr>
+<tr>
+<td><strong>FM</strong></td>
+<td>Timbres metálicos y percusivos al estilo Chowning y DX7: campanas, pianos eléctricos, bajos de los 80.</td>
+</tr>
+<tr>
+<td><strong>AM / anillo</strong></td>
+<td>Trémolos y, con moduladora audible, timbres metálicos e inarmónicos.</td>
+</tr>
+<tr>
+<td><strong>Tabla de ondas</strong></td>
+<td>Un timbre que se transforma de forma continua mientras suena.</td>
+</tr>
+<tr>
+<td><strong>Granular</strong></td>
+<td>Nubes y texturas hechas de micro-fragmentos, también a partir de un audio propio.</td>
+</tr>
+<tr>
+<td><strong>Karplus-Strong</strong></td>
+<td>Cuerdas pulsadas y tambores por modelado físico.</td>
+</tr>
+<tr>
+<td><strong>Distorsión de fase</strong></td>
+<td>El sonido del Casio CZ, con formas resonantes.</td>
+</tr>
+<tr>
+<td><strong>Waveshaping</strong></td>
+<td>Una senoide que se enriquece; con polinomios de Chebyshev se eligen los armónicos exactos.</td>
+</tr>
+<tr>
+<td><strong>Formantes</strong></td>
+<td>Vocales cantadas (a, e, i, o, u) y transiciones entre ellas.</td>
+</tr>
+<tr>
+<td><strong>Ruido</strong></td>
+<td>Blanco, rosa, marrón, azul o violeta, con una banda que puede seguir la nota.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Todos comparten una secuencia de notas escrita como texto (<code>C4 E4 G4</code>, <code>C4:0.5 R:0.25 G4:1</code>, acordes como <code>C4+E4+G4:2</code>, solfeo <code>Do4</code> o frecuencias en Hz), una envolvente ADSR, vibrato, barrido de tono y unísono estéreo.</p>
+<h2 id="filtros-y-efectos">Filtros y efectos</h2>
+<figure class="img shadow"><a href="../../assets/img/estudio-sintesis/03-efectos.webp" class="img-link"><img src="../../assets/img/estudio-sintesis/03-efectos.webp" alt="Cadena de efectos con un ecualizador y su respuesta en frecuencia" loading="lazy"></a><figcaption>Al seleccionar un filtro se dibuja su respuesta en frecuencia y la de toda la cadena.</figcaption></figure>
+<ul>
+<li><strong>Filtros:</strong> IIR clásicos (Butterworth, Chebyshev I y II, elíptico, Bessel), biquad, ecualizador paramétrico de 5 bandas, FIR por ventanas, filtro resonante SVF o Moog modulable por LFO, por la envolvente (auto-wah) o en barrido, filtro peine y filtro de formantes.</li>
+<li><strong>Tiempo y espacio:</strong> delay con ping-pong, reverb algorítmica (Freeverb) y reverb por convolución con una respuesta al impulso propia o sintética.</li>
+<li><strong>Modulación:</strong> chorus, flanger, phaser, trémolo y auto-paneo, modulador en anillo, vibrato.</li>
+<li><strong>Dinámica y distorsión:</strong> compresor y limitador, puerta de ruido, ocho tipos de distorsión, bitcrusher.</li>
+<li><strong>Tono, tiempo y espectro:</strong> estiramiento temporal y transposición con vocoder de fase, y procesos espectrales (robotización, susurro, congelado, desenfoque, puerta espectral).</li>
+</ul>
+<p>Las configuraciones se guardan como presets en la biblioteca, con su nombre y descripción, y se pueden pasar a otro computador como archivo <code>.json</code>.</p>
+<h2 id="declaracion-de-uso-de-ia">Declaración de uso de IA</h2>
+<p>Claude fue utilizado para los siguientes propósitos:</p>
+<ul>
+<li>
+<p><strong>Programar el estudio e instalar sus dependencias.</strong></p>
+<blockquote>
+<p>&quot;Generame un programa de python localmente en el cual pueda realizar distintos tipos de sintesis de sonido, aplicandole distintos tipos de filtros a los sonidos creados o cargados (utiliza los metodos mas conocidos y populares de sintesis y lo mismo los filtros). Altamente customizable como software de edicion de sonido. Instala todas las dependencias necesarias&quot;</p>
+</blockquote>
+</li>
+<li>
+<p><strong>Mejorar la interfaz, describir los sonidos y agregar el banco de osciladores.</strong></p>
+<blockquote>
+<p>&quot;Esta perfecto, pero date tu tiempo en hacer que la interfaz sea mas amigable (tanto funcional como visualmente), tambien añadiendo una breve descripcion de que puedo esperar de cada sonido, a su vez me gustaria poder tener la capacidad de añadir o eliminar mas osciladores en el area de sintesis&quot;</p>
+</blockquote>
+</li>
+<li>
+<p><strong>Publicar este post y dejar el programa descargable desde mi carpeta del portafolio.</strong></p>
+<blockquote>
+<p>&quot;Crea un post en mi pagina con la explicación que escribi en este documento de word, sobre el programa estudio sintesis y vinculalo con una carpeta en mi portafolio de la orquesta de laptops, para poder descargarlo directamente&quot;</p>
+</blockquote>
+</li>
+</ul>
+
+</div>
+<footer class="post-tail">
+  <div class="post-tags"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.5" cy="8.5" r="1.3"/></svg><a class="chip" href="../../tags/estudio-de-sintesis/index.html">estudio de sintesis</a><a class="chip" href="../../tags/python/index.html">python</a><a class="chip" href="../../tags/sintesis/index.html">sintesis</a><a class="chip" href="../../tags/filtros/index.html">filtros</a><a class="chip" href="../../tags/efectos/index.html">efectos</a><a class="chip" href="../../tags/programa/index.html">programa</a></div>
+  <nav class="post-navigation"><a class="anterior" href="../../posts/mtrackpad/index.html"><small>Anterior</small>MTrackpad: un instrumento para tocar con el trackpad</a><a class="siguiente" href="../../posts/tarea-2-metodos-de-sintesis/index.html"><small>Siguiente</small>Tarea 2: Métodos de síntesis</a></nav>
+</footer>
+</article></main>
+    <aside id="panel"><section class="panel-bloque toc"><h2>Contenido</h2><ul><li class="toc-h2"><a href="#descarga">Descarga</a></li><li class="toc-h2"><a href="#como-se-usa">Cómo se usa</a></li><li class="toc-h2"><a href="#metodos-de-sintesis">Métodos de síntesis</a></li><li class="toc-h2"><a href="#filtros-y-efectos">Filtros y efectos</a></li><li class="toc-h2"><a href="#declaracion-de-uso-de-ia">Declaración de uso de IA</a></li></ul></section></aside>
+  </div>
+  <footer>
+    <p>© 2026 Felipe Osorio. Copia sin conexión del blog para la Orquesta de Laptops UC.</p>
+    <p>Hecho originalmente con <a href="https://github.com/cotes2020/jekyll-theme-chirpy" target="_blank" rel="noopener">Chirpy</a> y Jekyll.</p>
+  </footer>
+</div>
+<div id="mascara"></div>
+<script>window.RAIZ = "../../";</script>
+<script src="../../assets/js/busqueda.js"></script>
+<script src="../../assets/js/blog.js"></script>
+</body>
+</html>

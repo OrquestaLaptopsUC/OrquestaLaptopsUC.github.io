@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tutorial: crea tu portafolio y vincúlalo a la orquesta | Felipe Osorio</title>
+<meta name="description" content="Cada integrante de la Orquesta de Laptops UC puede tener un blog propio, como este, hecho con el tema Chirpy y publicado gratis en GitHub Pages. Después se muestra dentro del sitio de la orquesta, en…">
+<link rel="stylesheet" href="../../assets/css/blog.css">
+<link rel="stylesheet" href="../../assets/css/codigo.css">
+<script>try{var t=localStorage.getItem("modo");if(t)document.documentElement.dataset.mode=t;}catch(e){}</script>
+</head>
+<body>
+<aside id="sidebar">
+  <div class="perfil">
+    <a href="../../index.html" class="avatar" aria-label="Inicio">FO</a>
+    <a href="../../index.html" class="site-title">Felipe Osorio</a>
+    <p class="site-subtitle">Bitacora Orquesta de Laptops UC</p>
+  </div>
+  <nav><ul><li class="nav-item"><a href="../../index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h13V9.5"/></svg><span>Inicio</span></a></li><li class="nav-item"><a href="../../categories/index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Categorías</span></a></li><li class="nav-item"><a href="../../tags/index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.5" cy="8.5" r="1.3"/></svg><span>Etiquetas</span></a></li><li class="nav-item"><a href="../../archives/index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18v4H3zM5 9v10h14V9M10 13h4"/></svg><span>Archivo</span></a></li><li class="nav-item"><a href="../../about/index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg><span>Acerca de</span></a></li></ul></nav>
+  <a class="volver-portafolio" href="../../../index.html" target="_top"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h6l2 2h10v11H3z"/></svg><span>Portafolio en la orquesta</span></a>
+  <div class="sidebar-bottom">
+    <button id="modo" type="button" title="Cambiar modo claro/oscuro"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></button>
+    <a href="https://github.com/eepyysspp" target="_blank" rel="noopener" title="GitHub (necesita internet)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-4 1.3-4-2-6-2.5M15 21v-3.5a3 3 0 0 0-.9-2.4c3-.3 6-1.5 6-6.6a5.2 5.2 0 0 0-1.4-3.6 4.8 4.8 0 0 0-.1-3.6s-1.1-.3-3.7 1.4a12.7 12.7 0 0 0-6.6 0C5.7 1 4.6 1.3 4.6 1.3a4.8 4.8 0 0 0-.1 3.6A5.2 5.2 0 0 0 3 8.5c0 5.1 3 6.3 6 6.6a3 3 0 0 0-.9 2.4V21"/></svg></a>
+    <a href="mailto:felipeosorio@uc.cl" title="Correo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="m3 7 9 6 9-6"/></svg></a>
+  </div>
+</aside>
+<div id="main-wrapper">
+  <header id="topbar">
+    <button id="abrir-menu" type="button" aria-label="Menú"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <nav class="migas"><a href="../../index.html">Inicio</a> <span class='sep'>›</span> <span>Tutorial: crea tu portafolio y vincúlalo a la orquesta</span></nav>
+    <div class="buscador"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input id="buscar" type="search" placeholder="Buscar…" autocomplete="off" aria-label="Buscar"></div>
+  </header>
+  <div id="resultados" hidden></div>
+  <div id="contenido">
+    <main><article class="post">
+<header class="post-header">
+  <h1>Tutorial: crea tu portafolio y vincúlalo a la orquesta</h1>
+  <div class="post-meta">
+    <span>Por <strong>Felipe Osorio</strong></span>
+    <time datetime="2026-09-24T20:50:00-03:00">24 de septiembre de 2026</time>
+    <span>5 min de lectura</span>
+    <span class="post-cats"><a href="../../categories/tutoriales/index.html">Tutoriales</a></span>
+  </div>
+</header>
+
+<div class="contenido-post">
+<p>Cada integrante de la Orquesta de Laptops UC puede tener un blog propio, como este, hecho con el tema <a href="https://github.com/cotes2020/jekyll-theme-chirpy" target="_blank" rel="noopener">Chirpy</a> y publicado gratis en GitHub Pages. Después se muestra dentro del sitio de la orquesta, en <code>orquestalaptopsuc.github.io/portafolios/Nombre_Apellido/</code>.</p>
+<p>Todo se hace desde el navegador, sin instalar nada. Toma unos 20 minutos.</p>
+<div class="prompt prompt-info">
+<p>En los ejemplos, reemplaza <code>USUARIO</code> por tu usuario de GitHub (en minúsculas) y <code>NOMBRE APELLIDO</code> por tu nombre.</p>
+</div>
+<h2 id="1-crea-tu-cuenta-de-github">1. Crea tu cuenta de GitHub</h2>
+<p>Si no tienes cuenta, créala en <a href="https://github.com/signup" target="_blank" rel="noopener">github.com/signup</a>. Tu nombre de usuario será parte de la dirección de tu blog: <code>https://USUARIO.github.io</code>.</p>
+<p>Luego pide a quien administra la organización <strong>OrquestaLaptopsUC</strong> en GitHub que te agregue como colaborador, para que puedas subir tu carpeta al repositorio de la orquesta (paso 6).</p>
+<h2 id="2-crea-tu-blog-desde-la-plantilla-chirpy">2. Crea tu blog desde la plantilla Chirpy</h2>
+<ol>
+<li>Entra a <a href="https://github.com/cotes2020/chirpy-starter" target="_blank" rel="noopener">github.com/cotes2020/chirpy-starter</a> con tu sesión iniciada.</li>
+<li>Haz clic en <strong>Use this template → Create a new repository</strong>.</li>
+<li>En <em>Repository name</em> escribe exactamente <code>USUARIO.github.io</code>. Ejemplo: <code>eepyysspp.github.io</code>.</li>
+<li>Déjalo <strong>Public</strong> y haz clic en <strong>Create repository</strong>.</li>
+</ol>
+<h2 id="3-activa-github-pages">3. Activa GitHub Pages</h2>
+<ol>
+<li>En tu repositorio nuevo ve a <strong>Settings → Pages</strong>.</li>
+<li>En <em>Build and deployment → Source</em> elige <strong>GitHub Actions</strong>.</li>
+<li>Ve a la pestaña <strong>Actions</strong>. Cada vez que cambies algo se ejecuta &quot;Build and Deploy&quot;. Cuando aparece el tic verde (1 a 3 minutos), tu blog está publicado en <code>https://USUARIO.github.io</code>.</li>
+</ol>
+<div class="prompt prompt-tip">
+<p>Si la primera ejecución falló o no partió, entra a <strong>Actions</strong>, abre &quot;Build and Deploy&quot; y usa <strong>Run workflow</strong>.</p>
+</div>
+<h2 id="4-personaliza-config-yml">4. Personaliza <code>_config.yml</code></h2>
+<p>Abre el archivo <code>_config.yml</code> de tu repositorio y haz clic en el lápiz (✏️) para editarlo. Busca cada una de estas líneas y cámbiala. No pegues el bloque completo encima del archivo.</p>
+<div class="code-block con-archivo"><div class="code-header"><span class="code-label archivo">_config.yml</span><button class="copiar" type="button" title="Copiar">Copiar</button></div><pre class="highlight"><code><span class="c1"># Cambios para el archivo _config.yml de TU blog (repositorio USUARIO.github.io).</span>
+<span class="c1"># No copies este archivo entero: busca cada línea en tu _config.yml y cámbiala.</span>
+
+<span class="nt">lang</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">es-ES</span>
+<span class="nt">timezone</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">America/Santiago</span>
+
+<span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NOMBRE APELLIDO</span>
+<span class="nt">tagline</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Bitácora Orquesta de Laptops UC</span>
+<span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;-</span>
+<span class="w">  </span><span class="no">Registro de ideas, trabajo y varios.</span>
+
+<span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="s">"https://USUARIO.github.io"</span>
+
+<span class="nt">github</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">username</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">USUARIO</span>
+
+<span class="nt">social</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NOMBRE APELLIDO</span>
+<span class="w">  </span><span class="nt">email</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tucorreo@uc.cl</span>
+<span class="w">  </span><span class="nt">links</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://github.com/USUARIO</span>
+
+<span class="c1"># Tu foto: súbela a assets/img/ de tu repositorio, o usa una URL completa</span>
+<span class="nt">avatar</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/img/avatar.jpg</span>
+
+<span class="c1"># IMPORTANTE para que el sitio de la orquesta muestre siempre la versión nueva:</span>
+<span class="nt">pwa</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">cache</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</code></pre></div>
+<div class="prompt prompt-warning">
+<p><strong>No te saltes <code>cache: enabled: false</code>.</strong> Si queda en <code>true</code>, tu blog se guarda en caché en el navegador y el sitio de la orquesta sigue mostrando la versión antigua aunque publiques cambios.</p>
+</div>
+<p>Cuando termines, haz clic en <strong>Commit changes</strong>. Se vuelve a publicar solo.</p>
+<h2 id="5-escribe-tu-primera-entrada">5. Escribe tu primera entrada</h2>
+<ol>
+<li>En tu repositorio entra a la carpeta <code>_posts</code>.</li>
+<li><strong>Add file → Create new file</strong>. Nómbralo <code>AAAA-MM-DD-titulo.md</code>, por ejemplo <code>2026-09-24-mi-idea.md</code>.</li>
+<li>Pega esta plantilla, cambia el título, la fecha y el texto, y haz <strong>Commit changes</strong>.</li>
+</ol>
+<div class="code-block con-archivo"><div class="code-header"><span class="code-label archivo">_posts/2026-01-01-primera-entrada.md</span><button class="copiar" type="button" title="Copiar">Copiar</button></div><pre class="highlight"><code>---
+title: "Mi primera entrada"
+date: 2026-01-01 12:00:00 -0300
+categories: [Ideas]
+<span class="gu">tags: [orquesta]</span>
+<span class="gu">---</span>
+
+&lt;!--
+PLANTILLA DE ENTRADA (post) para un blog Chirpy.
+<span class="k">-</span><span class="w"> </span>Guárdala en la carpeta _posts/ de TU repositorio (USUARIO.github.io).
+<span class="k">-</span><span class="w"> </span>El nombre del archivo debe ser AAAA-MM-DD-titulo.md (ej: 2026-09-24-mi-idea.md).
+<span class="k">-</span><span class="w"> </span>La fecha de arriba no puede estar en el futuro, o la entrada no aparece.
+<span class="k">-</span><span class="w"> </span>Borra las secciones que no uses (y este comentario).
+--&gt;
+
+Escribe aquí el texto de tu entrada. Puedes usar <span class="gs">**negrita**</span>, <span class="ge">*cursiva*</span> y [<span class="nt">enlaces</span>](<span class="na">https://orquestalaptopsuc.github.io/</span>).
+
+<span class="gu">### Un video de YouTube</span>
+&lt;!-- En YouTube: Compartir → Insertar, copia el src del iframe --&gt;
+&lt;iframe width="100%" height="315" src="https://www.youtube.com/embed/ID_DEL_VIDEO" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen&gt;&lt;/iframe&gt;
+
+<span class="gu">### Un audio (sample)</span>
+&lt;!-- Sube el audio a tu carpeta en el repo de la orquesta: portafolios/Nombre_Apellido/Samples/ --&gt;
+&lt;audio controls preload="none" style="width:100%"&gt;
+  &lt;source src="https://orquestalaptopsuc.github.io/portafolios/Nombre_Apellido/Samples/mi-sample.wav" type="audio/wav"&gt;
+  Tu navegador no puede reproducir este audio. &lt;a href="https://orquestalaptopsuc.github.io/portafolios/Nombre_Apellido/Samples/mi-sample.wav"&gt;Descargar&lt;/a&gt;.
+&lt;/audio&gt;
+
+<span class="gu">### Una imagen</span>
+&lt;!-- Sube la imagen a assets/img/ de tu repositorio --&gt;
+![<span class="nt">Descripción de la imagen</span>](<span class="na">/assets/img/mi-imagen.png</span>)
+
+<span class="gu">### Conclusión:</span>
+Cierra con lo que aprendiste o lo que propones para la orquesta.
+</code></pre></div>
+<div class="prompt prompt-warning">
+<p>La <code>date</code> de la entrada debe ser la de hoy o una anterior, con <code>-0300</code> (hora de Chile). Si queda en el futuro, la entrada no aparece.</p>
+</div>
+<h2 id="6-vincula-tu-blog-al-sitio-de-la-orquesta">6. Vincula tu blog al sitio de la orquesta</h2>
+<ol>
+<li>Abre el repositorio <a href="https://github.com/OrquestaLaptopsUC/OrquestaLaptopsUC.github.io/tree/main/portafolios" target="_blank" rel="noopener">OrquestaLaptopsUC.github.io → portafolios</a>.</li>
+<li><strong>Add file → Create new file</strong> y escribe como nombre <code>Nombre_Apellido/index.html</code>, con el formato de siempre (ej: <code>Alan_Brito/index.html</code>). Al escribir la <code>/</code> se crea tu carpeta.</li>
+<li>Pega esta plantilla y reemplaza <code>USUARIO</code> (3 veces) y <code>NOMBRE APELLIDO</code> (3 veces).</li>
+<li><strong>Commit changes</strong>. En uno o dos minutos tu blog se verá en <code>https://orquestalaptopsuc.github.io/portafolios/Nombre_Apellido/</code>.</li>
+</ol>
+<div class="code-block con-archivo"><div class="code-header"><span class="code-label archivo">portafolios/Nombre_Apellido/index.html</span><button class="copiar" type="button" title="Copiar">Copiar</button></div><pre class="highlight"><code><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="p">&lt;</span><span class="nt">html</span> <span class="na">lang</span><span class="o">=</span><span class="s">"es"</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">charset</span><span class="o">=</span><span class="s">"utf-8"</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">name</span><span class="o">=</span><span class="s">"viewport"</span> <span class="na">content</span><span class="o">=</span><span class="s">"width=device-width, initial-scale=1"</span><span class="p">&gt;</span>
+  <span class="cm">&lt;!-- PLANTILLA: reemplaza NOMBRE APELLIDO y USUARIO (tu usuario de GitHub, en minúsculas) --&gt;</span>
+  <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>NOMBRE APELLIDO · Portafolio · Orquesta de Laptops UC<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">style</span><span class="p">&gt;</span>
+<span class="w">    </span><span class="nt">html</span><span class="o">,</span><span class="w"> </span><span class="nt">body</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">margin</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="k">height</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="kt">%</span><span class="p">;</span><span class="w"> </span><span class="k">background</span><span class="p">:</span><span class="w"> </span><span class="mh">#1b1b1e</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="nt">iframe</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">display</span><span class="p">:</span><span class="w"> </span><span class="kc">block</span><span class="p">;</span><span class="w"> </span><span class="k">width</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="kt">%</span><span class="p">;</span><span class="w"> </span><span class="k">height</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="kt">%</span><span class="p">;</span><span class="w"> </span><span class="k">border</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">.</span><span class="nc">fallback</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">position</span><span class="p">:</span><span class="w"> </span><span class="kc">fixed</span><span class="p">;</span><span class="w"> </span><span class="k">right</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="kt">px</span><span class="p">;</span><span class="w"> </span><span class="k">bottom</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="kt">px</span><span class="p">;</span><span class="w"> </span><span class="k">font</span><span class="p">:</span><span class="w"> </span><span class="mi">13</span><span class="kt">px</span><span class="o">/</span><span class="mf">1.2</span><span class="w"> </span><span class="n">system-ui</span><span class="p">,</span><span class="w"> </span><span class="kc">sans-serif</span><span class="p">;</span>
+<span class="w">      </span><span class="k">background</span><span class="p">:</span><span class="w"> </span><span class="nb">rgba</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">.65</span><span class="p">);</span><span class="w"> </span><span class="k">color</span><span class="p">:</span><span class="w"> </span><span class="mh">#fff</span><span class="p">;</span><span class="w"> </span><span class="k">padding</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="kt">px</span><span class="w"> </span><span class="mi">10</span><span class="kt">px</span><span class="p">;</span><span class="w"> </span><span class="k">border-radius</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="kt">px</span><span class="p">;</span><span class="w"> </span><span class="k">text-decoration</span><span class="p">:</span><span class="w"> </span><span class="kc">none</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">.</span><span class="nc">fallback</span><span class="p">:</span><span class="nd">hover</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">background</span><span class="p">:</span><span class="w"> </span><span class="nb">rgba</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">.85</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="p">&lt;/</span><span class="nt">style</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+  <span class="cm">&lt;!-- Muestra tu blog https://USUARIO.github.io/ dentro del sitio de la orquesta --&gt;</span>
+  <span class="p">&lt;</span><span class="nt">iframe</span> <span class="na">src</span><span class="o">=</span><span class="s">"https://USUARIO.github.io/"</span> <span class="na">title</span><span class="o">=</span><span class="s">"Portafolio de NOMBRE APELLIDO"</span>
+          <span class="na">allow</span><span class="o">=</span><span class="s">"autoplay; encrypted-media; picture-in-picture; fullscreen"</span> <span class="na">allowfullscreen</span><span class="p">&gt;&lt;/</span><span class="nt">iframe</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">a</span> <span class="na">class</span><span class="o">=</span><span class="s">"fallback"</span> <span class="na">href</span><span class="o">=</span><span class="s">"https://USUARIO.github.io/"</span> <span class="na">target</span><span class="o">=</span><span class="s">"_blank"</span> <span class="na">rel</span><span class="o">=</span><span class="s">"noopener"</span><span class="p">&gt;</span>Abrir en pestaña nueva ↗<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">noscript</span><span class="p">&gt;&lt;</span><span class="nt">p</span><span class="p">&gt;&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">"https://USUARIO.github.io/"</span><span class="p">&gt;</span>Ir al portafolio de NOMBRE APELLIDO<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">p</span><span class="p">&gt;&lt;/</span><span class="nt">noscript</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</code></pre></div>
+<p>Como ejemplo, mira <a href="../../../index.html">este mismo blog dentro del sitio de la orquesta</a>. Las plantillas también están en la carpeta <a href="https://github.com/OrquestaLaptopsUC/OrquestaLaptopsUC.github.io/tree/main/portafolios/_plantilla" target="_blank" rel="noopener"><code>portafolios/_plantilla</code></a> del repositorio.</p>
+<div class="prompt prompt-tip">
+<p>¿No eres colaborador todavía? Haz un <em>fork</em> del repositorio, crea tu archivo ahí y abre un <em>Pull request</em>. Alguien del equipo lo aprueba.</p>
+</div>
+<h2 id="7-opcional-sube-samples-de-audio">7. (Opcional) Sube samples de audio</h2>
+<ol>
+<li>En el repo de la orquesta, entra a tu carpeta <code>portafolios/Nombre_Apellido/</code> y usa <strong>Add file → Upload files</strong>. Si quieres ordenarlos, crea antes una subcarpeta <code>Samples/</code>.</li>
+<li>En una entrada de tu blog, pon un reproductor por archivo:</li>
+</ol>
+<div class="code-block" data-lang="HTML"><div class="code-header"><span class="code-label">HTML</span><button class="copiar" type="button" title="Copiar">Copiar</button></div><pre class="highlight"><code><span class="p">&lt;</span><span class="nt">audio</span> <span class="na">controls</span> <span class="na">preload</span><span class="o">=</span><span class="s">"none"</span> <span class="na">style</span><span class="o">=</span><span class="s">"width:100%"</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">source</span> <span class="na">src</span><span class="o">=</span><span class="s">"https://orquestalaptopsuc.github.io/portafolios/Nombre_Apellido/Samples/mi-sample.wav"</span> <span class="na">type</span><span class="o">=</span><span class="s">"audio/wav"</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">audio</span><span class="p">&gt;</span>
+</code></pre></div>
+<div class="prompt prompt-warning">
+<p>GitHub acepta archivos de hasta 25 MB cuando los subes desde la web. Si tus audios son grandes, conviértelos a <code>.mp3</code> y cambia <code>type=&quot;audio/wav&quot;</code> por <code>type=&quot;audio/mpeg&quot;</code>. Respeta mayúsculas y minúsculas: <code>Samples</code> no es lo mismo que <code>samples</code>.</p>
+</div>
+<p>Puedes ver un ejemplo en la entrada <a href="../../posts/Samples/index.html">Samples</a> de este blog.</p>
+<h2 id="problemas-frecuentes">Problemas frecuentes</h2>
+<p><strong>Mi blog muestra una página 404.</strong>
+Revisa que el repositorio se llame exactamente <code>USUARIO.github.io</code>, que en <em>Settings → Pages</em> diga <strong>GitHub Actions</strong> y que la última ejecución en <em>Actions</em> tenga tic verde.</p>
+<p><strong>La pestaña Actions muestra una ✗ roja.</strong>
+Abre la ejecución fallida y lee el paso marcado en rojo. Lo más común es un error de formato en <code>_config.yml</code>: una sangría mal puesta o un <code>:</code> sin espacio después. Corrige y vuelve a hacer commit.</p>
+<p><strong>Mi entrada nueva no aparece.</strong>
+Revisa que el archivo esté dentro de <code>_posts/</code>, que el nombre empiece con la fecha (<code>AAAA-MM-DD-</code>), que termine en <code>.md</code> y que la <code>date</code> no esté en el futuro.</p>
+<p><strong>El sitio de la orquesta muestra una versión antigua de mi blog.</strong>
+Pon <code>cache: enabled: false</code> en <code>_config.yml</code> (paso 4). Si la versión antigua sigue en tu navegador, bórrala una vez: en Chrome, candado de la barra de dirección → Configuración del sitio → Borrar datos, en <code>orquestalaptopsuc.github.io</code>.</p>
+<p><strong>El audio no suena.</strong>
+Abre la dirección del archivo directo en el navegador. Si da 404, revisa la ruta y las mayúsculas. Los cambios del repo de la orquesta tardan uno o dos minutos en publicarse.</p>
+
+</div>
+<footer class="post-tail">
+  <div class="post-tags"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.5" cy="8.5" r="1.3"/></svg><a class="chip" href="../../tags/portafolio/index.html">portafolio</a><a class="chip" href="../../tags/github/index.html">github</a><a class="chip" href="../../tags/tutorial/index.html">tutorial</a></div>
+  <nav class="post-navigation"><a class="anterior" href="../../posts/Samples/index.html"><small>Anterior</small>Samples</a><a class="siguiente" href="../../posts/propuesta-obra-genesis/index.html"><small>Siguiente</small>Tarea 1: Propuesta de obra para la Orquesta de Laptops UC</a></nav>
+</footer>
+</article></main>
+    <aside id="panel"><section class="panel-bloque toc"><h2>Contenido</h2><ul><li class="toc-h2"><a href="#1-crea-tu-cuenta-de-github">1. Crea tu cuenta de GitHub</a></li><li class="toc-h2"><a href="#2-crea-tu-blog-desde-la-plantilla-chirpy">2. Crea tu blog desde la plantilla Chirpy</a></li><li class="toc-h2"><a href="#3-activa-github-pages">3. Activa GitHub Pages</a></li><li class="toc-h2"><a href="#4-personaliza-config-yml">4. Personaliza _config.yml</a></li><li class="toc-h2"><a href="#5-escribe-tu-primera-entrada">5. Escribe tu primera entrada</a></li><li class="toc-h2"><a href="#6-vincula-tu-blog-al-sitio-de-la-orquesta">6. Vincula tu blog al sitio de la orquesta</a></li><li class="toc-h2"><a href="#7-opcional-sube-samples-de-audio">7. (Opcional) Sube samples de audio</a></li><li class="toc-h2"><a href="#problemas-frecuentes">Problemas frecuentes</a></li></ul></section></aside>
+  </div>
+  <footer>
+    <p>© 2026 Felipe Osorio. Copia sin conexión del blog para la Orquesta de Laptops UC.</p>
+    <p>Hecho originalmente con <a href="https://github.com/cotes2020/jekyll-theme-chirpy" target="_blank" rel="noopener">Chirpy</a> y Jekyll.</p>
+  </footer>
+</div>
+<div id="mascara"></div>
+<script>window.RAIZ = "../../";</script>
+<script src="../../assets/js/busqueda.js"></script>
+<script src="../../assets/js/blog.js"></script>
+</body>
+</html>

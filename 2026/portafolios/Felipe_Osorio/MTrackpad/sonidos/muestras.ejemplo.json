@@ -1,0 +1,4 @@
+{
+  "1": { "archivo": "mi_textura.wav", "modo": "granular", "base": 48 },
+  "2": { "archivo": "mi_golpe.wav", "modo": "disparo", "base": 36 }
+}

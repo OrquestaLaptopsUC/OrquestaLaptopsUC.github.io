@@ -1,0 +1,6 @@
+/* Fuentes locales (antes se cargaban desde Google Fonts): Sora y JetBrains Mono, licencia SIL OFL 1.1. */
+@font-face{font-family:'Sora';font-style:normal;font-display:swap;font-weight:500;src:url('sora-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'Sora';font-style:normal;font-display:swap;font-weight:700;src:url('sora-latin-700-normal.woff2') format('woff2')}
+@font-face{font-family:'Sora';font-style:normal;font-display:swap;font-weight:800;src:url('sora-latin-800-normal.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-display:swap;font-weight:500;src:url('jetbrains-mono-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-display:swap;font-weight:700;src:url('jetbrains-mono-latin-700-normal.woff2') format('woff2')}
