@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MRI Spectral IFFT Synthesizer (Offline DSP)</title>
+  <style>
+    /* VARIABLES GLOBALES Y TEMA */
+    :root {
+      --bg-main: #080c14;
+      --bg-panel: #0f1623;
+      --bg-card: #162032;
+      --border-color: #1e293b;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      
+      --cyan-400: #22d3ee;
+      --cyan-500: #06b6d4;
+      --emerald-400: #34d399;
+      --emerald-500: #10b981;
+      --amber-400: #fbbf24;
+      --rose-400: #fb7185;
+      --rose-500: #f43f5e;
+      --purple-400: #c084fc;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    .font-mono-dsp {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    /* SCROLLBARS */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0b111e; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+    /* LAYOUT BÁSICO */
+    .header {
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    
+    .main-grid {
+      display: grid;
+      grid-template-columns: 7fr 5fr;
+      gap: 16px;
+      padding: 16px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    @media (max-width: 1024px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    .col { display: flex; flex-direction: column; gap: 16px; }
+
+    /* PANELES Y TARJETAS */
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    }
+    
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .card {
+      background: rgba(15, 23, 35, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    /* UTILIDADES FLEX */
+    .flex { display: flex; }
+    .flex-col { display: flex; flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-1 { gap: 4px; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+
+    /* TEXTOS */
+    .text-xs { font-size: 11px; }
+    .text-sm { font-size: 13px; }
+    .font-bold { font-weight: bold; }
+    .text-muted { color: var(--text-muted); }
+    .text-cyan { color: var(--cyan-400); }
+    .text-emerald { color: var(--emerald-400); }
+    .text-amber { color: var(--amber-400); }
+    .text-rose { color: var(--rose-400); }
+
+    /* BOTONES */
+    button, .btn {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    button:hover { background: #334155; }
+    .btn-cyan { background: rgba(6, 182, 212, 0.2); color: var(--cyan-400); border-color: rgba(6, 182, 212, 0.4); }
+    .btn-cyan:hover { background: rgba(6, 182, 212, 0.3); }
+    .btn-emerald { background: var(--emerald-500); color: white; border-color: var(--emerald-400); font-weight: bold; }
+    .btn-emerald:hover { background: #059669; }
+    .btn-rose { background: var(--rose-500); color: white; border-color: var(--rose-400); font-weight: bold; }
+    .btn-rose:hover { background: #e11d48; }
+
+    /* INPUTS */
+    select, input[type="file"] {
+      background: #020617;
+      border: 1px solid #334155;
+      color: var(--text-main);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: inherit;
+      width: 100%;
+    }
+    
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 6px; background: #1e293b; border-radius: 3px; border: 1px solid #334155;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+      background: var(--cyan-500); margin-top: -5px; cursor: pointer;
+    }
+
+    /* COMPONENTES VISUALES */
+    .grid-bg {
+      background-image: linear-gradient(to right, rgba(30, 41, 59, 0.35) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(30, 41, 59, 0.35) 1px, transparent 1px);
+      background-size: 24px 24px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+    canvas { display: block; width: 100%; height: 100%; }
+    
+    .badge {
+      width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+      font-weight: bold; font-family: ui-monospace, monospace;
+    }
+    
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #64748b; }
+    .status-dot.active-emerald { background: var(--emerald-400); box-shadow: 0 0 8px var(--emerald-400); animation: pulse 2s infinite; }
+    .status-dot.active-rose { background: var(--rose-400); box-shadow: 0 0 8px var(--rose-400); }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    /* TABLA */
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 11px; }
+    th { background: rgba(15, 23, 42, 0.95); color: var(--text-muted); padding: 8px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; }
+    td { padding: 6px 8px; border-bottom: 1px solid rgba(30, 41, 59, 0.6); }
+    .table-container { max-height: 250px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; }
+
+    /* TECLADO */
+    .keyboard { display: grid; grid-template-columns: repeat(13, 1fr); gap: 4px; user-select: none; }
+    .key {
+      height: 70px; border: 1px solid #334155; border-radius: 6px; display: flex; flex-direction: column; 
+      align-items: center; justify-content: space-between; padding: 4px; font-size: 9px; cursor: pointer;
+    }
+    .key-white { background: #1e293b; color: white; }
+    .key-black { background: #0f172a; color: #cbd5e1; }
+    .key.active { background: var(--cyan-500); color: white; border-color: var(--cyan-400); box-shadow: 0 0 10px var(--cyan-500); transform: translateY(2px); }
+
+    #toast {
+      position: fixed; bottom: 20px; right: 20px; background: rgba(15, 23, 42, 0.95); border: 1px solid var(--cyan-500);
+      padding: 12px 20px; border-radius: 8px; color: white; z-index: 1000; display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="flex items-center gap-3">
+      <div>
+        <h1 class="font-bold text-sm">MRI SPECTRAL <span class="text-cyan">IFFT</span> SYNTHESIZER</h1>
+        <p class="text-xs text-muted font-mono-dsp">DSP Engine v2.5 (Offline Vanilla JS)</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 text-xs font-mono-dsp">
+      <div class="card flex items-center gap-2"><span class="text-muted">Fs:</span> <span id="statusSampleRate" class="text-cyan font-bold">48000 Hz</span></div>
+      <div class="card flex items-center gap-2"><span class="text-muted">Picos:</span> <span id="statusActivePeaks" class="text-amber font-bold">0 / 12</span></div>
+      <div class="card flex items-center gap-2">
+        <div id="audioEngineDot" class="status-dot"></div>
+        <span id="audioEngineStatus">IFFT En Espera</span>
+      </div>
+      <button id="btnMasterToggle" class="btn-emerald">Activar Resíntesis IFFT</button>
+    </div>
+  </header>
+
+  <!-- MAIN APP -->
+  <div class="main-grid">
+    
+    <!-- COLUMNA IZQUIERDA -->
+    <div class="col">
+      
+      <!-- Panel 1: Audio Source -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="flex items-center gap-2">
+            <div class="badge" style="background: rgba(6, 182, 212, 0.2); color: var(--cyan-400); border: 1px solid var(--cyan-500);">1</div>
+            <h2 class="text-sm font-bold">Muestra (MP3/WAV) y Ventana</h2>
+          </div>
+          <div class="flex gap-2">
+            <label class="btn btn-cyan">
+              Subir Audio
+              <input id="fileInput" type="file" accept="audio/*" style="display:none;" />
+            </label>
+            <button id="btnLoadDemoMRI" style="background: rgba(245,158,11,0.2); color: var(--amber-400); border: 1px solid var(--amber-400);">Demo MRI 3T</button>
+            <button id="btnPlayOriginal">▶ Escuchar Original</button>
+          </div>
+        </div>
+
+        <div class="grid-bg" style="height: 100px; margin-bottom: 12px;">
+          <canvas id="waveformCanvas" style="cursor: ew-resize;"></canvas>
+          <div style="position:absolute; top:4px; left:8px; font-size:10px; color:#cbd5e1; background:rgba(0,0,0,0.7); padding:2px 4px;" id="fileNameLabel">Muestra Sintética...</div>
+        </div>
+
+        <div class="flex gap-2 text-xs">
+          <div class="card" style="flex:1;">
+            <div class="flex justify-between mb-1"><span class="text-muted">Posición:</span><span id="windowPosLabel" class="text-cyan font-mono-dsp">0.25 s</span></div>
+            <input id="sliderWindowPos" type="range" min="0" max="1000" value="150" />
+          </div>
+          <div class="card" style="flex:1;">
+            <div class="flex justify-between mb-1"><span class="text-muted">Tamaño FFT:</span><span id="fftSizeLabel" class="text-cyan font-mono-dsp">4096</span></div>
+            <select id="selectFftSize" class="font-mono-dsp">
+              <option value="2048">2048 bins</option>
+              <option value="4096" selected>4096 bins</option>
+              <option value="8192">8192 bins</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 2: FFT -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="flex items-center gap-2">
+            <div class="badge" style="background: rgba(6, 182, 212, 0.2); color: var(--cyan-400); border: 1px solid var(--cyan-500);">2</div>
+            <h2 class="text-sm font-bold">Espectro FFT y Umbral</h2>
+          </div>
+        </div>
+
+        <div class="flex gap-2 text-xs mb-3">
+          <div class="card" style="flex:1; border-color: var(--rose-500);">
+            <div class="flex justify-between mb-1"><span class="text-rose font-bold">Umbral (dB):</span><span id="thresholdDbLabel" class="text-rose font-mono-dsp">-42.0 dB</span></div>
+            <input id="sliderThresholdDb" type="range" min="-90" max="-5" step="0.5" value="-42" />
+          </div>
+          <div class="card" style="flex:1;">
+            <div class="flex justify-between mb-1"><span class="text-amber font-bold">Máx Picos:</span><span id="maxPeaksLabel" class="text-amber font-mono-dsp">12</span></div>
+            <input id="sliderMaxPeaks" type="range" min="1" max="12" step="1" value="12" />
+          </div>
+        </div>
+
+        <div class="grid-bg" style="height: 250px;">
+          <canvas id="fftCanvas" style="cursor: ns-resize;"></canvas>
+        </div>
+      </div>
+
+      <!-- Panel 3: Coefficients -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="flex items-center gap-2">
+            <div class="badge" style="background: rgba(245, 158, 11, 0.2); color: var(--amber-400); border: 1px solid var(--amber-400);">3</div>
+            <h2 class="text-sm font-bold">Coeficientes Espectrales Extraídos</h2>
+          </div>
+          <button id="btnResetPartials">Restaurar Pesos</button>
+        </div>
+        
+        <div class="table-container font-mono-dsp">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Activo</th><th>Bin</th><th>Frecuencia</th><th>Mag(dB)</th><th>Mag(Lin)</th><th>Fase</th><th>Complejo</th><th>Peso</th></tr>
+            </thead>
+            <tbody id="coefficientsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- COLUMNA DERECHA -->
+    <div class="col">
+      
+      <!-- Panel 4: IFFT Engine -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="flex items-center gap-2">
+            <div class="badge" style="background: rgba(16, 185, 129, 0.2); color: var(--emerald-400); border: 1px solid var(--emerald-500);">4</div>
+            <h2 class="text-sm font-bold">Motor IFFT Tiempo Real</h2>
+          </div>
+        </div>
+
+        <div class="flex gap-2 mb-3">
+          <button id="btnModeBlockIFFT" style="flex:1; border-color:var(--cyan-400); display:block; text-align:left;">
+            <div class="text-cyan font-bold mb-1">Modo A: IFFT Bloques</div>
+            <div class="text-xs text-muted">Overlap-Add Estricto</div>
+          </button>
+          <button id="btnModeAdditiveIDFT" style="flex:1; display:block; text-align:left;">
+            <div class="font-bold mb-1">Modo B: Suma IDFT</div>
+            <div class="text-xs text-muted">Muestra a muestra</div>
+          </button>
+        </div>
+
+        <div class="grid-bg" style="height: 120px; margin-bottom: 12px;">
+          <canvas id="ifftScopeCanvas"></canvas>
+        </div>
+
+        <div class="flex gap-2 text-xs">
+          <div class="card" style="flex:1;">
+            <div class="flex justify-between mb-1"><span class="text-muted">Ganancia:</span><span id="baseGainLabel" class="text-emerald font-mono-dsp">0.75</span></div>
+            <input id="sliderBaseGain" type="range" min="0" max="1.5" step="0.01" value="0.75" />
+          </div>
+          <div class="card" style="flex:1;">
+            <div class="flex justify-between mb-1"><span class="text-muted">Tilt (dB):</span><span id="spectralTiltLabel" class="text-cyan font-mono-dsp">0.0 dB</span></div>
+            <input id="sliderSpectralTilt" type="range" min="-18" max="18" step="0.5" value="0" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 5: Mic -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="flex items-center gap-2">
+            <div class="badge" style="background: rgba(244, 63, 94, 0.2); color: var(--rose-400); border: 1px solid var(--rose-500);">5</div>
+            <h2 class="text-sm font-bold">Control por Micrófono</h2>
+          </div>
+          <button id="btnToggleMic" style="border-color:var(--rose-500); color:var(--rose-400);">
+            <div id="micStatusDot" class="status-dot active-rose"></div> <span id="btnToggleMicText">Activar Micrófono</span>
+          </button>
+        </div>
+
+        <div class="card mb-2">
+          <div class="flex justify-between mb-2 text-xs font-bold text-emerald">
+            <span>Envolvente RMS (Amplitud)</span> <span id="envFollowerValue" class="font-mono-dsp">0.000</span>
+          </div>
+          <div style="width:100%; height:8px; background:#000; border-radius:4px; overflow:hidden; border:1px solid #334;">
+            <div id="envMeterBar" style="height:100%; background:var(--emerald-500); width:0%; transition: width 0.1s;"></div>
+          </div>
+        </div>
+
+        <div class="card mb-2">
+          <div class="flex justify-between mb-2 text-xs font-bold text-amber">
+            <span>Centroide Espectral (Brillo)</span> 
+            <div class="flex items-center gap-2">
+              <span id="centroidHzValue" class="font-mono-dsp">0 Hz</span>
+              <span id="attackLed" style="padding:2px 4px; background:#1e293b; font-size:9px; border-radius:4px;">ATAQUE</span>
+            </div>
+          </div>
+          <div style="width:100%; height:8px; background:#000; border-radius:4px; overflow:hidden; border:1px solid #334;">
+            <div id="centroidMeterBar" style="height:100%; background:var(--amber-400); width:0%; transition: width 0.1s;"></div>
+          </div>
+          
+          <div class="flex gap-2 mt-2 text-xs">
+            <select id="selectCentroidTarget" class="font-mono-dsp" style="flex:1;">
+              <option value="tilt">Destino: Tilt Espectral</option>
+              <option value="pitch">Destino: Modulación Pitch</option>
+              <option value="threshold">Destino: Abrir Umbral</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 6: Keyboard -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="flex items-center gap-2">
+            <div class="badge" style="background: rgba(192, 132, 252, 0.2); color: var(--purple-400); border: 1px solid var(--purple-400);">6</div>
+            <h2 class="text-sm font-bold">Teclado Transpositor</h2>
+          </div>
+          <label class="flex items-center gap-1 text-xs cursor-pointer">
+            <input id="chkDroneLatch" type="checkbox" checked /> Modo Drone Sostenido
+          </label>
+        </div>
+        <div id="keyboardContainer" class="keyboard font-mono-dsp"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- SCRIPT DEL MOTOR DSP -->
+  <script>
+    // Se inserta todo el código JS lógico exactamente igual que en la versión previa,
+    // con pequeñas adaptaciones para los selectores de clases CSS (Vanilla).
+
+    class ExplicitDSP {
+      static fft(real, imag, inverse = false) {
+        const n = real.length;
+        if ((n & (n - 1)) !== 0) throw new Error("FFT size must be power of 2");
+        let j = 0;
+        for (let i = 0; i < n; i++) {
+          if (i < j) {
+            let tr = real[i], ti = imag[i];
+            real[i] = real[j]; imag[i] = imag[j];
+            real[j] = tr; imag[j] = ti;
+          }
+          let m = n >> 1;
+          while (m >= 1 && j >= m) { j -= m; m >>= 1; }
+          j += m;
+        }
+        const sign = inverse ? 1 : -1;
+        for (let size = 2; size <= n; size <<= 1) {
+          const halfSize = size >> 1;
+          const angleStep = (sign * 2 * Math.PI) / size;
+          const wStepRe = Math.cos(angleStep);
+          const wStepIm = Math.sin(angleStep);
+          for (let i = 0; i < n; i += size) {
+            let wRe = 1.0, wIm = 0.0;
+            for (let k = 0; k < halfSize; k++) {
+              const evenIdx = i + k, oddIdx = i + k + halfSize;
+              const tRe = wRe * real[oddIdx] - wIm * imag[oddIdx];
+              const tIm = wRe * imag[oddIdx] + wIm * real[oddIdx];
+              real[oddIdx] = real[evenIdx] - tRe;
+              imag[oddIdx] = imag[evenIdx] - tIm;
+              real[evenIdx] += tRe;
+              imag[evenIdx] += tIm;
+              const nextWRe = wRe * wStepRe - wIm * wStepIm;
+              wIm = wRe * wStepIm + wIm * wStepRe;
+              wRe = nextWRe;
+            }
+          }
+        }
+        if (inverse) {
+          for (let i = 0; i < n; i++) { real[i] /= n; imag[i] /= n; }
+        }
+      }
+      static createHannWindow(n) {
+        const win = new Float32Array(n);
+        for (let i = 0; i < n; i++) win[i] = 0.5 * (1 - Math.cos((2 * Math.PI * i) / (n - 1)));
+        return win;
+      }
+    }
+
+    const state = {
+      audioCtx: null, sampleRate: 48000,
+      sourceBuffer: null, monoSamples: null, windowStartRatio: 0.15, fftSize: 4096, minPeakDistanceHz: 35,
+      spectrumMagLinear: null, spectrumMagDb: null, spectrumPhase: null, spectrumReal: null, spectrumImag: null,
+      thresholdDb: -42.0, maxPeaks: 12, maxFreqView: 6000, selectedPeaks: [],
+      isSynthRunning: false, synthMode: 'blockIFFT', baseGain: 0.75, manualSpectralTilt: 0.0, pitchRatio: 1.0, keyGateOpen: true,
+      micActive: false, micStream: null, micAnalyser: null, micTimeData: null, micFreqData: null, prevMicSpectrum: null,
+      envFollower: 0.0, spectralCentroidHz: 0, spectralCentroidNorm: 0, attackDetected: false, attackBoostEnv: 0.0,
+      micSensitivity: 3.5, centroidTarget: 'tilt',
+      outputScopeBuffer: new Float32Array(1024), outputScopeWritePtr: 0
+    };
+
+    let scriptProcessorNode = null;
+    let previewSourceNode = null;
+
+    const IFFT_BLOCK_SIZE = 2048;
+    const IFFT_HOP_SIZE = 512; 
+    const olaHannWindow = ExplicitDSP.createHannWindow(IFFT_BLOCK_SIZE);
+    const olaRingBuffer = new Float32Array(IFFT_BLOCK_SIZE * 2);
+    let olaReadIndex = 0, olaWriteIndex = 0, olaHopCounter = 0, globalSampleCounter = 0;
+    const partialPhases = new Float64Array(12);
+    const ifftRealBlock = new Float64Array(IFFT_BLOCK_SIZE);
+    const ifftImagBlock = new Float64Array(IFFT_BLOCK_SIZE);
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.style.display = 'block';
+      clearTimeout(showToast.tmr);
+      showToast.tmr = setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    function ensureAudioContext() {
+      if (!state.audioCtx) {
+        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        state.sampleRate = state.audioCtx.sampleRate;
+        document.getElementById('statusSampleRate').textContent = `${state.sampleRate} Hz`;
+      }
+      if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+    }
+
+    function generateSyntheticMRIBuffer() {
+      ensureAudioContext();
+      const fs = state.sampleRate, dur = 3.2, numSamples = Math.floor(fs * dur);
+      const buffer = state.audioCtx.createBuffer(1, numSamples, fs);
+      const data = buffer.getChannelData(0);
+      const mriModes = [
+        { freq: 412.5, amp: 0.95, phase: 0.2, decay: 3.5 }, { freq: 588.0, amp: 0.62, phase: 1.4, decay: 4.0 },
+        { freq: 825.0, amp: 1.00, phase: -0.8, decay: 2.8 }, { freq: 1142.3, amp: 0.54, phase: 2.1, decay: 5.0 },
+        { freq: 1237.5, amp: 0.85, phase: 0.7, decay: 3.2 }, { freq: 1650.0, amp: 0.72, phase: -1.9, decay: 4.2 }
+      ];
+      for (let n = 0; n < numSamples; n++) {
+        const t = n / fs, localT = t % 0.18;
+        const env = Math.min(1.0, localT / 0.006) * Math.exp(-localT * 11.0);
+        let sample = 0;
+        for (let m = 0; m < mriModes.length; m++) {
+          sample += mriModes[m].amp * Math.exp(-localT * mriModes[m].decay) * Math.cos(2 * Math.PI * mriModes[m].freq * t + mriModes[m].phase);
+        }
+        data[n] = (sample * (0.25 + 0.75 * env)) * 0.22 + (Math.random() * 2 - 1) * 0.012;
+      }
+      state.sourceBuffer = buffer; state.monoSamples = data;
+      drawWaveformOverview(); performOfflineFFTAnalysis();
+    }
+
+    async function handleFileUpload(file) {
+      if (!file) return;
+      ensureAudioContext();
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const audioBuffer = await state.audioCtx.decodeAudioData(arrayBuffer);
+        const mono = new Float32Array(audioBuffer.length);
+        if (audioBuffer.numberOfChannels === 1) mono.set(audioBuffer.getChannelData(0));
+        else {
+          const ch0 = audioBuffer.getChannelData(0), ch1 = audioBuffer.getChannelData(1);
+          for (let i = 0; i < audioBuffer.length; i++) mono[i] = 0.5 * (ch0[i] + ch1[i]);
+        }
+        state.sourceBuffer = audioBuffer; state.monoSamples = mono;
+        document.getElementById('fileNameLabel').textContent = file.name;
+        drawWaveformOverview(); performOfflineFFTAnalysis();
+        showToast("Audio cargado y analizado.");
+      } catch (e) { showToast("Error al decodificar: " + e.message); }
+    }
+
+    function performOfflineFFTAnalysis() {
+      if (!state.monoSamples) return;
+      const N = state.fftSize, samples = state.monoSamples;
+      const startIdx = Math.min(Math.max(0, samples.length - N), Math.floor(state.windowStartRatio * Math.max(0, samples.length - N)));
+      const hann = ExplicitDSP.createHannWindow(N), real = new Float64Array(N), imag = new Float64Array(N);
+      for (let i = 0; i < N; i++) { real[i] = (startIdx + i < samples.length ? samples[startIdx + i] : 0) * hann[i] * 2.0; imag[i] = 0; }
+      ExplicitDSP.fft(real, imag, false);
+      
+      const halfN = N >> 1;
+      const magLinear = new Float32Array(halfN), magDb = new Float32Array(halfN), phase = new Float32Array(halfN);
+      let maxMag = 1e-9;
+      for (let k = 1; k < halfN; k++) {
+        const m = Math.hypot(real[k], imag[k]) / (N / 2);
+        magLinear[k] = m; if (m > maxMag) maxMag = m;
+      }
+      for (let k = 0; k < halfN; k++) {
+        const normMag = magLinear[k] / maxMag;
+        magLinear[k] = normMag; magDb[k] = 20 * Math.log10(Math.max(normMag, 1e-6));
+        phase[k] = Math.atan2(imag[k], real[k]);
+      }
+      state.spectrumMagLinear = magLinear; state.spectrumMagDb = magDb; state.spectrumPhase = phase;
+      state.spectrumReal = real; state.spectrumImag = imag;
+      extractDominantPeaks();
+    }
+
+    function extractDominantPeaks() {
+      if (!state.spectrumMagDb) return;
+      const N = state.fftSize, halfN = N >> 1, fs = state.sampleRate, binWidthHz = fs / N;
+      const minBinSep = Math.max(1, Math.round(state.minPeakDistanceHz / binWidthHz));
+      
+      let effThresh = state.thresholdDb;
+      if (state.micActive && state.centroidTarget === 'threshold') {
+        effThresh = Math.max(-90, Math.min(-5, state.thresholdDb - state.spectralCentroidNorm * 24));
+      }
+
+      const cands = [];
+      for (let k = 2; k < halfN - 2; k++) {
+        const db = state.spectrumMagDb[k];
+        if (db >= effThresh && db >= state.spectrumMagDb[k - 1] && db >= state.spectrumMagDb[k + 1]) {
+          const a = state.spectrumMagDb[k - 1], b = state.spectrumMagDb[k], c = state.spectrumMagDb[k + 1];
+          const denom = a - 2 * b + c;
+          const exactBin = k + (Math.abs(denom) > 1e-6 ? 0.5 * (a - c) / denom : 0);
+          const magLin = state.spectrumMagLinear[k], ph = state.spectrumPhase[k];
+          cands.push({ bin: k, exactBin, freq: exactBin * binWidthHz, magLinear: magLin, magDb: db, phase: ph, re: magLin * Math.cos(ph), im: magLin * Math.sin(ph) });
+        }
+      }
+      cands.sort((a, b) => b.magLinear - a.magLinear);
+      
+      const chosen = [];
+      for (let i = 0; i < cands.length; i++) {
+        if (chosen.length >= state.maxPeaks) break;
+        if (!chosen.some(p => Math.abs(p.bin - cands[i].bin) < minBinSep)) {
+          const prev = state.selectedPeaks.find(old => Math.abs(old.bin - cands[i].bin) <= 2);
+          chosen.push({ ...cands[i], rank: chosen.length + 1, enabled: prev ? prev.enabled : true, userWeight: prev ? prev.userWeight : 1.0 });
+        }
+      }
+      state.selectedPeaks = chosen;
+      document.getElementById('statusActivePeaks').textContent = `${chosen.filter(p => p.enabled).length} / ${state.maxPeaks}`;
+      renderCoefficientsTable(); drawFFTSpectrum();
+    }
+
+    function renderCoefficientsTable() {
+      const tbody = document.getElementById('coefficientsTableBody');
+      tbody.innerHTML = '';
+      state.selectedPeaks.forEach((p, i) => {
+        const tr = document.createElement('tr');
+        tr.style.color = p.enabled ? '#e2e8f0' : '#475569';
+        tr.innerHTML = `
+          <td class="text-amber font-bold">#${p.rank}</td>
+          <td><input type="checkbox" ${p.enabled ? 'checked' : ''} onchange="state.selectedPeaks[${i}].enabled=this.checked; extractDominantPeaks();"></td>
+          <td>${p.bin}</td><td class="text-cyan">${p.freq.toFixed(1)}</td><td class="text-rose">${p.magDb.toFixed(1)}</td>
+          <td>${p.magLinear.toFixed(4)}</td><td>${p.phase.toFixed(2)}</td>
+          <td>${p.re.toFixed(2)} ${p.im >= 0 ? '+' : '-'} j${Math.abs(p.im).toFixed(2)}</td>
+          <td><input type="range" min="0" max="2" step="0.1" value="${p.userWeight}" oninput="state.selectedPeaks[${i}].userWeight=parseFloat(this.value); drawFFTSpectrum();"></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function startRealtimeIFFTSynth() {
+      ensureAudioContext();
+      if (state.isSynthRunning) return;
+      scriptProcessorNode = state.audioCtx.createScriptProcessor(1024, 0, 1);
+      olaRingBuffer.fill(0); olaReadIndex = 0; olaWriteIndex = 0; olaHopCounter = 0;
+
+      scriptProcessorNode.onaudioprocess = (e) => {
+        const out = e.outputBuffer.getChannelData(0);
+        const peaks = state.selectedPeaks, numPeaks = peaks.length;
+        
+        let envMult = state.micActive ? state.envFollower : 1.0;
+        let effPitch = state.pitchRatio, effTilt = state.manualSpectralTilt;
+        
+        if (state.micActive && state.centroidTarget === 'tilt') effTilt += (state.spectralCentroidNorm - 0.35) * 28.0;
+        else if (state.micActive && state.centroidTarget === 'pitch') effPitch *= (0.75 + state.spectralCentroidNorm);
+
+        const totalGain = state.baseGain * envMult * (1.0 + state.attackBoostEnv) * (state.keyGateOpen ? 1.0 : 0.0);
+        state.attackBoostEnv *= 0.92;
+
+        if (numPeaks === 0 || totalGain < 0.001) {
+          for (let i = 0; i < out.length; i++) { out[i] = 0; state.outputScopeBuffer[state.outputScopeWritePtr++] = 0; if (state.outputScopeWritePtr >= 1024) state.outputScopeWritePtr = 0; }
+          return;
+        }
+
+        if (state.synthMode === 'blockIFFT') {
+          for (let i = 0; i < out.length; i++) {
+            if (olaHopCounter === 0) synthesizeOneIFFTBlock(effPitch, effTilt, state.sampleRate);
+            olaHopCounter = (olaHopCounter + 1) % IFFT_HOP_SIZE;
+            
+            let sample = olaRingBuffer[olaReadIndex];
+            olaRingBuffer[olaReadIndex] = 0;
+            olaReadIndex = (olaReadIndex + 1) % olaRingBuffer.length;
+            
+            out[i] = Math.max(-0.98, Math.min(0.98, sample * totalGain));
+            state.outputScopeBuffer[state.outputScopeWritePtr++] = out[i];
+            if (state.outputScopeWritePtr >= 1024) state.outputScopeWritePtr = 0;
+          }
+        } else {
+          const norm = 1.0 / Math.max(1.5, Math.sqrt(numPeaks));
+          for (let i = 0; i < out.length; i++) {
+            let sum = 0;
+            for (let m = 0; m < numPeaks; m++) {
+              const p = peaks[m]; if (!p.enabled || p.userWeight <= 0) continue;
+              const f = p.freq * effPitch;
+              const tiltGain = Math.pow(10, (effTilt * Math.log2(Math.max(80, f) / 1000)) / 20);
+              sum += p.magLinear * p.userWeight * tiltGain * Math.cos(partialPhases[m] + p.phase);
+              partialPhases[m] = (partialPhases[m] + (2 * Math.PI * f) / state.sampleRate) % (2 * Math.PI);
+            }
+            out[i] = Math.max(-0.98, Math.min(0.98, sum * norm * totalGain));
+            state.outputScopeBuffer[state.outputScopeWritePtr++] = out[i];
+            if (state.outputScopeWritePtr >= 1024) state.outputScopeWritePtr = 0;
+          }
+        }
+      };
+      scriptProcessorNode.connect(state.audioCtx.destination);
+      state.isSynthRunning = true;
+      document.getElementById('audioEngineDot').classList.add('active-emerald');
+      document.getElementById('audioEngineStatus').textContent = 'IFFT Activa';
+      document.getElementById('btnMasterToggle').className = 'btn-rose';
+      document.getElementById('btnMasterToggle').textContent = 'Detener Resíntesis';
+    }
+
+    function synthesizeOneIFFTBlock(pitchRatio, tiltDb, fs) {
+      ifftRealBlock.fill(0); ifftImagBlock.fill(0);
+      const binWidth = fs / IFFT_BLOCK_SIZE, halfN = IFFT_BLOCK_SIZE >> 1;
+      const scale = (IFFT_BLOCK_SIZE / 2) / Math.max(1.5, Math.sqrt(state.selectedPeaks.length));
+
+      for (let m = 0; m < state.selectedPeaks.length; m++) {
+        const p = state.selectedPeaks[m];
+        if (!p.enabled || p.userWeight <= 0) continue;
+        const targetF = p.freq * pitchRatio;
+        const k = Math.round(targetF / binWidth);
+        if (k <= 1 || k >= halfN - 1) continue;
+        
+        const tiltGain = Math.pow(10, (tiltDb * Math.log2(Math.max(80, targetF) / 1000)) / 20);
+        const mag = p.magLinear * p.userWeight * tiltGain * scale;
+        const instPh = partialPhases[m] + p.phase;
+        
+        const re = mag * Math.cos(instPh), im = mag * Math.sin(instPh);
+        ifftRealBlock[k] += re; ifftImagBlock[k] += im;
+        ifftRealBlock[IFFT_BLOCK_SIZE - k] += re; ifftImagBlock[IFFT_BLOCK_SIZE - k] -= im;
+        partialPhases[m] = (partialPhases[m] + 2 * Math.PI * (k * binWidth) * (IFFT_HOP_SIZE / fs)) % (2 * Math.PI);
+      }
+      ExplicitDSP.fft(ifftRealBlock, ifftImagBlock, true);
+      for (let n = 0; n < IFFT_BLOCK_SIZE; n++) {
+        olaRingBuffer[(olaReadIndex + n) % olaRingBuffer.length] += ifftRealBlock[n] * olaHannWindow[n] * 0.5;
+      }
+    }
+
+    function stopRealtimeIFFTSynth() {
+      if (scriptProcessorNode) { scriptProcessorNode.disconnect(); scriptProcessorNode = null; }
+      state.isSynthRunning = false;
+      document.getElementById('audioEngineDot').classList.remove('active-emerald');
+      document.getElementById('audioEngineStatus').textContent = 'IFFT En Espera';
+      document.getElementById('btnMasterToggle').className = 'btn-emerald';
+      document.getElementById('btnMasterToggle').textContent = 'Activar Resíntesis IFFT';
+    }
+
+    async function toggleMicrophone() {
+      ensureAudioContext();
+      if (state.micActive) {
+        if (state.micStream) state.micStream.getTracks().forEach(t => t.stop());
+        state.micActive = false; state.envFollower = 0;
+        document.getElementById('micStatusDot').className = 'status-dot';
+        document.getElementById('btnToggleMicText').textContent = 'Activar Micrófono';
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } });
+        const src = state.audioCtx.createMediaStreamSource(stream);
+        const analyser = state.audioCtx.createAnalyser();
+        analyser.fftSize = 1024;
+        src.connect(analyser);
+        state.micStream = stream; state.micAnalyser = analyser;
+        state.micTimeData = new Float32Array(1024); state.micFreqData = new Float32Array(512); state.prevMicSpectrum = new Float32Array(512);
+        state.micActive = true;
+        document.getElementById('micStatusDot').className = 'status-dot active-emerald';
+        document.getElementById('btnToggleMicText').textContent = 'Micrófono Activo (Click para Desactivar)';
+        if (!state.isSynthRunning) startRealtimeIFFTSynth();
+      } catch (e) { showToast("Error mic: " + e.message); }
+    }
+
+    function updateMicrophoneDescriptors() {
+      if (!state.micActive) return;
+      state.micAnalyser.getFloatTimeDomainData(state.micTimeData);
+      state.micAnalyser.getFloatFrequencyData(state.micFreqData);
+      
+      let sq = 0; for (let i = 0; i < 1024; i++) sq += state.micTimeData[i] * state.micTimeData[i];
+      const rms = Math.sqrt(sq / 1024), tgt = Math.min(1.0, rms * state.micSensitivity);
+      
+      const a = Math.exp(-0.016 / 0.012), r = Math.exp(-0.016 / 0.085);
+      state.envFollower = tgt > state.envFollower ? a * state.envFollower + (1 - a) * tgt : r * state.envFollower + (1 - r) * tgt;
+      document.getElementById('envMeterBar').style.width = `${state.envFollower * 100}%`;
+      document.getElementById('envFollowerValue').textContent = state.envFollower.toFixed(3);
+
+      let wSum = 0, mSum = 0, flux = 0;
+      const binHz = 24000 / 512;
+      for (let k = 1; k < 512; k++) {
+        const m = Math.pow(10, state.micFreqData[k] / 20);
+        wSum += (k * binHz) * m; mSum += m;
+        if (m - state.prevMicSpectrum[k] > 0) flux += m - state.prevMicSpectrum[k];
+        state.prevMicSpectrum[k] = m;
+      }
+      
+      if (mSum > 1e-4 && rms > 0.008) {
+        state.spectralCentroidHz = 0.75 * state.spectralCentroidHz + 0.25 * (wSum / mSum);
+        state.spectralCentroidNorm = Math.max(0, Math.min(1, (state.spectralCentroidHz - 250) / 3800));
+        document.getElementById('centroidHzValue').textContent = `${Math.round(state.spectralCentroidHz)} Hz`;
+        document.getElementById('centroidMeterBar').style.width = `${state.spectralCentroidNorm * 100}%`;
+      }
+      
+      if (flux > 0.18 && rms > 0.025 && !state.attackDetected) {
+        state.attackDetected = true; state.attackBoostEnv = 0.65; partialPhases.fill(0);
+        document.getElementById('attackLed').style.background = 'var(--amber-400)';
+        document.getElementById('attackLed').style.color = '#000';
+        setTimeout(() => { 
+          state.attackDetected = false; 
+          document.getElementById('attackLed').style.background = '#1e293b';
+          document.getElementById('attackLed').style.color = '#fff';
+        }, 100);
+      }
+      if (state.centroidTarget === 'threshold') extractDominantPeaks();
+    }
+
+    // Dibujo Visual UI
+    function resizeCanvas(canvas) {
+      const w = canvas.parentElement.clientWidth, h = canvas.parentElement.clientHeight;
+      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+      return { width: w, height: h };
+    }
+
+    function drawWaveformOverview() {
+      const canvas = document.getElementById('waveformCanvas'); if (!canvas || !state.monoSamples) return;
+      const { width, height } = resizeCanvas(canvas), ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, width, height); ctx.strokeStyle = '#06b6d4'; ctx.beginPath();
+      const step = Math.max(1, Math.floor(state.monoSamples.length / width));
+      for (let x = 0; x < width; x++) {
+        const val = state.monoSamples[Math.min(x * step, state.monoSamples.length - 1)];
+        ctx.lineTo(x, height / 2 - val * (height / 2));
+      }
+      ctx.stroke();
+      const wX = state.windowStartRatio * width;
+      ctx.fillStyle = 'rgba(245,158,11,0.2)'; ctx.fillRect(wX, 0, 10, height);
+    }
+
+    function drawFFTSpectrum() {
+      const canvas = document.getElementById('fftCanvas'); if (!canvas || !state.spectrumMagDb) return;
+      const { width, height } = resizeCanvas(canvas), ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, width, height);
+      
+      const pad = 20, plotW = width - pad * 2, plotH = height - pad * 2;
+      const maxF = state.maxFreqView, maxBin = Math.floor(maxF / (state.sampleRate / state.fftSize));
+      const getX = f => pad + (f / maxF) * plotW;
+      const getY = db => pad + ((5 - Math.max(-95, Math.min(5, db))) / 100) * plotH;
+
+      ctx.beginPath();
+      for (let k = 1; k <= maxBin; k++) {
+        ctx.lineTo(getX(k * (state.sampleRate / state.fftSize)), getY(state.spectrumMagDb[k]));
+      }
+      ctx.strokeStyle = '#22d3ee'; ctx.stroke();
+
+      let effThresh = state.thresholdDb;
+      if (state.micActive && state.centroidTarget === 'threshold') effThresh -= state.spectralCentroidNorm * 24;
+      
+      ctx.beginPath(); ctx.moveTo(pad, getY(effThresh)); ctx.lineTo(width - pad, getY(effThresh));
+      ctx.strokeStyle = '#f43f5e'; ctx.setLineDash([4, 4]); ctx.stroke(); ctx.setLineDash([]);
+      
+      state.selectedPeaks.forEach(p => {
+        if (p.freq > maxF) return;
+        const x = getX(p.freq), y = getY(p.magDb);
+        ctx.beginPath(); ctx.moveTo(x, pad + plotH); ctx.lineTo(x, y);
+        ctx.strokeStyle = p.enabled ? '#fbbf24' : '#475569'; ctx.stroke();
+        ctx.beginPath(); ctx.arc(x, y, 4, 0, 2 * Math.PI); ctx.fillStyle = p.enabled ? '#fbbf24' : '#475569'; ctx.fill();
+      });
+    }
+
+    function drawRealtimeIFFTScope() {
+      const canvas = document.getElementById('ifftScopeCanvas'); if (!canvas) return;
+      const { width, height } = resizeCanvas(canvas), ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, width, height);
+      ctx.beginPath();
+      for (let x = 0; x < width; x++) {
+        const idx = (state.outputScopeWritePtr + Math.floor((x / width) * 512)) % 1024;
+        ctx.lineTo(x, height / 2 - state.outputScopeBuffer[idx] * (height / 2) * 0.9);
+      }
+      ctx.strokeStyle = state.isSynthRunning ? '#10b981' : '#475569'; ctx.stroke();
+    }
+
+    function buildKeyboardUI() {
+      const c = document.getElementById('keyboardContainer');
+      const notes = [
+        { n: 'C4', r: 1.0, k: 'a', w: true }, { n: 'C#4', r: 1.059, k: 'w', w: false }, { n: 'D4', r: 1.122, k: 's', w: true },
+        { n: 'D#4', r: 1.189, k: 'e', w: false }, { n: 'E4', r: 1.26, k: 'd', w: true }, { n: 'F4', r: 1.335, k: 'f', w: true },
+        { n: 'F#4', r: 1.414, k: 't', w: false }, { n: 'G4', r: 1.498, k: 'g', w: true }, { n: 'G#4', r: 1.587, k: 'y', w: false },
+        { n: 'A4', r: 1.682, k: 'h', w: true }, { n: 'A#4', r: 1.782, k: 'u', w: false }, { n: 'B4', r: 1.888, k: 'j', w: true },
+        { n: 'C5', r: 2.0, k: 'k', w: true }
+      ];
+      notes.forEach((nt, i) => {
+        const b = document.createElement('div');
+        b.className = `key ${nt.w ? 'key-white' : 'key-black'} ${i === 0 ? 'active' : ''}`;
+        b.innerHTML = `<span>${nt.k.toUpperCase()}</span><b>${nt.n}</b>`;
+        
+        const trigger = () => {
+          state.pitchRatio = nt.r; state.keyGateOpen = true;
+          Array.from(c.children).forEach(el => el.classList.remove('active'));
+          b.classList.add('active');
+          if (!state.isSynthRunning) startRealtimeIFFTSynth();
+        };
+        const release = () => { if (!document.getElementById('chkDroneLatch').checked) { state.keyGateOpen = false; b.classList.remove('active'); } };
+        b.onmousedown = trigger; b.onmouseup = release; b.onmouseleave = release;
+        c.appendChild(b);
+      });
+    }
+
+    function initEvents() {
+      document.getElementById('fileInput').onchange = e => handleFileUpload(e.target.files[0]);
+      document.getElementById('btnLoadDemoMRI').onclick = generateSyntheticMRIBuffer;
+      document.getElementById('btnPlayOriginal').onclick = () => {
+        if (!state.sourceBuffer) return;
+        if (previewSourceNode) { previewSourceNode.stop(); previewSourceNode = null; document.getElementById('btnPlayOriginal').textContent = '▶ Escuchar Original'; return; }
+        previewSourceNode = state.audioCtx.createBufferSource(); previewSourceNode.buffer = state.sourceBuffer; previewSourceNode.connect(state.audioCtx.destination);
+        previewSourceNode.start(); document.getElementById('btnPlayOriginal').textContent = '⏹ Detener Original';
+      };
+      
+      document.getElementById('btnMasterToggle').onclick = () => state.isSynthRunning ? stopRealtimeIFFTSynth() : startRealtimeIFFTSynth();
+      document.getElementById('btnModeBlockIFFT').onclick = () => { state.synthMode = 'blockIFFT'; document.getElementById('btnModeBlockIFFT').style.borderColor = 'var(--cyan-400)'; document.getElementById('btnModeAdditiveIDFT').style.borderColor = 'transparent'; };
+      document.getElementById('btnModeAdditiveIDFT').onclick = () => { state.synthMode = 'additiveIDFT'; document.getElementById('btnModeAdditiveIDFT').style.borderColor = 'var(--cyan-400)'; document.getElementById('btnModeBlockIFFT').style.borderColor = 'transparent'; };
+      document.getElementById('btnToggleMic').onclick = toggleMicrophone;
+      
+      // Sliders
+      const bindSlider = (id, stateKey, labelId, suffix = '', fn = null) => {
+        document.getElementById(id).oninput = e => {
+          state[stateKey] = parseFloat(e.target.value);
+          if (labelId) document.getElementById(labelId).textContent = state[stateKey].toFixed(1) + suffix;
+          if (fn) fn();
+        };
+      };
+      bindSlider('sliderWindowPos', 'windowStartRatio', 'windowPosLabel', 's', () => { state.windowStartRatio /= 1000; drawWaveformOverview(); performOfflineFFTAnalysis(); });
+      bindSlider('sliderThresholdDb', 'thresholdDb', 'thresholdDbLabel', ' dB', extractDominantPeaks);
+      bindSlider('sliderMaxPeaks', 'maxPeaks', 'maxPeaksLabel', '', extractDominantPeaks);
+      bindSlider('sliderBaseGain', 'baseGain', 'baseGainLabel', '');
+      bindSlider('sliderSpectralTilt', 'manualSpectralTilt', 'spectralTiltLabel', ' dB');
+      
+      document.getElementById('selectCentroidTarget').onchange = e => state.centroidTarget = e.target.value;
+      document.getElementById('selectFftSize').onchange = e => { state.fftSize = parseInt(e.target.value); performOfflineFFTAnalysis(); };
+      
+      window.onresize = () => { drawWaveformOverview(); drawFFTSpectrum(); };
+    }
+
+    function loop() {
+      updateMicrophoneDescriptors();
+      drawRealtimeIFFTScope();
+      requestAnimationFrame(loop);
+    }
+
+    window.onload = () => {
+      buildKeyboardUI();
+      initEvents();
+      generateSyntheticMRIBuffer();
+      loop();
+    };
+  </script>
+</body>
+</html>

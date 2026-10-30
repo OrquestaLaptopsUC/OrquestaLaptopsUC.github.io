@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResoDance — Sintetizador Electromecánico de MRI</title>
+    <style>
+        /* RESET BÁSICO Y UTILIDADES OFFLINE (Reemplazo de Tailwind) */
+        *, ::before, ::after { box-sizing: border-box; border-width: 0; border-style: solid; margin: 0; padding: 0; }
+        button, input { font-family: inherit; font-size: 100%; font-weight: inherit; line-height: inherit; color: inherit; background: transparent; }
+        button { cursor: pointer; }
+        
+        .min-h-screen { min-height: 100vh; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .flex-row { flex-direction: row; }
+        .flex-wrap { flex-wrap: wrap; }
+        .flex-1 { flex: 1 1 0%; }
+        .items-start { align-items: flex-start; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-end { justify-content: flex-end; }
+        .gap-0\.5 { gap: 0.125rem; }
+        .gap-1\.5 { gap: 0.375rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+        .p-1 { padding: 0.25rem; }
+        .p-3 { padding: 0.75rem; }
+        .p-4 { padding: 1rem; }
+        .p-5 { padding: 1.25rem; }
+        .px-1\.5 { padding-left: 0.375rem; padding-right: 0.375rem; }
+        .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+        .px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
+        .px-5 { padding-left: 1.25rem; padding-right: 1.25rem; }
+        .py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+        .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+        .py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+        .py-2\.5 { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+        .pb-3 { padding-bottom: 0.75rem; }
+        .pt-1 { padding-top: 0.25rem; }
+        .pt-2 { padding-top: 0.5rem; }
+        .pt-3 { padding-top: 0.75rem; }
+        .mb-1\.5 { margin-bottom: 0.375rem; }
+        .mb-3 { margin-bottom: 0.75rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-4 { margin-top: 1rem; }
+        .mt-5 { margin-top: 1.25rem; }
+        .mr-1 { margin-right: 0.25rem; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .w-full { width: 100%; }
+        .w-2 { width: 0.5rem; }
+        .w-2\.5 { width: 0.625rem; }
+        .w-4 { width: 1rem; }
+        .w-6 { width: 1.5rem; }
+        .w-8 { width: 2rem; }
+        .w-10 { width: 2.5rem; }
+        .w-16 { width: 4rem; }
+        .max-w-6xl { max-width: 72rem; }
+        .h-1 { height: 0.25rem; }
+        .h-2 { height: 0.5rem; }
+        .h-2\.5 { height: 0.625rem; }
+        .h-4 { height: 1rem; }
+        .h-6 { height: 1.5rem; }
+        .h-10 { height: 2.5rem; }
+        .h-56 { height: 14rem; }
+        .h-full { height: 100%; }
+        .grid { display: grid; }
+        .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        .hidden { display: none; }
+        .block { display: block; }
+        .inline-block { display: inline-block; }
+        .absolute { position: absolute; }
+        .relative { position: relative; }
+        .-top-1 { top: -0.25rem; }
+        .-right-1 { right: -0.25rem; }
+        .top-2 { top: 0.5rem; }
+        .left-3 { left: 0.75rem; }
+        .bottom-2 { bottom: 0.5rem; }
+        .right-3 { right: 0.75rem; }
+        .overflow-hidden { overflow: hidden; }
+        .overflow-x-hidden { overflow-x: hidden; }
+        .rounded { border-radius: 0.25rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-xl { border-radius: 0.75rem; }
+        .rounded-full { border-radius: 9999px; }
+        .border { border-width: 1px; }
+        .border-b { border-bottom-width: 1px; }
+        .border-t { border-top-width: 1px; }
+        
+        .border-slate-700 { border-color: #334155; }
+        .border-slate-800 { border-color: #1e293b; }
+        .border-slate-800\/60 { border-color: rgba(30, 41, 59, 0.6); }
+        .border-slate-800\/80 { border-color: rgba(30, 41, 59, 0.8); }
+        .border-slate-800\/90 { border-color: rgba(30, 41, 59, 0.9); }
+        .border-cyan-500\/30 { border-color: rgba(6, 182, 212, 0.3); }
+        .border-cyan-500\/40 { border-color: rgba(6, 182, 212, 0.4); }
+        .border-amber-500\/40 { border-color: rgba(245, 158, 11, 0.4); }
+        .border-emerald-500\/40 { border-color: rgba(16, 185, 129, 0.4); }
+        
+        .bg-slate-900\/90 { background-color: rgba(15, 23, 42, 0.9); }
+        .bg-slate-950 { background-color: #020617; }
+        .bg-slate-500 { background-color: #64748b; }
+        .bg-cyan-950 { background-color: #083344; }
+        .bg-cyan-500 { background-color: #06b6d4; }
+        .bg-cyan-500\/10 { background-color: rgba(6, 182, 212, 0.1); }
+        .bg-cyan-500\/20 { background-color: rgba(6, 182, 212, 0.2); }
+        .bg-amber-950 { background-color: #451a03; }
+        .bg-emerald-950 { background-color: #022c22; }
+        .bg-rose-500 { background-color: #f43f5e; }
+        
+        .text-white { color: #ffffff; }
+        .text-slate-200 { color: #e2e8f0; }
+        .text-slate-300 { color: #cbd5e1; }
+        .text-slate-400 { color: #94a3b8; }
+        .text-slate-500 { color: #64748b; }
+        .text-slate-950 { color: #020617; }
+        .text-cyan-300 { color: #67e8f9; }
+        .text-cyan-400 { color: #22d3ee; }
+        .text-amber-300 { color: #fcd34d; }
+        .text-amber-400 { color: #fbbf24; }
+        .text-emerald-300 { color: #6ee7b7; }
+        .text-emerald-400 { color: #34d399; }
+        .text-rose-400 { color: #fb7185; }
+        
+        .text-\[10px\] { font-size: 10px; }
+        .text-\[11px\] { font-size: 11px; }
+        .text-xs { font-size: 0.75rem; line-height: 1rem; }
+        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+        .text-base { font-size: 1rem; line-height: 1.5rem; }
+        .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+        
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+        .uppercase { text-transform: uppercase; }
+        .tracking-wider { letter-spacing: 0.05em; }
+        .tracking-widest { letter-spacing: 0.1em; }
+        .text-right { text-align: right; }
+        .opacity-80 { opacity: 0.8; }
+        
+        .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .shadow-cyan-500\/20 { box-shadow: 0 4px 14px 0 rgba(6, 182, 212, 0.2); }
+        .shadow-rose-500\/20 { box-shadow: 0 4px 14px 0 rgba(244, 63, 94, 0.2); }
+        .transition { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+        .pointer-events-none { pointer-events: none; }
+        .outline-none { outline: 2px solid transparent; outline-offset: 2px; }
+        .fill-current { fill: currentColor; }
+        .backdrop-blur-md { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        
+        /* Pseudo-clases */
+        .hover\:text-white:hover { color: #ffffff; }
+        .hover\:text-cyan-400:hover { color: #22d3ee; }
+        .hover\:text-amber-400:hover { color: #fbbf24; }
+        .hover\:text-emerald-400:hover { color: #34d399; }
+        .hover\:bg-cyan-400:hover { background-color: #22d3ee; }
+        .hover\:bg-cyan-900:hover { background-color: #164e63; }
+        .hover\:bg-amber-900:hover { background-color: #78350f; }
+        .hover\:bg-emerald-900:hover { background-color: #064e3b; }
+        .hover\:bg-rose-400:hover { background-color: #fb7185; }
+        .active\:scale-95:active { transform: scale(0.95); }
+        .focus\:border-cyan-500:focus { border-color: #06b6d4; }
+        .focus\:border-amber-500:focus { border-color: #f59e0b; }
+        .focus\:border-emerald-500:focus { border-color: #10b981; }
+        .focus\:border-slate-500:focus { border-color: #64748b; }
+        
+        /* Media queries (Responsividad) */
+        @media (min-width: 640px) {
+            .sm\:flex { display: flex; }
+            .sm\:inline { display: inline; }
+            .sm\:flex-row { flex-direction: row; }
+            .sm\:p-6 { padding: 1.5rem; }
+            .sm\:h-64 { height: 16rem; }
+        }
+        @media (min-width: 768px) {
+            .md\:flex-row { flex-direction: row; }
+            .md\:items-center { align-items: center; }
+            .md\:w-auto { width: auto; }
+            .md\:justify-end { justify-content: flex-end; }
+        }
+        @media (min-width: 1024px) {
+            .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        
+        /* Animaciones */
+        @keyframes pulse { 50% { opacity: .5; } }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+        /* Estilos Base y Fuentes Nativas Offline */
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #070a0f;
+            color: #e2e8f0;
+            user-select: none;
+        }
+        .mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+        /* Custom Sliders */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #1e293b;
+            border-radius: 999px;
+            outline: none;
+            border: 1px solid #334155;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #06b6d4;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.7);
+            border: 2px solid #ecfeff;
+            transition: transform 0.1s ease, background-color 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            background: #22d3ee;
+        }
+        input[type="range"].amber-slider::-webkit-slider-thumb {
+            background: #f59e0b;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.7);
+        }
+        input[type="range"].emerald-slider::-webkit-slider-thumb {
+            background: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.7);
+        }
+        .scanline {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(6, 182, 212, 0.04) 50%,
+                rgba(6, 182, 212, 0.04)
+            );
+            background-size: 100% 4px;
+        }
+        .panel-glow {
+            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 4px 20px -2px rgba(0, 0, 0, 0.6);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-3 sm:p-6 overflow-x-hidden">
+
+    <!-- HEADER / BARRA DE TELEMETRÍA -->
+    <header class="max-w-6xl w-full mx-auto bg-slate-900/90 border border-slate-800 rounded-xl p-4 mb-4 panel-glow backdrop-blur-md">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="relative flex items-center justify-center w-10 h-10 rounded-lg bg-cyan-950 border border-cyan-500/40 text-cyan-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                    </svg>
+                    <span id="statusDot" class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-xl font-bold tracking-wider text-white mono">RESODANCE</h1>
+                        <span class="text-[10px] mono uppercase px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">3.0 Tesla DSP</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Sintetizador de Modelamiento Físico por Fuerza de Lorentz</p>
+                </div>
+            </div>
+
+            <!-- Controles Maestros y Presets -->
+            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+                <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-lg border border-slate-800">
+                    <button data-preset="epi" class="preset-btn px-2.5 py-1.5 rounded text-xs mono font-medium text-slate-400 hover:text-white transition">EPI Funcional</button>
+                    <button data-preset="t1" class="preset-btn px-2.5 py-1.5 rounded text-xs mono font-medium text-slate-400 hover:text-white transition">T1 Spin-Echo</button>
+                    <button data-preset="dwi" class="preset-btn px-2.5 py-1.5 rounded text-xs mono font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 transition">Difusión (DWI)</button>
+                    <button data-preset="techno" class="preset-btn px-2.5 py-1.5 rounded text-xs mono font-medium text-slate-400 hover:text-white transition">Techno 3T</button>
+                </div>
+
+                <button id="masterToggleBtn" class="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm mono uppercase tracking-wider bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-500/20 transition active:scale-95">
+                    <svg id="playIcon" class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"/></svg>
+                    <span id="masterBtnText">Iniciar Escaneo</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CUERPO PRINCIPAL -->
+    <main class="max-w-6xl w-full mx-auto flex-1 flex flex-col gap-4">
+
+        <!-- MONITOR DE SECUENCIAS DE PULSO Y ESPECTRO -->
+        <section class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 panel-glow relative overflow-hidden">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-4">
+                    <span class="text-xs mono uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 inline-block"></span>
+                        Diagrama de Secuencia en Tiempo Real
+                    </span>
+                    <div class="hidden sm:flex items-center gap-3 text-[11px] mono text-slate-400">
+                        <span class="text-cyan-400">Gx: Readout (EPI)</span>
+                        <span class="text-amber-400">Gy: Phase Encode</span>
+                        <span class="text-emerald-400">Gz: Slice Crush</span>
+                    </div>
+                </div>
+
+                <!-- Botones de disparo manual (Performance Pads) -->
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] mono text-slate-400 mr-1 hidden sm:inline">Excitación Manual (Teclas 1-3):</span>
+                    <button id="padGx" class="px-2.5 py-1 rounded text-xs mono bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/40 active:scale-95 transition">⚡ Ráfaga Gx</button>
+                    <button id="padGy" class="px-2.5 py-1 rounded text-xs mono bg-amber-950 hover:bg-amber-900 text-amber-300 border border-amber-500/40 active:scale-95 transition">⚡ Escalón Gy</button>
+                    <button id="padGz" class="px-2.5 py-1 rounded text-xs mono bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 active:scale-95 transition">⚡ Impacto Gz</button>
+                </div>
+            </div>
+
+            <!-- Lienzo Doble: Trenes de Pulsos + Salida Acústica -->
+            <div class="relative w-full h-56 sm:h-64 bg-slate-950 rounded-lg border border-slate-800/90 overflow-hidden scanline">
+                <canvas id="scopeCanvas" class="w-full h-full block"></canvas>
+                <!-- Overlay de telemetría sobre el canvas -->
+                <div class="absolute top-2 left-3 pointer-events-none flex flex-col gap-0.5 text-[10px] mono text-slate-400">
+                    <div>CAMPO ESTÁTICO B₀: <span class="text-slate-200">3.0 TESLA</span></div>
+                    <div>ESTADO DE GRADIENTES: <span id="telemetryState" class="text-amber-400">EN ESPERA</span></div>
+                </div>
+                <div class="absolute bottom-2 right-3 pointer-events-none text-[10px] mono text-slate-500">
+                    ESPACIO = PLAY/STOP | TECLAS 1, 2, 3 = PULSOS MANUALES
+                </div>
+            </div>
+        </section>
+
+        <!-- LAS 3 ETAPAS DEL MODELO FÍSICO (8 PARÁMETROS EN TOTAL) -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+            <!-- ETAPA 1: EXCITADOR DE PULSOS DE GRADIENTE -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 panel-glow flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                        <div>
+                            <span class="text-[10px] mono uppercase tracking-widest text-cyan-400">Etapa 01 // Excitador</span>
+                            <h2 class="text-base font-semibold text-white">Secuenciador de Gradientes</h2>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="resetStage1" class="text-[10px] mono text-slate-500 hover:text-cyan-400 transition px-2 py-1 rounded bg-slate-950 border border-slate-800" title="Restaurar valores por defecto de la etapa">⟲ RESET</button>
+                            <span class="text-xs mono px-2 py-1 rounded bg-slate-950 text-slate-400 border border-slate-800">Gx + Gy + Gz</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-5">
+                        <!-- Param 1: TR (Repetition Rate) y BPM -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <label for="paramTR" class="font-medium text-slate-300">Frecuencia de Ciclo (1 / TR)</label>
+                                <span id="valTR" class="mono text-cyan-400">2.0 Hz (500 ms)</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input id="paramTR" type="range" min="0.5" max="8.0" step="0.1" value="2.0" class="flex-1">
+                                <input id="inputTR" type="number" min="0.5" max="8.0" step="0.01" value="2.0" class="w-16 bg-slate-950 border border-slate-700 rounded text-xs px-1.5 py-0.5 text-cyan-300 mono text-right outline-none focus:border-cyan-500">
+                            </div>
+                            <!-- Desglose de BPM -->
+                            <div class="flex items-center gap-3 mt-2 border-t border-slate-800/60 pt-2">
+                                <span class="text-[10px] mono text-slate-500 w-8">BPM</span>
+                                <input id="paramBPM" type="range" min="30" max="480" step="1" value="120" class="flex-1 opacity-80 h-1">
+                                <input id="inputBPM" type="number" min="30" max="480" step="0.1" value="120" class="w-16 bg-slate-950 border border-slate-700 rounded text-xs px-1.5 py-0.5 text-cyan-300 mono text-right outline-none focus:border-cyan-500 opacity-80">
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-2">Velocidad del ciclo principal de escaneo y golpes de corte.</p>
+                        </div>
+
+                        <!-- Param 2: Frecuencia EPI (Chirp Pitch) -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <label for="paramEPI" class="font-medium text-slate-300">Conmutación EPI (Tono Gx)</label>
+                                <span id="valEPI" class="mono text-cyan-400">680 Hz</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input id="paramEPI" type="range" min="140" max="1800" step="10" value="680" class="flex-1">
+                                <input id="inputEPI" type="number" min="140" max="1800" step="1" value="680" class="w-16 bg-slate-950 border border-slate-700 rounded text-xs px-1.5 py-0.5 text-cyan-300 mono text-right outline-none focus:border-cyan-500">
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">Frecuencia del tren de lectura rápida (zumbido tonal característico).</p>
+                        </div>
+
+                        <!-- Param 3: Slew Rate (Pendiente Trapezoidal) -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <label for="paramSlew" class="font-medium text-slate-300">Slew Rate (Flanco Trapezoidal)</label>
+                                <span id="valSlew" class="mono text-cyan-400">78% (200 T/m/s)</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input id="paramSlew" type="range" min="5" max="100" step="1" value="78" class="flex-1">
+                                <input id="inputSlew" type="number" min="5" max="100" step="0.1" value="78" class="w-16 bg-slate-950 border border-slate-700 rounded text-xs px-1.5 py-0.5 text-cyan-300 mono text-right outline-none focus:border-cyan-500">
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">Pendiente de subida eléctrica. Más alto = trapecio más agresivo y brillante.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mini selector de polirritmia X/Y/Z -->
+                <div class="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                    <span class="text-slate-400 mono">Acoplamiento de Ejes:</span>
+                    <div class="flex gap-1.5">
+                        <button data-mode="sync" class="mode-btn px-2 py-1 rounded mono text-[11px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">Síncrono</button>
+                        <button data-mode="poly" class="mode-btn px-2 py-1 rounded mono text-[11px] bg-slate-950 text-slate-400 border border-slate-800">Polirrítmico</button>
+                        <button data-mode="alt" class="mode-btn px-2 py-1 rounded mono text-[11px] bg-slate-950 text-slate-400 border border-slate-800">Alternado</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ETAPA 2: CONVERSIÓN ELECTROMECÁNICA (MASA-RESORTE + LORENTZ) -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 panel-glow flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                        <div>
+                            <span class="text-[10px] mono uppercase tracking-widest text-amber-400">Etapa 02 // Mecánica</span>
+                            <h2 class="text-base font-semibold text-white">Inercia de Bobina y Lorentz</h2>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="resetStage2" class="text-[10px] mono text-slate-500 hover:text-amber-400 transition px-2 py-1 rounded bg-slate-950 border border-slate-800" title="Restaurar valores por defecto de la etapa">⟲ RESET</button>
+                            <span class="text-xs mono px-2 py-1 rounded bg-slate-950 text-slate-400 border border-slate-800">Masa-Resorte</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-5">
+                        <!-- Param 4: Frecuencia Natural de la Bobina -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <label for="paramCoilFreq" class="font-medium text-slate-300">Rigidez del Anclaje Epoxi (f₀)</label>
+                                <span id="valCoilFreq" class="mono text-amber-400">920 Hz</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input id="paramCoilFreq" class="amber-slider flex-1" type="range" min="250" max="2400" step="10" value="920">
+                                <input id="inputCoilFreq" type="number" min="250" max="2400" step="1" value="920" class="w-16 bg-slate-950 border border-slate-700 rounded text-xs px-1.5 py-0.5 text-amber-400 mono text-right outline-none focus:border-amber-500">
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">Frecuencia natural del sistema masa-resorte de las bobinas de cobre.</p>
+                        </div>
+
+                        <!-- Param 5: Factor Q (Sub-amortiguamiento) -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <label for="paramCoilQ" class="font-medium text-slate-300">Resonancia Mecánica (Factor Q)</label>
+                                <span id="valCoilQ" class="mono text-amber-400">Q = 7.5</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input id="paramCoilQ" class="amber-slider flex-1" type="range" min="1.0" max="20.0" step="0.5" value="7.5">
+                                <input id="inputCoilQ" type="number" min="1.0" max="20.0" step="0.1" value="7.5" class="w-16 bg-slate-950 border border-slate-700 rounded text-xs px-1.5 py-0.5 text-amber-400 mono text-right outline-none focus:border-amber-500">
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">Vibración residual de la bobina tras recibir cada latigazo magnético.</p>
+                        </div>
+
+                        <!-- Param 6: Impacto No-Lineal (Waveshaper) -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <label for="paramDrive" class="font-medium text-slate-300">Impacto de Chasis (Lorentz Drive)</label>
+                                <span id="valDrive" class="mono text-amber-400">55%</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input id="paramDrive" class="amber-slider flex-1" type="range" min="0" max="100" step="1" value="55">
+                                <input id="inputDrive" type="number" min="0" max="100" step="0.1" value="55" class="w-16 bg-slate-950 border border-slate-700 rounded text-xs px-1.5 py-0.5 text-amber-400 mono text-right outline-none focus:border-amber-500">
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">Saturación no lineal cuando la bobina golpea los topes físicos del chasis.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] mono text-slate-400">
+                    <span>ECUACIÓN: m·x'' + c·x' + k·x = B₀·I(t)</span>
+                    <span class="text-amber-400">SATURACIÓN ACTIVA</span>
+                </div>
+            </div>
+
+            <!-- ETAPA 3: RESONADOR ACÚSTICO MODAL (EL TÚNEL / BORE) -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 panel-glow flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                        <div>
+                            <span class="text-[10px] mono uppercase tracking-widest text-emerald-400">Etapa 03 // Acústica</span>
+                            <h2 class="text-base font-semibold text-white">Resonador Modal del Cilindro</h2>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="resetStage3" class="text-[10px] mono text-slate-500 hover:text-emerald-400 transition px-2 py-1 rounded bg-slate-950 border border-slate-800" title="Restaurar valores por defecto de la etapa">⟲ RESET</button>
+                            <span class="text-xs mono px-2 py-1 rounded bg-slate-950 text-slate-400 border border-slate-800">4 Modos + Guía</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-5">
+                        <!-- Param 7: Geometría del Túnel (Diámetro / Modos) -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <label for="paramBoreSize" class="font-medium text-slate-300">Diámetro de Cavidad (Bore Size)</label>
+                                <span id="valBoreSize" class="mono text-emerald-400">65 cm (f₁ = 264 Hz)</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input id="paramBoreSize" class="emerald-slider flex-1" type="range" min="50" max="90" step="1" value="65">
+                                <input id="inputBoreSize" type="number" min="50" max="90" step="0.1" value="65" class="w-16 bg-slate-950 border border-slate-700 rounded text-xs px-1.5 py-0.5 text-emerald-400 mono text-right outline-none focus:border-emerald-500">
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">Escala el banco de filtros modales y la línea de retardo cilíndrica.</p>
+                        </div>
+
+                        <!-- Param 8: Reflexión del Tubo (Wet/Feedback) -->
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <label for="paramBoreRes" class="font-medium text-slate-300">Reflexión de Fibra (Acústica Tubo)</label>
+                                <span id="valBoreRes" class="mono text-emerald-400">68%</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input id="paramBoreRes" class="emerald-slider flex-1" type="range" min="0" max="100" step="1" value="68">
+                                <input id="inputBoreRes" type="number" min="0" max="100" step="0.1" value="68" class="w-16 bg-slate-950 border border-slate-700 rounded text-xs px-1.5 py-0.5 text-emerald-400 mono text-right outline-none focus:border-emerald-500">
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1">Mezcla del resonador modal y retroalimentación de guía de onda (comb).</p>
+                        </div>
+
+                        <!-- Control de Volumen Maestro (Utilidad) -->
+                        <div class="pt-1">
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <label for="paramVolume" class="font-medium text-slate-300">Nivel de Salida Maestro</label>
+                                <span id="valVolume" class="mono text-slate-300">80%</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input id="paramVolume" type="range" min="0" max="100" step="1" value="80" class="flex-1">
+                                <input id="inputVolume" type="number" min="0" max="100" step="0.1" value="80" class="w-16 bg-slate-950 border border-slate-700 rounded text-xs px-1.5 py-0.5 text-slate-300 mono text-right outline-none focus:border-slate-500">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Indicador de modos activos -->
+                <div class="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] mono text-slate-400">
+                    <span>MODOS CILÍNDRICOS:</span>
+                    <span id="modesReadout" class="text-emerald-400">264 / 470 / 776 / 1140 Hz</span>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- FOOTER EXPLICATIVO -->
+    <footer class="max-w-6xl w-full mx-auto mt-4 pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
+        <div>
+            <strong class="text-slate-300 mono">Arquitectura DSP:</strong> Generador Trapezoidal (X,Y,Z) ➔ Filtro Masa-Resorte (Slew + Biquad) ➔ Waveshaper Asimétrico ➔ Banco Modal (4x Bandpass + Comb Waveguide).
+        </div>
+        <div class="mono text-[11px] text-slate-400">
+            ResoDance v1.0 — Instrumento Experimental Web Audio
+        </div>
+    </footer>
+
+    <!-- LÓGICA DE SÍNTESIS DE MODELAMIENTO FÍSICO Y VISUALIZACIÓN -->
+    <script>
+        /**
+         * RESODANCE - Motor de Modelamiento Físico de MRI
+         * Implementa en tiempo real:
+         * 1. Secuenciador de pulsos trapezoidales de gradiente (Gx, Gy, Gz).
+         * 2. Sistema masa-resorte-amortiguador con no-linealidad de impacto (Lorentz).
+         * 3. Cavidad acústica cilíndrica mediante banco resonador modal + guía de onda (Comb).
+         */
+
+        const state = {
+            currentPresetId: 'dwi', // Inicia en modo Difusión
+            isRunning: false,
+            trRate: 2.0,         // Hz (Ciclos por segundo)
+            epiFreq: 220,        // Hz (Frecuencia del chirrido de lectura Gx)
+            slewRate: 95,        // % (Pendiente trapezoidal -> filtro de slew)
+            coilFreq: 1350,      // Hz (Frecuencia natural del anclaje epoxi)
+            coilQ: 11.5,         // Factor Q de la bobina
+            drive: 82,           // % (Saturación no lineal de impacto)
+            boreSize: 60,        // cm (Diámetro del túnel, define los modos)
+            boreRes: 80,         // % (Mezcla y reflexión del cilindro)
+            volume: 80,          // % (Volumen general)
+            couplingMode: 'poly',// 'sync' | 'poly' | 'alt'
+            stepCounter: 0
+        };
+
+        // Variables de Web Audio API
+        let audioCtx = null;
+        let masterGain = null;
+        let analyser = null;
+
+        // Nodos de la Cadena de Modelamiento Físico
+        let slewFilter = null;        // Modela el tiempo de subida trapezoidal (Slew Rate)
+        let coilSpringFilter = null;  // Modela el sistema Masa-Resorte de la bobina
+        let driveGain = null;         // Ganancia previa al impacto mecánico
+        let impactShaper = null;      // Waveshaper no lineal (tope de chasis)
+        let dryGain = null;           // Señal mecánica directa
+        let wetModalGain = null;      // Mezcla del resonador cilíndrico
+        let modalFilters = [];        // 4 filtros paso-banda para los modos del cilindro
+        let waveguideDelay = null;    // Retardo de guía de onda (reflexión axial/radial)
+        let waveguideFeedback = null; // Retroalimentación del tubo
+
+        // Planificador de tiempo real (Lookahead Scheduler)
+        let schedulerTimer = null;
+        let nextCycleTime = 0;
+
+        // Historial para el visualizador de pulsos Gx, Gy, Gz
+        const pulseEvents = []; // Guarda ventanas de actividad { type, start, end, amp }
+
+        /**
+         * Genera una curva de transferencia no-lineal asimétrica para simular
+         * el impacto físico de las bobinas contra sus anclajes rígidos.
+         */
+        function createImpactCurve(amount) {
+            const k = amount * 1.8 + 1;
+            const n_samples = 8192;
+            const curve = new Float32Array(n_samples);
+            for (let i = 0; i < n_samples; ++i) {
+                const x = (i * 2) / n_samples - 1;
+                // Compresión asimétrica dura en positivo, ligeramente amortiguada en negativo
+                if (x >= 0) {
+                    curve[i] = Math.tanh(k * x * 1.4);
+                } else {
+                    curve[i] = Math.tanh(k * x * 0.9) * 0.85;
+                }
+            }
+            return curve;
+        }
+
+        /**
+         * Inicializa el grafo de síntesis física en Web Audio API
+         */
+        function initAudioEngine() {
+            if (audioCtx) return;
+
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContextClass();
+
+            // 1. Filtro de Slew Rate (convierte ondas cuadradas/escalones en trapecios reales)
+            slewFilter = audioCtx.createBiquadFilter();
+            slewFilter.type = 'lowpass';
+            slewFilter.Q.value = 0.707; // Butterworth plano para rampa lineal
+
+            // 2. Sistema Masa-Resorte-Amortiguador (Resonancia mecánica del cobre + epoxi)
+            coilSpringFilter = audioCtx.createBiquadFilter();
+            coilSpringFilter.type = 'lowpass';
+
+            // 3. No-linealidad de impacto mecánico (Waveshaper)
+            driveGain = audioCtx.createGain();
+            impactShaper = audioCtx.createWaveShaper();
+            impactShaper.oversample = '2x';
+
+            // 4. Resonador Acústico Modal del Cilindro (4 modos cilíndricos en paralelo + Guía de onda)
+            dryGain = audioCtx.createGain();
+            wetModalGain = audioCtx.createGain();
+
+            // Modos característicos de una cavidad cilíndrica abierta
+            const modeRatios = [1.0, 1.78, 2.94, 4.32];
+            modalFilters = modeRatios.map(() => {
+                const bp = audioCtx.createBiquadFilter();
+                bp.type = 'bandpass';
+                bp.Q.value = 14;
+                return bp;
+            });
+
+            // Guía de onda corta (Comb filter para el rebote metálico/plástico del túnel)
+            waveguideDelay = audioCtx.createDelay(0.05);
+            waveguideFeedback = audioCtx.createGain();
+            const waveguideFilter = audioCtx.createBiquadFilter();
+            waveguideFilter.type = 'lowpass';
+            waveguideFilter.frequency.value = 3200;
+
+            // 5. Compresor/Limitador de seguridad y salida maestra
+            const limiter = audioCtx.createDynamicsCompressor();
+            limiter.threshold.value = -8;
+            limiter.knee.value = 6;
+            limiter.ratio.value = 12;
+            limiter.attack.value = 0.002;
+            limiter.release.value = 0.08;
+
+            masterGain = audioCtx.createGain();
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 2048;
+            analyser.smoothingTimeConstant = 0.75;
+
+            // CONEXIONES DEL GRAFO FÍSICO:
+            // Excitadores -> SlewFilter -> CoilSpringFilter -> DriveGain -> ImpactShaper
+            slewFilter.connect(coilSpringFilter);
+            coilSpringFilter.connect(driveGain);
+            driveGain.connect(impactShaper);
+
+            // Salida del impacto se divide en ruta Directa (Dry) y Resonador del Túnel (Wet)
+            impactShaper.connect(dryGain);
+            dryGain.connect(limiter);
+
+            // Conexión al banco modal paralelo
+            modalFilters.forEach((bp) => {
+                impactShaper.connect(bp);
+                bp.connect(wetModalGain);
+            });
+
+            // Conexión a la guía de onda cilíndrica (Delay con retroalimentación filtrada)
+            impactShaper.connect(waveguideDelay);
+            waveguideDelay.connect(waveguideFilter);
+            waveguideFilter.connect(waveguideFeedback);
+            waveguideFeedback.connect(waveguideDelay); // Bucle de guía de onda
+            waveguideFilter.connect(wetModalGain);
+
+            wetModalGain.connect(limiter);
+            limiter.connect(masterGain);
+            masterGain.connect(analyser);
+            analyser.connect(audioCtx.destination);
+
+            updatePhysicalParameters();
+        }
+
+        /**
+         * Actualiza en tiempo real los nodos DSP según los 8 controles del usuario
+         */
+        function updatePhysicalParameters() {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+
+            // 1. Slew Rate: mapea de 5%..100% a frecuencia de corte (600 Hz a 14000 Hz)
+            // Un filtro paso-bajo limita la derivada temporal (dI/dt), creando flancos trapezoidales
+            const slewCutoff = 450 * Math.pow(32, state.slewRate / 100);
+            slewFilter.frequency.setTargetAtTime(slewCutoff, now, 0.015);
+
+            // 2. Masa-Resorte de la bobina
+            coilSpringFilter.frequency.setTargetAtTime(state.coilFreq, now, 0.015);
+            coilSpringFilter.Q.setTargetAtTime(state.coilQ, now, 0.015);
+
+            // 3. Lorentz Impact Drive
+            const normDrive = state.drive / 100;
+            driveGain.gain.setTargetAtTime(1.0 + normDrive * 3.8, now, 0.015);
+            impactShaper.curve = createImpactCurve(state.drive);
+
+            // 4. Geometría del Cilindro (Bore Size en cm: 50cm a 90cm)
+            // Frecuencia fundamental radial/axial aproximada: c / (2 * D)
+            const speedOfSound = 34300; // cm/s
+            const f1 = speedOfSound / (2 * state.boreSize);
+            const modeRatios = [1.0, 1.78, 2.94, 4.32];
+            const currentModes = [];
+
+            modalFilters.forEach((bp, idx) => {
+                const modeFreq = Math.min(f1 * modeRatios[idx], 16000);
+                currentModes.push(Math.round(modeFreq));
+                bp.frequency.setTargetAtTime(modeFreq, now, 0.02);
+                // El Q modal crece con la reflexión del tubo
+                bp.Q.setTargetAtTime(6 + (state.boreRes / 100) * 22, now, 0.02);
+            });
+
+            // Tiempo de retardo de la guía de onda = diámetro / velocidad del sonido
+            const delaySec = Math.max(0.001, (state.boreSize / speedOfSound) * 2);
+            waveguideDelay.delayTime.setTargetAtTime(delaySec, now, 0.02);
+            waveguideFeedback.gain.setTargetAtTime((state.boreRes / 100) * 0.68, now, 0.02);
+
+            // Balance Dry / Wet del cilindro
+            const wetRatio = state.boreRes / 100;
+            dryGain.gain.setTargetAtTime(0.65 - wetRatio * 0.25, now, 0.02);
+            wetModalGain.gain.setTargetAtTime(wetRatio * 1.35, now, 0.02);
+
+            // Volumen maestro
+            masterGain.gain.setTargetAtTime((state.volume / 100) * 0.85, now, 0.02);
+
+            // Actualizar lectura de modos en UI
+            const modesEl = document.getElementById('modesReadout');
+            if (modesEl) {
+                modesEl.textContent = `${currentModes.join(' / ')} Hz`;
+            }
+            const valBoreSize = document.getElementById('valBoreSize');
+            if (valBoreSize) {
+                valBoreSize.textContent = `${state.boreSize} cm (f₁ = ${Math.round(f1)} Hz)`;
+            }
+        }
+
+        /**
+         * GENERADOR DE PULSOS DE GRADIENTE:
+         * Crea las señales eléctricas que excitan las bobinas Gx, Gy y Gz.
+         */
+
+        // Pulso Gz (Slice Selection / Crusher): Impulso trapezoidal grueso y percusivo
+        function triggerGzSlicePulse(time, duration = 0.022, polarity = 1) {
+            if (!audioCtx) return;
+
+            // Usamos un ConstantSourceNode modulado para crear un pulso trapezoidal exacto de corriente DC
+            const pulseSource = audioCtx.createConstantSource();
+            const pulseEnv = audioCtx.createGain();
+
+            // Rampa de subida y bajada determinada por el Slew Rate
+            const rampTime = Math.max(0.0006, (1.05 - state.slewRate / 100) * 0.008);
+            const flatTop = Math.max(0.002, duration - rampTime * 2);
+
+            pulseSource.offset.value = polarity;
+            pulseEnv.gain.setValueAtTime(0.0001, time);
+            pulseEnv.gain.linearRampToValueAtTime(0.95, time + rampTime);
+            pulseEnv.gain.setValueAtTime(0.95, time + rampTime + flatTop);
+            pulseEnv.gain.linearRampToValueAtTime(0.0001, time + rampTime * 2 + flatTop);
+
+            // Pequeño oscilador de sub-armónico mecánico del golpe Gz
+            const thumpOsc = audioCtx.createOscillator();
+            const thumpGain = audioCtx.createGain();
+            thumpOsc.type = 'triangle';
+            thumpOsc.frequency.setValueAtTime(140, time);
+            thumpOsc.frequency.exponentialRampToValueAtTime(52, time + duration * 1.4);
+
+            thumpGain.gain.setValueAtTime(0.6, time);
+            thumpGain.gain.exponentialRampToValueAtTime(0.001, time + duration * 1.5);
+
+            pulseSource.connect(pulseEnv);
+            pulseEnv.connect(slewFilter);
+
+            thumpOsc.connect(thumpGain);
+            thumpGain.connect(slewFilter);
+
+            pulseSource.start(time);
+            pulseSource.stop(time + rampTime * 2 + flatTop + 0.01);
+            thumpOsc.start(time);
+            thumpOsc.stop(time + duration * 1.6);
+
+            recordPulseEvent('Gz', time, rampTime * 2 + flatTop, polarity);
+        }
+
+        // Tren Gx (EPI Readout): Conmutación bipolar rápida que produce el chirrido metálico
+        function triggerGxEpiTrain(time, duration, freq) {
+            if (!audioCtx) return;
+
+            const osc = audioCtx.createOscillator();
+            const env = audioCtx.createGain();
+
+            // Una onda cuadrada pasada por nuestro slewFilter se convierte exactamente en un tren trapezoidal
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(freq, time);
+
+            const attack = Math.min(0.008, duration * 0.15);
+            const release = Math.min(0.012, duration * 0.2);
+
+            env.gain.setValueAtTime(0.0001, time);
+            env.gain.linearRampToValueAtTime(0.55, time + attack);
+            env.gain.setValueAtTime(0.55, time + Math.max(attack, duration - release));
+            env.gain.linearRampToValueAtTime(0.0001, time + duration);
+
+            osc.connect(env);
+            env.connect(slewFilter);
+
+            osc.start(time);
+            osc.stop(time + duration + 0.01);
+
+            recordPulseEvent('Gx', time, duration, 1);
+        }
+
+        // Escalón Gy (Phase Encoding Blips): Ráfaga de pulsos cortos sincronizados entre líneas de lectura
+        function triggerGyPhaseBlip(time, duration, blipRate) {
+            if (!audioCtx) return;
+
+            const osc = audioCtx.createOscillator();
+            const env = audioCtx.createGain();
+
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(blipRate, time);
+
+            env.gain.setValueAtTime(0.0001, time);
+            env.gain.linearRampToValueAtTime(0.38, time + 0.004);
+            env.gain.exponentialRampToValueAtTime(0.001, time + duration);
+
+            osc.connect(env);
+            env.connect(slewFilter);
+
+            osc.start(time);
+            osc.stop(time + duration + 0.01);
+
+            recordPulseEvent('Gy', time, duration, 0.8);
+        }
+
+        /**
+         * Registra eventos para dibujarlos en el diagrama de secuencia de pulsos
+         */
+        function recordPulseEvent(axis, startTime, duration, amp) {
+            pulseEvents.push({
+                axis,
+                start: startTime,
+                end: startTime + duration,
+                amp
+            });
+            // Limpiar historial antiguo
+            if (pulseEvents.length > 180) {
+                pulseEvents.splice(0, pulseEvents.length - 180);
+            }
+        }
+
+        /**
+         * Planificador de Ciclo de Secuencia MRI (Lookahead Scheduler)
+         */
+        function scheduleMriCycle(cycleStartTime) {
+            const cyclePeriod = 1.0 / state.trRate;
+            const step = state.stepCounter++;
+
+            // 1. Eje Z: Pulso de selección de corte (Slice Selection) al inicio del TR
+            const polarity = (step % 2 === 0) ? 1 : -1;
+            triggerGzSlicePulse(cycleStartTime, Math.min(0.028, cyclePeriod * 0.14), polarity);
+
+            // 2. Pulso secundario Gz (Crusher / Refocusing a mitad del TE)
+            // Se usa el modo de acoplamiento para variar el ritmo, no el tono.
+            if (state.couplingMode !== 'alt' || step % 3 !== 0) {
+                const teDelay = cyclePeriod * 0.22;
+                triggerGzSlicePulse(cycleStartTime + teDelay, Math.min(0.018, cyclePeriod * 0.09), -polarity);
+            }
+
+            // 3. Eje X: Tren de lectura EPI (el chirrido de alta velocidad)
+            const epiStart = cycleStartTime + cyclePeriod * 0.34;
+            const epiDuration = cyclePeriod * 0.46;
+
+            // Variación clínica real: El tono siempre es constante, pero el ritmo puede variar 
+            // simulando tiempos de relajación entre cortes o calibración.
+            const currentEpiFreq = state.epiFreq; 
+            let applyGx = true;
+
+            if (state.couplingMode === 'alt') {
+                // Simula una pausa entre adquisiciones de cortes (TR relaxation)
+                applyGx = (step % 4 !== 3);
+            } else if (state.couplingMode === 'poly') {
+                // Simula una ráfaga fragmentada (multi-shot)
+                applyGx = (step % 2 === 0);
+            }
+
+            if (applyGx) {
+                triggerGxEpiTrain(epiStart, epiDuration, currentEpiFreq);
+            }
+
+            // 4. Eje Y: Blips de codificación de fase (acompañan al tren EPI o actúan en contratiempo)
+            const gyStart = (state.couplingMode === 'poly')
+                ? cycleStartTime + cyclePeriod * 0.18
+                : epiStart;
+            const gyDuration = cyclePeriod * 0.38;
+            const blipFreq = Math.max(45, currentEpiFreq * 0.25);
+
+            if (state.couplingMode !== 'alt' || applyGx) {
+                triggerGyPhaseBlip(gyStart, gyDuration, blipFreq);
+            }
+        }
+
+        /**
+         * Bucle de Planificación (Scheduler) y Control de Estado
+         */
+        function scheduler() {
+            // Planifica eventos hasta 100ms en el futuro usando Web Audio API lookahead
+            while (nextCycleTime < audioCtx.currentTime + 0.1) {
+                scheduleMriCycle(nextCycleTime);
+                nextCycleTime += (1.0 / state.trRate);
+            }
+            schedulerTimer = setTimeout(scheduler, 25);
+        }
+
+        function toggleScanner() {
+            initAudioEngine();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            state.isRunning = !state.isRunning;
+            const btn = document.getElementById('masterToggleBtn');
+            const icon = document.getElementById('playIcon');
+            const text = document.getElementById('masterBtnText');
+            const dot = document.getElementById('statusDot');
+            const telemetry = document.getElementById('telemetryState');
+
+            if (state.isRunning) {
+                // UI: Estado Activo (Alerta Roja)
+                btn.classList.replace('bg-cyan-500', 'bg-rose-500');
+                btn.classList.replace('hover:bg-cyan-400', 'hover:bg-rose-400');
+                btn.classList.replace('shadow-cyan-500/20', 'shadow-rose-500/20');
+                btn.classList.replace('text-slate-950', 'text-white');
+                icon.innerHTML = '<path d="M6 6h8v8H6z"/>'; // Icono de Stop (cuadrado)
+                text.textContent = 'Detener Escaneo';
+                
+                dot.classList.replace('bg-slate-500', 'bg-rose-500');
+                dot.classList.add('animate-pulse');
+                
+                telemetry.textContent = 'EN PROGRESO';
+                telemetry.className = 'text-rose-400 font-bold animate-pulse';
+                
+                // Iniciar Secuencia Continua
+                state.stepCounter = 0;
+                nextCycleTime = audioCtx.currentTime + 0.05;
+                scheduler();
+            } else {
+                // UI: Estado Detenido (Espera)
+                btn.classList.replace('bg-rose-500', 'bg-cyan-500');
+                btn.classList.replace('hover:bg-rose-400', 'hover:bg-cyan-400');
+                btn.classList.replace('shadow-rose-500/20', 'shadow-cyan-500/20');
+                btn.classList.replace('text-white', 'text-slate-950');
+                icon.innerHTML = '<path d="M4 4l12 6-12 6z"/>'; // Icono de Play (triángulo)
+                text.textContent = 'Iniciar Escaneo';
+                
+                dot.classList.replace('bg-rose-500', 'bg-slate-500');
+                dot.classList.remove('animate-pulse');
+                
+                telemetry.textContent = 'EN ESPERA';
+                telemetry.className = 'text-amber-400';
+                
+                // Detener Secuencia
+                clearTimeout(schedulerTimer);
+            }
+        }
+
+        /**
+         * VISUALIZADOR EN TIEMPO REAL (Diagrama de Secuencia Gx/Gy/Gz + Osciloscopio Acústico)
+         */
+        const canvas = document.getElementById('scopeCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function renderLoop() {
+            const width = canvas.width / window.devicePixelRatio;
+            const height = canvas.height / window.devicePixelRatio;
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Rejilla técnica de fondo
+            ctx.strokeStyle = 'rgba(30, 41, 59, 0.65)';
+            ctx.lineWidth = 1;
+            const gridCols = 12;
+            for (let i = 1; i < gridCols; i++) {
+                const x = (width / gridCols) * i;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+
+            const now = audioCtx ? audioCtx.currentTime : performance.now() / 1000;
+            const timeWindow = 1.8; // Segundos visibles en el diagrama de secuencia
+
+            // Dibujar las 3 pistas de pulsos de gradiente (Mitad superior del lienzo)
+            const tracks = [
+                { axis: 'Gx', y: height * 0.16, color: '#22d3ee', label: 'Gx' },
+                { axis: 'Gy', y: height * 0.34, color: '#fbbf24', label: 'Gy' },
+                { axis: 'Gz', y: height * 0.52, color: '#34d399', label: 'Gz' }
+            ];
+
+            // Slew visual (qué tan inclinados se ven los trapecios)
+            const visualSlopePx = Math.max(2, (105 - state.slewRate) * 0.18);
+
+            tracks.forEach(track => {
+                // Línea base del eje
+                ctx.strokeStyle = 'rgba(51, 65, 85, 0.8)';
+                ctx.beginPath();
+                ctx.moveTo(0, track.y);
+                ctx.lineTo(width, track.y);
+                ctx.stroke();
+
+                // Dibujar bloques trapezoidales activos en la ventana de tiempo
+                ctx.strokeStyle = track.color;
+                ctx.fillStyle = track.color + '22';
+                ctx.lineWidth = 1.8;
+
+                pulseEvents.forEach(ev => {
+                    if (ev.axis !== track.axis) return;
+                    const ageStart = now - ev.start;
+                    const ageEnd = now - ev.end;
+                    if (ageEnd > timeWindow || ageStart < -0.1) return;
+
+                    const xEnd = width - (ageStart / timeWindow) * width;
+                    const xStart = width - (ageEnd / timeWindow) * width;
+                    const w = Math.max(4, xEnd - xStart);
+                    const h = (track.axis === 'Gz' ? 18 : 14) * ev.amp;
+                    const slope = Math.min(visualSlopePx, w * 0.4);
+
+                    ctx.beginPath();
+                    ctx.moveTo(xStart, track.y);
+                    ctx.lineTo(xStart + slope, track.y - h);
+                    ctx.lineTo(xEnd - slope, track.y - h);
+                    ctx.lineTo(xEnd, track.y);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Si es Gx (lectura rápida EPI), dibujamos líneas internas de oscilación
+                    if (track.axis === 'Gx' && w > 12) {
+                        ctx.beginPath();
+                        const stepPx = Math.max(3, 2400 / state.epiFreq);
+                        for (let lx = xStart + slope; lx < xEnd - slope; lx += stepPx) {
+                            ctx.moveTo(lx, track.y - h);
+                            ctx.lineTo(lx, track.y + h * 0.7);
+                        }
+                        ctx.stroke();
+                    }
+                });
+            });
+
+            // Mitad inferior: Forma de onda acústica real resultante en el cilindro (Osciloscopio)
+            const waveY = height * 0.80;
+            ctx.strokeStyle = 'rgba(51, 65, 85, 0.5)';
+            ctx.beginPath();
+            ctx.moveTo(0, waveY);
+            ctx.lineTo(width, waveY);
+            ctx.stroke();
+
+            if (analyser) {
+                const bufferLen = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLen);
+                analyser.getByteTimeDomainData(dataArray);
+
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#38bdf8';
+                ctx.beginPath();
+
+                const sliceWidth = width / bufferLen;
+                let x = 0;
+                for (let i = 0; i < bufferLen; i++) {
+                    const v = (dataArray[i] - 128) / 128.0;
+                    const y = waveY + v * (height * 0.22);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                    x += sliceWidth;
+                }
+                ctx.stroke();
+            }
+
+            requestAnimationFrame(renderLoop);
+        }
+        requestAnimationFrame(renderLoop);
+
+        /**
+         * VINCULACIÓN DE EVENTOS Y PRESETS DE PROTOCOLOS MÉDICOS / EXPERIMENTALES
+         */
+        const presets = {
+            epi: {
+                trRate: 2.2, epiFreq: 680, slewRate: 78,
+                coilFreq: 920, coilQ: 7.5, drive: 55,
+                boreSize: 65, boreRes: 68, couplingMode: 'sync'
+            },
+            t1: {
+                trRate: 1.4, epiFreq: 310, slewRate: 45,
+                coilFreq: 620, coilQ: 5.0, drive: 75,
+                boreSize: 70, boreRes: 55, couplingMode: 'alt'
+            },
+            dwi: {
+                trRate: 2.0, epiFreq: 220, slewRate: 95,
+                coilFreq: 1350, coilQ: 11.5, drive: 82,
+                boreSize: 60, boreRes: 80, couplingMode: 'poly'
+            },
+            techno: {
+                trRate: 4.5, epiFreq: 520, slewRate: 88,
+                coilFreq: 780, coilQ: 14.0, drive: 68,
+                boreSize: 58, boreRes: 85, couplingMode: 'poly'
+            }
+        };
+
+        // Memoria de estado modificada por el usuario (copia profunda inicial)
+        const userPresets = JSON.parse(JSON.stringify(presets));
+
+        function syncUIFromState() {
+            // Sincronizar clases de los botones de Presets
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                if (btn.dataset.preset === state.currentPresetId) {
+                    btn.className = 'preset-btn px-2.5 py-1.5 rounded text-xs mono font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 transition';
+                } else {
+                    btn.className = 'preset-btn px-2.5 py-1.5 rounded text-xs mono font-medium text-slate-400 hover:text-white transition';
+                }
+            });
+
+            document.getElementById('paramTR').value = state.trRate;
+            document.getElementById('inputTR').value = state.trRate;
+            document.getElementById('valTR').textContent = `${state.trRate.toFixed(2)} Hz (${Math.round(1000 / state.trRate)} ms)`;
+
+            // Sincronizar BPM basado en TR
+            const bpmValue = Math.round(state.trRate * 60 * 10) / 10;
+            document.getElementById('paramBPM').value = bpmValue;
+            document.getElementById('inputBPM').value = bpmValue;
+
+            document.getElementById('paramEPI').value = state.epiFreq;
+            document.getElementById('inputEPI').value = state.epiFreq;
+            document.getElementById('valEPI').textContent = `${state.epiFreq} Hz`;
+
+            document.getElementById('paramSlew').value = state.slewRate;
+            document.getElementById('inputSlew').value = state.slewRate;
+            document.getElementById('valSlew').textContent = `${state.slewRate}% (${Math.round(state.slewRate * 2.5)} T/m/s)`;
+
+            document.getElementById('paramCoilFreq').value = state.coilFreq;
+            document.getElementById('inputCoilFreq').value = state.coilFreq;
+            document.getElementById('valCoilFreq').textContent = `${state.coilFreq} Hz`;
+
+            document.getElementById('paramCoilQ').value = state.coilQ;
+            document.getElementById('inputCoilQ').value = state.coilQ;
+            document.getElementById('valCoilQ').textContent = `Q = ${state.coilQ.toFixed(1)}`;
+
+            document.getElementById('paramDrive').value = state.drive;
+            document.getElementById('inputDrive').value = state.drive;
+            document.getElementById('valDrive').textContent = `${state.drive}%`;
+
+            document.getElementById('paramBoreSize').value = state.boreSize;
+            document.getElementById('inputBoreSize').value = state.boreSize;
+            
+            document.getElementById('paramBoreRes').value = state.boreRes;
+            document.getElementById('inputBoreRes').value = state.boreRes;
+            document.getElementById('valBoreRes').textContent = `${state.boreRes}%`;
+
+            document.getElementById('paramVolume').value = state.volume;
+            document.getElementById('inputVolume').value = state.volume;
+            document.getElementById('valVolume').textContent = `${state.volume}%`;
+
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                if (btn.dataset.mode === state.couplingMode) {
+                    btn.className = 'mode-btn px-2 py-1 rounded mono text-[11px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
+                } else {
+                    btn.className = 'mode-btn px-2 py-1 rounded mono text-[11px] bg-slate-950 text-slate-400 border border-slate-800';
+                }
+            });
+
+            updatePhysicalParameters();
+        }
+
+        // Listeners para Sliders de controles principales
+        const controlParams = [
+            { id: 'TR', key: 'trRate' },
+            { id: 'EPI', key: 'epiFreq' },
+            { id: 'Slew', key: 'slewRate' },
+            { id: 'CoilFreq', key: 'coilFreq' },
+            { id: 'CoilQ', key: 'coilQ' },
+            { id: 'Drive', key: 'drive' },
+            { id: 'BoreSize', key: 'boreSize' },
+            { id: 'BoreRes', key: 'boreRes' },
+            { id: 'Volume', key: 'volume' }
+        ];
+
+        controlParams.forEach(p => {
+            const slider = document.getElementById('param' + p.id);
+            const input = document.getElementById('input' + p.id);
+            
+            slider.addEventListener('input', e => { 
+                state[p.key] = parseFloat(e.target.value); 
+                syncUIFromState(); 
+            });
+            
+            input.addEventListener('change', e => { 
+                state[p.key] = parseFloat(e.target.value); 
+                syncUIFromState(); 
+            });
+        });
+
+        // Listeners dedicados para el nuevo control de BPM
+        const handleBpmChange = (e) => {
+            const bpm = parseFloat(e.target.value);
+            state.trRate = bpm / 60;
+            syncUIFromState();
+        };
+        document.getElementById('paramBPM').addEventListener('input', handleBpmChange);
+        document.getElementById('inputBPM').addEventListener('change', handleBpmChange);
+
+        // Botones de Reset por Etapa (Restauran el preset actual a su estado de fábrica)
+        const resetStage = (stageNum) => {
+            const defaults = presets[state.currentPresetId];
+            if (stageNum === 1) {
+                state.trRate = defaults.trRate;
+                state.epiFreq = defaults.epiFreq;
+                state.slewRate = defaults.slewRate;
+                state.couplingMode = defaults.couplingMode;
+            } else if (stageNum === 2) {
+                state.coilFreq = defaults.coilFreq;
+                state.coilQ = defaults.coilQ;
+                state.drive = defaults.drive;
+            } else if (stageNum === 3) {
+                state.boreSize = defaults.boreSize;
+                state.boreRes = defaults.boreRes;
+            }
+            syncUIFromState();
+        };
+        
+        document.getElementById('resetStage1').addEventListener('click', () => resetStage(1));
+        document.getElementById('resetStage2').addEventListener('click', () => resetStage(2));
+        document.getElementById('resetStage3').addEventListener('click', () => resetStage(3));
+
+
+        // Botón Play/Stop
+        document.getElementById('masterToggleBtn').addEventListener('click', toggleScanner);
+
+        // Modos de acoplamiento X/Y/Z
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                state.couplingMode = btn.dataset.mode;
+                syncUIFromState();
+            });
+        });
+
+        // Selector de Presets con Memoria
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const newPresetId = btn.dataset.preset;
+                if (newPresetId === state.currentPresetId) return; // Ya está activo
+
+                // 1. Guardar la configuración actual en la memoria del preset saliente
+                userPresets[state.currentPresetId] = {
+                    trRate: state.trRate, epiFreq: state.epiFreq, slewRate: state.slewRate,
+                    coilFreq: state.coilFreq, coilQ: state.coilQ, drive: state.drive,
+                    boreSize: state.boreSize, boreRes: state.boreRes, couplingMode: state.couplingMode
+                };
+
+                // 2. Cargar el estado guardado del nuevo preset
+                Object.assign(state, userPresets[newPresetId]);
+                state.currentPresetId = newPresetId;
+                
+                syncUIFromState();
+            });
+        });
+
+        // Disparadores Manuales (Performance Pads) para tocar el instrumento en vivo
+        function fireManualPad(type) {
+            initAudioEngine();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+
+            if (type === 'Gx') {
+                triggerGxEpiTrain(now, 0.16, state.epiFreq);
+            } else if (type === 'Gy') {
+                triggerGyPhaseBlip(now, 0.14, Math.max(60, state.epiFreq * 0.35));
+            } else if (type === 'Gz') {
+                triggerGzSlicePulse(now, 0.026, 1);
+            }
+        }
+
+        document.getElementById('padGx').addEventListener('mousedown', () => fireManualPad('Gx'));
+        document.getElementById('padGy').addEventListener('mousedown', () => fireManualPad('Gy'));
+        document.getElementById('padGz').addEventListener('mousedown', () => fireManualPad('Gz'));
+
+        // Atajos de teclado para tocar en vivo (Espacio, 1, 2, 3)
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                toggleScanner();
+            } else if (e.key === '1') {
+                fireManualPad('Gx');
+            } else if (e.key === '2') {
+                fireManualPad('Gy');
+            } else if (e.key === '3') {
+                fireManualPad('Gz');
+            }
+        });
+
+        // Inicializar valores de UI al cargar
+        syncUIFromState();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1905 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MRI Spectral IFFT Synthesizer — Laboratorio DSP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #080c14;
+      --bg-panel: #0f1623;
+      --bg-card: #162032;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+    }
+    body {
+      background-color: var(--bg-main);
+      color: #e2e8f0;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+    .font-mono-dsp {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b111e;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    /* Custom Range Sliders */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 999px;
+      background: #1e293b;
+      border: 1px solid #334155;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #06b6d4;
+      border: 2px solid #ecfeff;
+      margin-top: -6px;
+      box-shadow: 0 0 8px rgba(6, 182, 212, 0.7);
+      transition: transform 0.1s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+    .grid-bg {
+      background-image: 
+        linear-gradient(to right, rgba(30, 41, 59, 0.35) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(30, 41, 59, 0.35) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .piano-key {
+      transition: all 0.08s ease;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .piano-key.active {
+      background: linear-gradient(180deg, #06b6d4 0%, #0284c7 100%) !important;
+      color: #ffffff !important;
+      transform: translateY(2px);
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.6);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-cyan-500 selection:text-slate-950">
+
+  <!-- TOP HEADER / CONSOLE STATUS -->
+  <header class="border-b border-slate-800 bg-slate-950/90 backdrop-blur sticky top-0 z-30 px-4 py-2.5">
+    <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/40 flex items-center justify-center shadow-inner">
+          <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-bold tracking-tight text-white">MRI SPECTRAL <span class="text-cyan-400">IFFT</span> SYNTHESIZER</h1>
+            <span class="text-[11px] font-mono-dsp uppercase px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/60">DSP Engine v2.4</span>
+          </div>
+          <p class="text-xs text-slate-400">Análisis FFT de Resonancia Magnética, Umbralización de Coeficientes ($\le 12$) y Resíntesis IFFT controlada por Micrófono</p>
+        </div>
+      </div>
+
+      <!-- Status Indicators -->
+      <div class="flex items-center flex-wrap gap-2 sm:gap-3 text-xs font-mono-dsp">
+        <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
+          <span class="text-slate-400">Fs:</span>
+          <span id="statusSampleRate" class="text-cyan-400 font-semibold">48000 Hz</span>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
+          <span class="text-slate-400">Picos Activos:</span>
+          <span id="statusActivePeaks" class="text-amber-400 font-semibold">0 / 12</span>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
+          <span id="audioEngineDot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+          <span id="audioEngineStatus" class="text-slate-300">IFFT En Espera</span>
+        </div>
+        <button id="btnMasterToggle" class="px-3.5 py-1.5 rounded-lg font-sans font-semibold text-xs bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30 transition flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
+          <span id="btnMasterToggleText">Activar Resíntesis IFFT</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- NOTIFICATION BANNER -->
+  <div id="toastBanner" class="hidden fixed bottom-4 right-4 z-50 max-w-md bg-slate-900/95 border border-cyan-500/50 text-slate-100 px-4 py-3 rounded-xl shadow-2xl backdrop-blur flex items-center gap-3">
+    <div class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></div>
+    <p id="toastMessage" class="text-xs font-medium"></p>
+  </div>
+
+  <!-- MAIN WORKSPACE GRID -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+    <!-- LEFT COLUMN (7 COLS): AUDIO SOURCE, WAVEFORM WINDOW & FFT SPECTRUM -->
+    <section class="lg:col-span-7 flex flex-col gap-4">
+
+      <!-- STEP 1: CARGA DE AUDIO Y SELECCION DE VENTANA TEMPORAL -->
+      <div class="bg-[#0f1623] border border-slate-800/90 rounded-xl p-4 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-md bg-cyan-500/20 text-cyan-400 font-mono-dsp text-xs font-bold flex items-center justify-center border border-cyan-500/30">1</span>
+            <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">Muestra de Resonador (MP3 / WAV) y Ventana de Análisis</h2>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="cursor-pointer px-3 py-1.5 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 text-xs font-medium transition flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+              <span>Subir Audio (.mp3 / .wav)</span>
+              <input id="fileInput" type="file" accept="audio/*" class="hidden" />
+            </label>
+            <button id="btnLoadDemoMRI" class="px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 text-xs font-medium transition flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              <span>Generar Muestra MRI 3T (Demo)</span>
+            </button>
+            <button id="btnPlayOriginal" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition" title="Escuchar audio cargado original">
+              ▶ Escuchar Original
+            </button>
+          </div>
+        </div>
+
+        <!-- Waveform Overview Canvas -->
+        <div class="relative h-24 bg-slate-950 rounded-lg border border-slate-800 overflow-hidden mb-3 grid-bg">
+          <canvas id="waveformCanvas" class="w-full h-full block cursor-ew-resize"></canvas>
+          <div class="absolute top-1.5 left-2.5 pointer-events-none flex items-center gap-2">
+            <span id="fileNameLabel" class="text-[11px] font-mono-dsp text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded border border-slate-800">Muestra Sintética: Secuencia EPI Resonador 3T</span>
+          </div>
+          <div class="absolute bottom-1.5 right-2.5 pointer-events-none">
+            <span class="text-[10px] font-mono-dsp text-cyan-400 bg-slate-900/80 px-2 py-0.5 rounded">Haz clic o arrastra para mover la ventana FFT</span>
+          </div>
+        </div>
+
+        <!-- Window & FFT Settings Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div class="bg-slate-900/70 border border-slate-800/80 rounded-lg p-2.5">
+            <div class="flex justify-between mb-1">
+              <span class="text-slate-400">Posición Ventana:</span>
+              <span id="windowPosLabel" class="font-mono-dsp text-cyan-400">0.25 s</span>
+            </div>
+            <input id="sliderWindowPos" type="range" min="0" max="1000" value="150" class="w-full" />
+          </div>
+
+          <div class="bg-slate-900/70 border border-slate-800/80 rounded-lg p-2.5">
+            <div class="flex justify-between mb-1">
+              <span class="text-slate-400">Tamaño FFT ($N$):</span>
+              <span id="fftSizeLabel" class="font-mono-dsp text-cyan-400">4096 bins</span>
+            </div>
+            <select id="selectFftSize" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs font-mono-dsp text-slate-200 focus:outline-none focus:border-cyan-500">
+              <option value="2048">N = 2048 (Δf ≈ 23.4 Hz)</option>
+              <option value="4096" selected>N = 4096 (Δf ≈ 11.7 Hz)</option>
+              <option value="8192">N = 8192 (Δf ≈ 5.8 Hz - Alta Res)</option>
+            </select>
+          </div>
+
+          <div class="bg-slate-900/70 border border-slate-800/80 rounded-lg p-2.5">
+            <div class="flex justify-between mb-1">
+              <span class="text-slate-400">Distancia Mín. entre Picos:</span>
+              <span id="minPeakDistLabel" class="font-mono-dsp text-cyan-400">35 Hz</span>
+            </div>
+            <input id="sliderMinPeakDist" type="range" min="10" max="200" value="35" class="w-full" />
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: ESPECTRO FFT, UMBRAL INTERACTIVO Y EXTRACCION DE 12 COEFICIENTES -->
+      <div class="bg-[#0f1623] border border-slate-800/90 rounded-xl p-4 shadow-xl flex-1 flex flex-col">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-md bg-cyan-500/20 text-cyan-400 font-mono-dsp text-xs font-bold flex items-center justify-center border border-cyan-500/30">2</span>
+            <div>
+              <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">Espectro FFT Directa $|X[k]|$ y Umbral de Selección</h2>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 text-xs font-mono-dsp">
+            <span class="flex items-center gap-1.5 text-cyan-400"><span class="w-2.5 h-0.5 bg-cyan-400 inline-block"></span> Espectro FFT</span>
+            <span class="flex items-center gap-1.5 text-rose-400"><span class="w-2.5 h-0.5 bg-rose-500 inline-block"></span> Umbral (dB)</span>
+            <span class="flex items-center gap-1.5 text-amber-400"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span> Top $\le 12$ Coeficientes</span>
+          </div>
+        </div>
+
+        <!-- Threshold & Max Peaks Controls -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3 text-xs">
+          <div class="bg-slate-900/90 border border-rose-500/30 rounded-lg p-2.5">
+            <div class="flex justify-between mb-1">
+              <span class="text-rose-300 font-medium">Umbral de Magnitud:</span>
+              <span id="thresholdDbLabel" class="font-mono-dsp font-bold text-rose-400">-42.0 dB</span>
+            </div>
+            <input id="sliderThresholdDb" type="range" min="-90" max="-5" step="0.5" value="-42" class="w-full" />
+          </div>
+
+          <div class="bg-slate-900/90 border border-amber-500/30 rounded-lg p-2.5">
+            <div class="flex justify-between mb-1">
+              <span class="text-amber-300 font-medium">Máx. Frecuencias (Límite):</span>
+              <span id="maxPeaksLabel" class="font-mono-dsp font-bold text-amber-400">12 coef.</span>
+            </div>
+            <input id="sliderMaxPeaks" type="range" min="1" max="12" step="1" value="12" class="w-full" />
+          </div>
+
+          <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-2.5">
+            <div class="flex justify-between mb-1">
+              <span class="text-slate-400">Rango Visual Frecuencia:</span>
+              <span id="maxFreqViewLabel" class="font-mono-dsp text-cyan-400">6000 Hz</span>
+            </div>
+            <input id="sliderMaxFreqView" type="range" min="1500" max="16000" step="500" value="6000" class="w-full" />
+          </div>
+        </div>
+
+        <!-- Interactive FFT Canvas -->
+        <div class="relative h-64 sm:h-72 bg-slate-950 rounded-lg border border-slate-800 overflow-hidden grid-bg flex-1">
+          <canvas id="fftCanvas" class="w-full h-full block cursor-ns-resize"></canvas>
+          <div class="absolute top-2 right-2.5 pointer-events-none bg-slate-900/85 border border-slate-800 px-2.5 py-1 rounded text-[11px] font-mono-dsp text-slate-300">
+            Arrastra verticalmente sobre el gráfico para ajustar el <span class="text-rose-400 font-semibold">Umbral dB</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: EXPOSICIÓN DE LOS 12 COEFICIENTES EXTRAÍDOS (TABLA INTERACTIVA) -->
+      <div class="bg-[#0f1623] border border-slate-800/90 rounded-xl p-4 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-md bg-amber-500/20 text-amber-400 font-mono-dsp text-xs font-bold flex items-center justify-center border border-amber-500/30">3</span>
+            <div>
+              <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">Coeficientes Espectrales Predominantes ($X[k_m] = |X|e^{j\phi}$)</h2>
+              <p class="text-[11px] text-slate-400">Parámetros enviados al motor de Transformada Inversa (IFFT) en tiempo real. Puedes silenciar o ajustar cada parcial.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btnResetPartials" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 transition">
+              Restaurar Pesos (100%)
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto max-h-64 border border-slate-800/80 rounded-lg">
+          <table class="w-full text-left border-collapse text-xs font-mono-dsp">
+            <thead class="bg-slate-900/95 text-slate-400 sticky top-0 z-10 border-b border-slate-800 text-[11px] uppercase">
+              <tr>
+                <th class="py-2 px-2.5">#</th>
+                <th class="py-2 px-2.5">Activo</th>
+                <th class="py-2 px-2.5">Bin $k$</th>
+                <th class="py-2 px-2.5">Frecuencia ($f_k$)</th>
+                <th class="py-2 px-2.5">Mag (dB)</th>
+                <th class="py-2 px-2.5">Mag Lineal $|X|$</th>
+                <th class="py-2 px-2.5">Fase $\phi_k$ (rad)</th>
+                <th class="py-2 px-2.5">Coef. Complejo ($\text{Re} + j\text{Im}$)</th>
+                <th class="py-2 px-2.5 w-32">Peso IFFT</th>
+              </tr>
+            </thead>
+            <tbody id="coefficientsTableBody" class="divide-y divide-slate-800/60 bg-slate-950/60">
+              <!-- Populated dynamically by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT COLUMN (5 COLS): REAL-TIME IFFT SYNTHESIS ENGINE, MICROPHONE DESCRIPTORS & KEYBOARD -->
+    <section class="lg:col-span-5 flex flex-col gap-4">
+
+      <!-- STEP 4: MOTOR DE SINTESIS POR FFT INVERSA EN TIEMPO REAL -->
+      <div class="bg-[#0f1623] border border-slate-800/90 rounded-xl p-4 shadow-xl">
+        <div class="flex items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 font-mono-dsp text-xs font-bold flex items-center justify-center border border-emerald-500/30">4</span>
+            <div>
+              <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">Motor de Resíntesis por FFT Inversa (IFFT)</h2>
+              <p class="text-[11px] text-slate-400">Reconstrucción de onda en tiempo real usando únicamente $\le 12$ coeficientes</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selector de Modo Matemático de Síntesis Inversa -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3 text-xs">
+          <button id="btnModeBlockIFFT" class="p-2.5 rounded-lg border border-cyan-500 bg-cyan-950/40 text-left transition flex flex-col justify-between">
+            <div class="flex items-center justify-between w-full mb-1">
+              <span class="font-bold text-cyan-300">Modo A: IFFT por Bloques (OLA)</span>
+              <span class="text-[10px] font-mono-dsp px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">IDFT Estricta</span>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-snug">Puebla un vector espectral vacío con los $\le 12$ bins complejos y ejecuta `inverseFFT()` con solapamiento Hann (Overlap-Add).</p>
+          </button>
+
+          <button id="btnModeAdditiveIDFT" class="p-2.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-900 text-left transition flex flex-col justify-between">
+            <div class="flex items-center justify-between w-full mb-1">
+              <span class="font-bold text-slate-300">Modo B: Suma IDFT Continua</span>
+              <span class="text-[10px] font-mono-dsp px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Fase Exacta</span>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-snug">Evalúa $x[n] = \frac{1}{N}\sum |X_m|\cos(2\pi f_m t + \phi_m)$ muestra a muestra preservando frecuencias inarmónicas sin cuantización de bin.</p>
+          </button>
+        </div>
+
+        <!-- Oscilloscope of Reconstructed Time-Domain IFFT Wave -->
+        <div class="relative h-36 bg-slate-950 rounded-lg border border-slate-800 overflow-hidden mb-3 grid-bg">
+          <canvas id="ifftScopeCanvas" class="w-full h-full block"></canvas>
+          <div class="absolute top-1.5 left-2.5 pointer-events-none flex items-center gap-2">
+            <span class="text-[11px] font-mono-dsp text-emerald-400 bg-slate-900/85 px-2 py-0.5 rounded border border-emerald-500/30">
+              Señal Temporal Reconstruida $x[n] = \text{IFFT}\{X_{\text{filtrada}}[k]\}$
+            </span>
+          </div>
+          <div class="absolute bottom-1.5 right-2.5 pointer-events-none">
+            <span id="pitchRatioReadout" class="text-[11px] font-mono-dsp text-cyan-300 bg-slate-900/85 px-2 py-0.5 rounded">Escala Frec: 1.000x | Tilt: 0.0 dB/oct</span>
+          </div>
+        </div>
+
+        <!-- Global Synthesis Parameters -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+          <div class="bg-slate-900/80 border border-slate-800 rounded-lg p-2.5">
+            <div class="flex justify-between mb-1">
+              <span class="text-slate-400">Ganancia Base:</span>
+              <span id="baseGainLabel" class="font-mono-dsp text-emerald-400">0.75</span>
+            </div>
+            <input id="sliderBaseGain" type="range" min="0" max="1.5" step="0.01" value="0.75" class="w-full" />
+          </div>
+
+          <div class="bg-slate-900/80 border border-slate-800 rounded-lg p-2.5">
+            <div class="flex justify-between mb-1">
+              <span class="text-slate-400">Inclinación (Tilt):</span>
+              <span id="spectralTiltLabel" class="font-mono-dsp text-cyan-400">0.0 dB</span>
+            </div>
+            <input id="sliderSpectralTilt" type="range" min="-18" max="18" step="0.5" value="0" class="w-full" />
+          </div>
+
+          <div class="bg-slate-900/80 border border-slate-800 rounded-lg p-2.5 col-span-2 sm:col-span-1">
+            <div class="flex justify-between mb-1">
+              <span class="text-slate-400">Modulación MRI (EPI):</span>
+              <span id="mriPulseRateLabel" class="font-mono-dsp text-amber-400">Off (Continuo)</span>
+            </div>
+            <input id="sliderMriPulseRate" type="range" min="0" max="16" step="0.5" value="0" class="w-full" />
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 5: CONTROL POR MICRÓFONO (SEGUIDOR DE ENVOLVENTE + CENTROIDE ESPECTRAL + ATAQUES) -->
+      <div class="bg-[#0f1623] border border-slate-800/90 rounded-xl p-4 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-md bg-rose-500/20 text-rose-400 font-mono-dsp text-xs font-bold flex items-center justify-center border border-rose-500/30">5</span>
+            <div>
+              <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">Control en Tiempo Real por Micrófono</h2>
+              <p class="text-[11px] text-slate-400">Seguidor de Envolvente (Amplitud) + 2 Descriptores Extra (Centroide Espectral y Detector de Ataques)</p>
+            </div>
+          </div>
+
+          <button id="btnToggleMic" class="px-3 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/40 text-xs font-semibold transition flex items-center gap-1.5">
+            <span id="micStatusDot" class="w-2 h-2 rounded-full bg-rose-400"></span>
+            <span id="btnToggleMicText">Activar Micrófono</span>
+          </button>
+        </div>
+
+        <!-- Descriptor 1: Seguidor de Envolvente -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-3 mb-3">
+          <div class="flex items-center justify-between text-xs mb-1.5">
+            <span class="font-semibold text-emerald-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              Descriptor 1: Seguidor de Envolvente (RMS + Ataque/Relajación)
+            </span>
+            <span id="envFollowerValue" class="font-mono-dsp text-emerald-400 font-bold">0.000</span>
+          </div>
+
+          <!-- Envelope Bar Meter -->
+          <div class="w-full h-3 bg-slate-950 rounded-full overflow-hidden border border-slate-800 mb-2.5 p-0.5">
+            <div id="envMeterBar" class="h-full bg-gradient-to-r from-emerald-500 via-cyan-400 to-amber-400 rounded-full transition-all duration-75" style="width: 0%"></div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
+            <div>
+              <label class="text-slate-400 block mb-1">Modo Control Amplitud:</label>
+              <select id="selectEnvRouting" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 font-mono-dsp text-slate-200">
+                <option value="direct" selected>Multiplicar Volumen IFFT (100%)</option>
+                <option value="hybrid">Híbrido (Base 30% + Mic 70%)</option>
+                <option value="off">Desactivado (Volumen Manual)</option>
+              </select>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-slate-400">Sensibilidad Mic:</span>
+                <span id="micGainLabel" class="font-mono-dsp text-cyan-400">3.5x</span>
+              </div>
+              <input id="sliderMicSensitivity" type="range" min="0.5" max="12" step="0.1" value="3.5" class="w-full" />
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span class="text-slate-400">Suavizado (Release):</span>
+                <span id="micSmoothLabel" class="font-mono-dsp text-cyan-400">85 ms</span>
+              </div>
+              <input id="sliderMicSmooth" type="range" min="10" max="400" step="5" value="85" class="w-full" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Descriptor 2 & 3: Centroide Espectral (Brillo) y Detector de Ataques -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-3">
+          <div class="flex items-center justify-between text-xs mb-1.5">
+            <span class="font-semibold text-amber-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+              Descriptor 2: Centroide Espectral (Brillo) y Flujo de Ataque
+            </span>
+            <div class="flex items-center gap-2 font-mono-dsp">
+              <span id="centroidHzValue" class="text-amber-400 font-bold">0 Hz</span>
+              <span id="attackLed" class="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-500 border border-slate-700 transition">ATAQUE</span>
+            </div>
+          </div>
+
+          <!-- Centroid Bar Meter -->
+          <div class="w-full h-3 bg-slate-950 rounded-full overflow-hidden border border-slate-800 mb-2.5 p-0.5">
+            <div id="centroidMeterBar" class="h-full bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-amber-400 rounded-full transition-all duration-75" style="width: 0%"></div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+            <div>
+              <label class="text-slate-400 block mb-1">Destino del Centroide Espectral (Voz):</label>
+              <select id="selectCentroidTarget" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 font-mono-dsp text-slate-200">
+                <option value="tilt" selected>Inclinación Espectral (Realzar Agudos de los 12 picos)</option>
+                <option value="pitch">Modulación de Altura / Frecuencia (Pitch Shift)</option>
+                <option value="threshold">Umbral Dinámico en dB (Abre más frecuencias con brillo)</option>
+                <option value="off">Sin asignar</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-slate-400 block mb-1">Acción en Transiente / Ataque de Voz:</label>
+              <select id="selectAttackAction" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 font-mono-dsp text-slate-200">
+                <option value="phasereset" selected>Reiniciar Fase Coherente IFFT (Golpe Magnético)</option>
+                <option value="boost">Impulso Momentáneo de Ganancia</option>
+                <option value="off">Sin asignar</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 6: CONTROL POR TECLADO (TRANSPOSICIÓN DE LOS 12 COEFICIENTES) -->
+      <div class="bg-[#0f1623] border border-slate-800/90 rounded-xl p-4 shadow-xl">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-md bg-purple-500/20 text-purple-400 font-mono-dsp text-xs font-bold flex items-center justify-center border border-purple-500/30">6</span>
+            <div>
+              <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200">Teclado de Escalamiento Espectral ($f'_m = r \cdot f_m$)</h2>
+              <p class="text-[11px] text-slate-400">Usa tu teclado físico (<code class="text-cyan-300">A S D F G H J K</code> / <code class="text-cyan-300">W E T Y U</code>) o haz clic. <code class="text-amber-300">C4 (Tecla A)</code> = Frecuencias Originales Exactas ($r=1.0$).</p>
+            </div>
+          </div>
+
+          <label class="flex items-center gap-1.5 text-xs cursor-pointer select-none bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">
+            <input id="chkDroneLatch" type="checkbox" checked class="accent-cyan-500 rounded" />
+            <span class="text-slate-300 font-medium">Modo Sostenido (Latch/Drone)</span>
+          </label>
+        </div>
+
+        <!-- On-Screen Keyboard -->
+        <div id="keyboardContainer" class="grid grid-cols-13 gap-1 pt-1 select-none">
+          <!-- Generated dynamically by JS -->
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    /***************************************************************************
+     * 1. MOTOR MATEMÁTICO EXPLÍCITO: COOLEY-TUKEY RADIX-2 FFT & IFFT (IN-PLACE)
+     * -------------------------------------------------------------------------
+     * Calcula la Transformada Discreta de Fourier directa e inversa sobre
+     * arreglos Float64Array / Float32Array de longitud N = 2^p.
+     ***************************************************************************/
+    class ExplicitDSP {
+      /**
+       * Ejecuta FFT directa (inverse = false) o IFFT inversa (inverse = true)
+       * @param {Float64Array|Float32Array} real Parte real de longitud N
+       * @param {Float64Array|Float32Array} imag Parte imaginaria de longitud N
+       * @param {boolean} inverse Si es true, calcula la FFT Inversa (con normalización 1/N)
+       */
+      static fft(real, imag, inverse = false) {
+        const n = real.length;
+        if ((n & (n - 1)) !== 0) {
+          throw new Error("El tamaño de la FFT debe ser potencia de 2.");
+        }
+
+        // 1. Permutación Bit-Reversal
+        let j = 0;
+        for (let i = 0; i < n; i++) {
+          if (i < j) {
+            const tempRe = real[i];
+            real[i] = real[j];
+            real[j] = tempRe;
+            const tempIm = imag[i];
+            imag[i] = imag[j];
+            imag[j] = tempIm;
+          }
+          let m = n >> 1;
+          while (m >= 1 && j >= m) {
+            j -= m;
+            m >>= 1;
+          }
+          j += m;
+        }
+
+        // 2. Mariposas de Cooley-Tukey
+        const sign = inverse ? 1 : -1;
+        for (let size = 2; size <= n; size <<= 1) {
+          const halfSize = size >> 1;
+          const angleStep = (sign * 2 * Math.PI) / size;
+          const wStepRe = Math.cos(angleStep);
+          const wStepIm = Math.sin(angleStep);
+
+          for (let i = 0; i < n; i += size) {
+            let wRe = 1.0;
+            let wIm = 0.0;
+            for (let k = 0; k < halfSize; k++) {
+              const evenIdx = i + k;
+              const oddIdx = i + k + halfSize;
+
+              const tRe = wRe * real[oddIdx] - wIm * imag[oddIdx];
+              const tIm = wRe * imag[oddIdx] + wIm * real[oddIdx];
+
+              real[oddIdx] = real[evenIdx] - tRe;
+              imag[oddIdx] = imag[evenIdx] - tIm;
+              real[evenIdx] += tRe;
+              imag[evenIdx] += tIm;
+
+              const nextWRe = wRe * wStepRe - wIm * wStepIm;
+              wIm = wRe * wStepIm + wIm * wStepRe;
+              wRe = nextWRe;
+            }
+          }
+        }
+
+        // 3. Normalización 1/N para la Transformada Inversa
+        if (inverse) {
+          for (let i = 0; i < n; i++) {
+            real[i] /= n;
+            imag[i] /= n;
+          }
+        }
+      }
+
+      /**
+       * Crea una ventana de Hann de longitud N
+       */
+      static createHannWindow(n) {
+        const win = new Float32Array(n);
+        for (let i = 0; i < n; i++) {
+          win[i] = 0.5 * (1 - Math.cos((2 * Math.PI * i) / (n - 1)));
+        }
+        return win;
+      }
+    }
+
+    /***************************************************************************
+     * 2. ESTADO GLOBAL DE LA APLICACIÓN Y MODELO ESPECTRAL (HASTA 12 PICOS)
+     ***************************************************************************/
+    const state = {
+      audioCtx: null,
+      sampleRate: 48000,
+
+      // Audio cargado del resonador
+      sourceBuffer: null,     // AudioBuffer completo
+      monoSamples: null,      // Float32Array canal mono
+      windowStartRatio: 0.15, // Posición [0..1] de la ventana de análisis
+      fftSize: 4096,          // Tamaño de análisis FFT (2048, 4096, 8192)
+      minPeakDistanceHz: 35,  // Separación mínima entre picos locales
+
+      // Resultados de la FFT Directa sobre la ventana seleccionada
+      spectrumMagLinear: null,
+      spectrumMagDb: null,
+      spectrumPhase: null,
+      spectrumReal: null,
+      spectrumImag: null,
+
+      // Filtrado por Umbral y Coeficientes Seleccionados (Máx 12)
+      thresholdDb: -42.0,
+      maxPeaks: 12,
+      maxFreqView: 6000,
+      selectedPeaks: [],      // Array de objetos { rank, bin, freq, magLinear, magDb, phase, re, im, enabled, userWeight }
+
+      // Estado del Sintetizador IFFT en Tiempo Real
+      isSynthRunning: false,
+      synthMode: 'blockIFFT', // 'blockIFFT' (Overlap-Add IFFT real) o 'additiveIDFT'
+      baseGain: 0.75,
+      manualSpectralTilt: 0.0,
+      mriPulseRateHz: 0.0,
+      pitchRatio: 1.0,        // Escala por teclado (1.0 = frecuencias originales del resonador)
+      keyGateOpen: true,      // Si Latch está activo, permanece abierto
+
+      // Estado de Control por Micrófono (Descriptores en Tiempo Real)
+      micActive: false,
+      micStream: null,
+      micAnalyser: null,
+      micTimeData: null,
+      micFreqData: null,
+      prevMicSpectrum: null,
+
+      // Valores instantáneos extraídos del micrófono
+      envFollower: 0.0,       // Descriptor 1: Amplitud suavizada [0..1]
+      spectralCentroidHz: 0,  // Descriptor 2: Brillo espectral en Hz
+      spectralCentroidNorm: 0,// Normalizado [0..1]
+      attackDetected: false,  // Descriptor 3: Flujo espectral percusivo
+      attackBoostEnv: 0.0,
+
+      // Configuración de mapeo del micrófono
+      envRouting: 'direct',   // 'direct', 'hybrid', 'off'
+      micSensitivity: 3.5,
+      micReleaseMs: 85,
+      centroidTarget: 'tilt', // 'tilt', 'pitch', 'threshold', 'off'
+      attackAction: 'phasereset',
+
+      // Buffer circular para el osciloscopio de salida IFFT
+      outputScopeBuffer: new Float32Array(1024),
+      outputScopeWritePtr: 0
+    };
+
+    // Nodos de Web Audio API para reproducción y síntesis en tiempo real
+    let scriptProcessorNode = null;
+    let previewSourceNode = null;
+
+    // Variables del motor Overlap-Add (OLA) IFFT en tiempo real
+    const IFFT_BLOCK_SIZE = 2048;
+    const IFFT_HOP_SIZE = 512; // 4x Overlap
+    const olaHannWindow = ExplicitDSP.createHannWindow(IFFT_BLOCK_SIZE);
+    const olaRingBuffer = new Float32Array(IFFT_BLOCK_SIZE * 2);
+    let olaReadIndex = 0;
+    let olaWriteIndex = 0;
+    let olaHopCounter = 0;
+    let globalSampleCounter = 0;
+
+    // Acumuladores de fase para los 12 parciales
+    const partialPhases = new Float64Array(12);
+
+    /***************************************************************************
+     * 3. UTILIDADES DE INTERFAZ Y NOTIFICACIONES
+     ***************************************************************************/
+    function showToast(msg) {
+      const banner = document.getElementById('toastBanner');
+      const text = document.getElementById('toastMessage');
+      text.textContent = msg;
+      banner.classList.remove('hidden');
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => banner.classList.add('hidden'), 3800);
+    }
+
+    function ensureAudioContext() {
+      if (!state.audioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        state.audioCtx = new AudioCtx();
+        state.sampleRate = state.audioCtx.sampleRate;
+        document.getElementById('statusSampleRate').textContent = `${state.sampleRate} Hz`;
+      }
+      if (state.audioCtx.state === 'suspended') {
+        state.audioCtx.resume();
+      }
+    }
+
+    /***************************************************************************
+     * 4. GENERADOR DE MUESTRA ACÚSTICA REALISTA DE RESONADOR MAGNÉTICO (DEMO 3T)
+     * -------------------------------------------------------------------------
+     * Sintetiza un buffer acústico con los modos mecánicos reales de las bobinas
+     * de gradiente (fuerzas de Lorentz en secuencia Echo-Planar Imaging EPI).
+     ***************************************************************************/
+    function generateSyntheticMRIBuffer() {
+      ensureAudioContext();
+      const fs = state.sampleRate;
+      const durationSeconds = 3.2;
+      const numSamples = Math.floor(fs * durationSeconds);
+      const buffer = state.audioCtx.createBuffer(1, numSamples, fs);
+      const data = buffer.getChannelData(0);
+
+      // Frecuencias características inarmónicas de un Resonador Magnético 3T (modos de vibración del cilindro y gradientes)
+      const mriModes = [
+        { freq: 412.5,  amp: 0.95, phase: 0.2,  decay: 3.5 },
+        { freq: 588.0,  amp: 0.62, phase: 1.4,  decay: 4.0 },
+        { freq: 825.0,  amp: 1.00, phase: -0.8, decay: 2.8 }, // Pico dominante gradiente X/Y
+        { freq: 1142.3, amp: 0.54, phase: 2.1,  decay: 5.0 },
+        { freq: 1237.5, amp: 0.85, phase: 0.7,  decay: 3.2 },
+        { freq: 1650.0, amp: 0.72, phase: -1.9, decay: 4.2 },
+        { freq: 1984.6, amp: 0.40, phase: 0.5,  decay: 6.0 },
+        { freq: 2475.0, amp: 0.64, phase: -0.4, decay: 4.8 },
+        { freq: 2890.2, amp: 0.33, phase: 1.1,  decay: 7.0 },
+        { freq: 3300.0, amp: 0.48, phase: -2.5, decay: 5.5 },
+        { freq: 3815.7, amp: 0.25, phase: 0.9,  decay: 8.5 },
+        { freq: 4420.0, amp: 0.19, phase: -1.2, decay: 9.0 }
+      ];
+
+      // Repetición de pulsos de gradiente (TR = 180 ms)
+      const pulsePeriod = 0.18;
+
+      for (let n = 0; n < numSamples; n++) {
+        const t = n / fs;
+        const localT = t % pulsePeriod;
+        // Envolvente del pulso trapezoidal de gradiente
+        const attack = Math.min(1.0, localT / 0.006);
+        const env = attack * Math.exp(-localT * 11.0);
+
+        let sample = 0;
+        for (let m = 0; m < mriModes.length; m++) {
+          const mode = mriModes[m];
+          const modeEnv = Math.exp(-localT * mode.decay);
+          sample += mode.amp * modeEnv * Math.cos(2 * Math.PI * mode.freq * t + mode.phase);
+        }
+
+        // Ligero ruido de piso de criostato / bomba de helio (-58 dB)
+        const noise = (Math.random() * 2 - 1) * 0.012;
+        data[n] = (sample * (0.25 + 0.75 * env)) * 0.22 + noise;
+      }
+
+      state.sourceBuffer = buffer;
+      state.monoSamples = data;
+      document.getElementById('fileNameLabel').textContent = `Muestra Sintética: Secuencia EPI Resonador 3T (${durationSeconds}s @ ${fs}Hz)`;
+
+      drawWaveformOverview();
+      performOfflineFFTAnalysis();
+    }
+
+    /***************************************************************************
+     * 5. CARGA DE ARCHIVO MP3 / WAV DEL USUARIO
+     ***************************************************************************/
+    async function handleFileUpload(file) {
+      if (!file) return;
+      ensureAudioContext();
+      try {
+        showToast(`Decodificando archivo "${file.name}"...`);
+        const arrayBuffer = await file.arrayBuffer();
+        const audioBuffer = await state.audioCtx.decodeAudioData(arrayBuffer);
+
+        // Mezclar a mono si es estéreo
+        const length = audioBuffer.length;
+        const mono = new Float32Array(length);
+        if (audioBuffer.numberOfChannels === 1) {
+          mono.set(audioBuffer.getChannelData(0));
+        } else {
+          const ch0 = audioBuffer.getChannelData(0);
+          const ch1 = audioBuffer.getChannelData(1);
+          for (let i = 0; i < length; i++) {
+            mono[i] = 0.5 * (ch0[i] + ch1[i]);
+          }
+        }
+
+        state.sourceBuffer = audioBuffer;
+        state.monoSamples = mono;
+        state.sampleRate = audioBuffer.sampleRate;
+        document.getElementById('statusSampleRate').textContent = `${state.sampleRate} Hz`;
+        document.getElementById('fileNameLabel').textContent = `${file.name} (${audioBuffer.duration.toFixed(2)}s)`;
+
+        // Buscar automáticamente la ventana con mayor energía RMS inicial
+        let bestOffset = 0;
+        let maxEnergy = -1;
+        const step = Math.max(1024, Math.floor(length / 50));
+        for (let offset = 0; offset + state.fftSize < length; offset += step) {
+          let sumSq = 0;
+          for (let k = 0; k < state.fftSize; k += 4) {
+            const v = mono[offset + k];
+            sumSq += v * v;
+          }
+          if (sumSq > maxEnergy) {
+            maxEnergy = sumSq;
+            bestOffset = offset;
+          }
+        }
+        state.windowStartRatio = length > state.fftSize ? bestOffset / (length - state.fftSize) : 0;
+        document.getElementById('sliderWindowPos').value = Math.round(state.windowStartRatio * 1000);
+
+        drawWaveformOverview();
+        performOfflineFFTAnalysis();
+        showToast(`¡Audio MP3/WAV analizado! Se extrajeron los coeficientes espectrales.`);
+      } catch (err) {
+        showToast(`Error al decodificar el archivo de audio: ${err.message}`);
+      }
+    }
+
+    /***************************************************************************
+     * 6. ANÁLISIS FFT DIRECTO, UMBRALIZACIÓN Y EXTRACCIÓN DE TOP <= 12 PICOS
+     ***************************************************************************/
+    function performOfflineFFTAnalysis() {
+      if (!state.monoSamples) return;
+
+      const N = state.fftSize;
+      const samples = state.monoSamples;
+      const maxStart = Math.max(0, samples.length - N);
+      const startIdx = Math.min(maxStart, Math.floor(state.windowStartRatio * maxStart));
+
+      const timeSec = startIdx / state.sampleRate;
+      document.getElementById('windowPosLabel').textContent = `${timeSec.toFixed(2)} s`;
+
+      // Preparar buffers complejos con ventana de Hann
+      const hann = ExplicitDSP.createHannWindow(N);
+      const real = new Float64Array(N);
+      const imag = new Float64Array(N);
+
+      for (let i = 0; i < N; i++) {
+        const sample = (startIdx + i < samples.length) ? samples[startIdx + i] : 0.0;
+        // Compensación de ganancia coherente de ventana Hann (* 2.0)
+        real[i] = sample * hann[i] * 2.0;
+        imag[i] = 0.0;
+      }
+
+      // Ejecutar Transformada Rápida de Fourier explícita
+      ExplicitDSP.fft(real, imag, false);
+
+      const halfN = N >> 1;
+      const magLinear = new Float32Array(halfN);
+      const magDb = new Float32Array(halfN);
+      const phase = new Float32Array(halfN);
+
+      // Encontrar el pico máximo para normalizar a 0 dBFS de referencia si se desea,
+      // o usar magnitud normalizada 2/N
+      let maxMag = 1e-9;
+      for (let k = 1; k < halfN; k++) {
+        const m = Math.hypot(real[k], imag[k]) / (N / 2);
+        magLinear[k] = m;
+        if (m > maxMag) maxMag = m;
+      }
+
+      // Normalizar con respecto al máximo de la ventana para que 0 dB sea el pico más alto
+      for (let k = 0; k < halfN; k++) {
+        const normMag = magLinear[k] / maxMag;
+        magLinear[k] = normMag;
+        magDb[k] = 20 * Math.log10(Math.max(normMag, 1e-6));
+        phase[k] = Math.atan2(imag[k], real[k]);
+      }
+
+      state.spectrumMagLinear = magLinear;
+      state.spectrumMagDb = magDb;
+      state.spectrumPhase = phase;
+      state.spectrumReal = real;
+      state.spectrumImag = imag;
+
+      extractDominantPeaks();
+    }
+
+    /**
+     * Filtra los bins por debajo del umbral en dB y selecciona hasta 12 picos máximos locales
+     */
+    function extractDominantPeaks() {
+      if (!state.spectrumMagDb) return;
+
+      const N = state.fftSize;
+      const halfN = N >> 1;
+      const fs = state.sampleRate;
+      const binWidthHz = fs / N;
+      const minBinSeparation = Math.max(1, Math.round(state.minPeakDistanceHz / binWidthHz));
+
+      // Si el micrófono está modulando el umbral dinámicamente, aplicarlo
+      let effectiveThresholdDb = state.thresholdDb;
+      if (state.micActive && state.centroidTarget === 'threshold') {
+        effectiveThresholdDb = Math.max(-90, Math.min(-5, state.thresholdDb - state.spectralCentroidNorm * 24));
+      }
+
+      const candidatePeaks = [];
+
+      // Detección de máximos locales que superan el umbral en dB
+      for (let k = 2; k < halfN - 2; k++) {
+        const db = state.spectrumMagDb[k];
+        if (db >= effectiveThresholdDb) {
+          if (
+            db >= state.spectrumMagDb[k - 1] &&
+            db >= state.spectrumMagDb[k + 1] &&
+            db >= state.spectrumMagDb[k - 2] &&
+            db >= state.spectrumMagDb[k + 2]
+          ) {
+            // Interpolación parabólica para estimar la frecuencia exacta del resonador
+            const alpha = state.spectrumMagDb[k - 1];
+            const beta = state.spectrumMagDb[k];
+            const gamma = state.spectrumMagDb[k + 1];
+            const denom = alpha - 2 * beta + gamma;
+            const deltaBin = Math.abs(denom) > 1e-6 ? 0.5 * (alpha - gamma) / denom : 0;
+            const exactBin = k + Math.max(-0.5, Math.min(0.5, deltaBin));
+
+            const magLin = state.spectrumMagLinear[k];
+            const ph = state.spectrumPhase[k];
+
+            candidatePeaks.push({
+              bin: k,
+              exactBin: exactBin,
+              freq: exactBin * binWidthHz,
+              magLinear: magLin,
+              magDb: db,
+              phase: ph,
+              re: magLin * Math.cos(ph),
+              im: magLin * Math.sin(ph)
+            });
+          }
+        }
+      }
+
+      // Ordenar de mayor a menor amplitud (predominancia)
+      candidatePeaks.sort((a, b) => b.magLinear - a.magLinear);
+
+      // Filtrar picos demasiado cercanos entre sí y limitar a un máximo de 12 frecuencias
+      const chosen = [];
+      for (let i = 0; i < candidatePeaks.length; i++) {
+        if (chosen.length >= state.maxPeaks) break;
+        const cand = candidatePeaks[i];
+        const tooClose = chosen.some(p => Math.abs(p.bin - cand.bin) < minBinSeparation);
+        if (!tooClose) {
+          // Conservar ajustes manuales previos si el bin es similar
+          const prevMatch = state.selectedPeaks.find(old => Math.abs(old.bin - cand.bin) <= 2);
+          chosen.push({
+            rank: chosen.length + 1,
+            bin: cand.bin,
+            freq: cand.freq,
+            magLinear: cand.magLinear,
+            magDb: cand.magDb,
+            phase: cand.phase,
+            re: cand.re,
+            im: cand.im,
+            enabled: prevMatch ? prevMatch.enabled : true,
+            userWeight: prevMatch ? prevMatch.userWeight : 1.0
+          });
+        }
+      }
+
+      state.selectedPeaks = chosen;
+      document.getElementById('statusActivePeaks').textContent = `${chosen.filter(p => p.enabled).length} / ${state.maxPeaks}`;
+
+      renderCoefficientsTable();
+      drawFFTSpectrum();
+    }
+
+    /***************************************************************************
+     * 7. TABLA DE COEFICIENTES EXPUESTOS AL USUARIO
+     ***************************************************************************/
+    function renderCoefficientsTable() {
+      const tbody = document.getElementById('coefficientsTableBody');
+      tbody.innerHTML = '';
+
+      if (state.selectedPeaks.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="9" class="py-6 text-center text-slate-500">Ninguna frecuencia supera el umbral actual (${state.thresholdDb.toFixed(1)} dB). Baja el deslizador de Umbral.</td>`;
+        tbody.appendChild(tr);
+        return;
+      }
+
+      state.selectedPeaks.forEach((peak, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = `hover:bg-slate-900/90 transition ${peak.enabled ? 'text-slate-200' : 'text-slate-600'}`;
+
+        const signIm = peak.im >= 0 ? '+' : '-';
+        const complexStr = `${peak.re.toFixed(3)} ${signIm} j${Math.abs(peak.im).toFixed(3)}`;
+
+        tr.innerHTML = `
+          <td class="py-1.5 px-2.5 font-bold text-amber-400">#${peak.rank}</td>
+          <td class="py-1.5 px-2.5">
+            <input type="checkbox" data-idx="${idx}" class="peak-toggle accent-cyan-500 cursor-pointer" ${peak.enabled ? 'checked' : ''} />
+          </td>
+          <td class="py-1.5 px-2.5 text-slate-400">${peak.bin}</td>
+          <td class="py-1.5 px-2.5 font-semibold text-cyan-300">${peak.freq.toFixed(1)} Hz</td>
+          <td class="py-1.5 px-2.5 text-rose-300">${peak.magDb.toFixed(1)} dB</td>
+          <td class="py-1.5 px-2.5 text-emerald-300">${peak.magLinear.toFixed(4)}</td>
+          <td class="py-1.5 px-2.5 text-purple-300">${peak.phase.toFixed(3)} rad</td>
+          <td class="py-1.5 px-2.5 text-slate-400 text-[11px]">${complexStr}</td>
+          <td class="py-1.5 px-2.5">
+            <input type="range" min="0" max="2" step="0.05" value="${peak.userWeight}" data-idx="${idx}" class="peak-weight w-24" />
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Eventos para activar/desactivar o cambiar el peso de cada coeficiente en vivo
+      tbody.querySelectorAll('.peak-toggle').forEach(chk => {
+        chk.addEventListener('change', (e) => {
+          const i = parseInt(e.target.getAttribute('data-idx'), 10);
+          state.selectedPeaks[i].enabled = e.target.checked;
+          document.getElementById('statusActivePeaks').textContent =
+            `${state.selectedPeaks.filter(p => p.enabled).length} / ${state.maxPeaks}`;
+          drawFFTSpectrum();
+        });
+      });
+
+      tbody.querySelectorAll('.peak-weight').forEach(slider => {
+        slider.addEventListener('input', (e) => {
+          const i = parseInt(e.target.getAttribute('data-idx'), 10);
+          state.selectedPeaks[i].userWeight = parseFloat(e.target.value);
+          drawFFTSpectrum();
+        });
+      });
+    }
+
+    /***************************************************************************
+     * 8. MOTOR DE RESÍNTESIS EN TIEMPO REAL POR FFT INVERSA (IFFT)
+     * -------------------------------------------------------------------------
+     * Soporta dos modos seleccionables en vivo:
+     *  - Modo A ('blockIFFT'): Crea un espectro vacío X[k]=0 de tamaño N=2048,
+     *    inserta únicamente los <=12 coeficientes complejos (con su magnitud y
+     *    fase continua), ejecuta ExplicitDSP.fft(re, im, true) [IFFT] y suma
+     *    los bloques con ventana de Hann (Overlap-Add).
+     *  - Modo B ('additiveIDFT'): Evalúa la definición analítica de la IDFT
+     *    dispersa muestra a muestra preservando las frecuencias inarmónicas exactas.
+     ***************************************************************************/
+    function startRealtimeIFFTSynth() {
+      ensureAudioContext();
+      if (state.isSynthRunning) return;
+
+      const bufferSize = 1024;
+      scriptProcessorNode = state.audioCtx.createScriptProcessor(bufferSize, 0, 1);
+
+      // Reiniciar punteros Overlap-Add
+      olaRingBuffer.fill(0);
+      olaReadIndex = 0;
+      olaWriteIndex = 0;
+      olaHopCounter = 0;
+
+      scriptProcessorNode.onaudioprocess = (audioProcessingEvent) => {
+        const output = audioProcessingEvent.outputBuffer.getChannelData(0);
+        const fs = state.sampleRate;
+        const peaks = state.selectedPeaks;
+        const numPeaks = peaks.length;
+
+        // 1. Calcular ganancia modulada por el Seguidor de Envolvente del micrófono
+        let envMultiplier = 1.0;
+        if (state.micActive) {
+          if (state.envRouting === 'direct') {
+            envMultiplier = state.envFollower;
+          } else if (state.envRouting === 'hybrid') {
+            envMultiplier = 0.25 + 0.85 * state.envFollower;
+          }
+        }
+
+        // 2. Calcular Pitch Ratio e Inclinación Espectral (Spectral Tilt) modulados por el Centroide del micrófono
+        let effectivePitchRatio = state.pitchRatio;
+        let effectiveTiltDb = state.manualSpectralTilt;
+
+        if (state.micActive) {
+          if (state.centroidTarget === 'tilt') {
+            // Sonidos brillantes ('sss') inclinan el espectro hacia los parciales agudos (+16 dB)
+            effectiveTiltDb += (state.spectralCentroidNorm - 0.35) * 28.0;
+          } else if (state.centroidTarget === 'pitch') {
+            effectivePitchRatio *= (0.75 + state.spectralCentroidNorm * 1.0);
+          }
+        }
+
+        const totalGain = state.baseGain * envMultiplier * (1.0 + state.attackBoostEnv) * (state.keyGateOpen ? 1.0 : 0.0);
+        state.attackBoostEnv *= 0.92; // Decaimiento de impulso de ataque
+
+        // Actualizar indicador UI ocasionalmente
+        state._lastEffectiveRatio = effectivePitchRatio;
+        state._lastEffectiveTilt = effectiveTiltDb;
+
+        if (numPeaks === 0 || totalGain < 0.0001) {
+          for (let i = 0; i < output.length; i++) {
+            output[i] = 0;
+            state.outputScopeBuffer[state.outputScopeWritePtr] = 0;
+            state.outputScopeWritePtr = (state.outputScopeWritePtr + 1) % state.outputScopeBuffer.length;
+          }
+          return;
+        }
+
+        if (state.synthMode === 'blockIFFT') {
+          // =================================================================
+          // MODO A: SÍNTESIS ESPECTRAL POR FFT INVERSA EN BLOQUES (OVERLAP-ADD)
+          // =================================================================
+          for (let i = 0; i < output.length; i++) {
+            if (olaHopCounter === 0) {
+              synthesizeOneIFFTBlock(effectivePitchRatio, effectiveTiltDb, fs);
+            }
+            olaHopCounter = (olaHopCounter + 1) % IFFT_HOP_SIZE;
+
+            // Extraer muestra del acumulador Overlap-Add
+            let sample = olaRingBuffer[olaReadIndex];
+            olaRingBuffer[olaReadIndex] = 0; // Limpiar tras lectura
+            olaReadIndex = (olaReadIndex + 1) % olaRingBuffer.length;
+
+            // Modulación opcional de tren de pulsos MRI
+            if (state.mriPulseRateHz > 0.1) {
+              const t = globalSampleCounter / fs;
+              const pulsePhase = (t * state.mriPulseRateHz) % 1.0;
+              const mriGate = Math.exp(-pulsePhase * 4.5);
+              sample *= mriGate;
+            }
+
+            const finalSample = Math.max(-0.98, Math.min(0.98, sample * totalGain));
+            output[i] = finalSample;
+
+            state.outputScopeBuffer[state.outputScopeWritePtr] = finalSample;
+            state.outputScopeWritePtr = (state.outputScopeWritePtr + 1) % state.outputScopeBuffer.length;
+            globalSampleCounter++;
+          }
+        } else {
+          // =================================================================
+          // MODO B: IDFT DISPERSA CONTINUA MUESTRA A MUESTRA (FASE EXACTA)
+          // x[n] = \sum_{m=1}^{M<=12} A_m \cos(2\pi f_m t + \phi_m)
+          // =================================================================
+          const normFactor = 1.0 / Math.max(1.5, Math.sqrt(numPeaks));
+
+          for (let i = 0; i < output.length; i++) {
+            let sum = 0.0;
+
+            for (let m = 0; m < numPeaks; m++) {
+              const p = peaks[m];
+              if (!p.enabled || p.userWeight <= 0) continue;
+
+              const freq = p.freq * effectivePitchRatio;
+              if (freq >= fs * 0.48) continue;
+
+              // Inclinación espectral respecto a 1000 Hz
+              const octavesFrom1k = Math.log2(Math.max(80, freq) / 1000.0);
+              const tiltGain = Math.pow(10, (effectiveTiltDb * octavesFrom1k) / 20);
+
+              const amp = p.magLinear * p.userWeight * tiltGain;
+              sum += amp * Math.cos(partialPhases[m] + p.phase);
+
+              partialPhases[m] += (2 * Math.PI * freq) / fs;
+              if (partialPhases[m] > 2 * Math.PI) partialPhases[m] -= 2 * Math.PI;
+            }
+
+            if (state.mriPulseRateHz > 0.1) {
+              const t = globalSampleCounter / fs;
+              const pulsePhase = (t * state.mriPulseRateHz) % 1.0;
+              sum *= Math.exp(-pulsePhase * 4.5);
+            }
+
+            const finalSample = Math.max(-0.98, Math.min(0.98, sum * normFactor * totalGain));
+            output[i] = finalSample;
+
+            state.outputScopeBuffer[state.outputScopeWritePtr] = finalSample;
+            state.outputScopeWritePtr = (state.outputScopeWritePtr + 1) % state.outputScopeBuffer.length;
+            globalSampleCounter++;
+          }
+        }
+      };
+
+      scriptProcessorNode.connect(state.audioCtx.destination);
+      state.isSynthRunning = true;
+
+      // Actualizar estado visual
+      document.getElementById('audioEngineDot').className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
+      document.getElementById('audioEngineStatus').textContent = 'IFFT Activa en Tiempo Real';
+      document.getElementById('btnMasterToggleText').textContent = 'Detener Resíntesis IFFT';
+      const btn = document.getElementById('btnMasterToggle');
+      btn.className = 'px-3.5 py-1.5 rounded-lg font-sans font-semibold text-xs bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-900/30 transition flex items-center gap-1.5';
+    }
+
+    /**
+     * Construye el espectro complejo de longitud N=2048 con únicamente los <=12
+     * coeficientes seleccionados y ejecuta la Transformada Inversa (IFFT)
+     */
+    const ifftRealBlock = new Float64Array(IFFT_BLOCK_SIZE);
+    const ifftImagBlock = new Float64Array(IFFT_BLOCK_SIZE);
+
+    function synthesizeOneIFFTBlock(pitchRatio, tiltDb, fs) {
+      ifftRealBlock.fill(0);
+      ifftImagBlock.fill(0);
+
+      const peaks = state.selectedPeaks;
+      const numPeaks = peaks.length;
+      const binWidth = fs / IFFT_BLOCK_SIZE;
+      const halfN = IFFT_BLOCK_SIZE >> 1;
+      const scale = (IFFT_BLOCK_SIZE / 2) / Math.max(1.5, Math.sqrt(numPeaks));
+
+      for (let m = 0; m < numPeaks; m++) {
+        const p = peaks[m];
+        if (!p.enabled || p.userWeight <= 0) continue;
+
+        const targetFreq = p.freq * pitchRatio;
+        const k = Math.round(targetFreq / binWidth);
+        if (k <= 1 || k >= halfN - 1) continue;
+
+        const octavesFrom1k = Math.log2(Math.max(80, targetFreq) / 1000.0);
+        const tiltGain = Math.pow(10, (tiltDb * octavesFrom1k) / 20);
+        const mag = p.magLinear * p.userWeight * tiltGain * scale;
+
+        // Fase coherente entre bloques sucesivos (Phase Vocoder / coherencia de fase)
+        const instPhase = partialPhases[m] + p.phase;
+        const re = mag * Math.cos(instPhase);
+        const im = mag * Math.sin(instPhase);
+
+        // Simetría Hermítica X[N-k] = X*[k] para obtener una señal 100% real tras la IFFT
+        ifftRealBlock[k] += re;
+        ifftImagBlock[k] += im;
+        ifftRealBlock[IFFT_BLOCK_SIZE - k] += re;
+        ifftImagBlock[IFFT_BLOCK_SIZE - k] -= im;
+
+        // Avanzar fase por el salto temporal (IFFT_HOP_SIZE muestras)
+        const actualBinFreq = k * binWidth;
+        partialPhases[m] = (partialPhases[m] + 2 * Math.PI * actualBinFreq * (IFFT_HOP_SIZE / fs)) % (2 * Math.PI);
+      }
+
+      // Ejecutar explícitamente la FFT Inversa: x[n] = IFFT{X[k]}
+      ExplicitDSP.fft(ifftRealBlock, ifftImagBlock, true);
+
+      // Aplicar ventana de síntesis de Hann y acumular en el buffer Overlap-Add (4x overlap -> factor 0.5)
+      for (let n = 0; n < IFFT_BLOCK_SIZE; n++) {
+        const ringIdx = (olaReadIndex + n) % olaRingBuffer.length;
+        olaRingBuffer[ringIdx] += ifftRealBlock[n] * olaHannWindow[n] * 0.5;
+      }
+    }
+
+    function stopRealtimeIFFTSynth() {
+      if (scriptProcessorNode) {
+        scriptProcessorNode.disconnect();
+        scriptProcessorNode = null;
+      }
+      state.isSynthRunning = false;
+      document.getElementById('audioEngineDot').className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
+      document.getElementById('audioEngineStatus').textContent = 'IFFT En Espera';
+      document.getElementById('btnMasterToggleText').textContent = 'Activar Resíntesis IFFT';
+      const btn = document.getElementById('btnMasterToggle');
+      btn.className = 'px-3.5 py-1.5 rounded-lg font-sans font-semibold text-xs bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30 transition flex items-center gap-1.5';
+    }
+
+    /***************************************************************************
+     * 9. CAPTURA DE MICRÓFONO Y EXTRACCIÓN DE DESCRIPTORES EN TIEMPO REAL
+     * -------------------------------------------------------------------------
+     * Extrae en cada cuadro de animación:
+     *  1. Seguidor de envolvente RMS con constantes de ataque y relajación.
+     *  2. Centroide espectral (Hz) = \sum f[k]|X[k]| / \sum |X[k]|
+     *  3. Flujo espectral positivo (Spectral Flux) para detección de ataques.
+     ***************************************************************************/
+    async function toggleMicrophone() {
+      ensureAudioContext();
+
+      if (state.micActive) {
+        if (state.micStream) {
+          state.micStream.getTracks().forEach(t => t.stop());
+        }
+        state.micActive = false;
+        state.envFollower = 0;
+        document.getElementById('btnToggleMicText').textContent = 'Activar Micrófono';
+        document.getElementById('micStatusDot').className = 'w-2 h-2 rounded-full bg-rose-400';
+        showToast('Control por micrófono desactivado.');
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
+        });
+
+        const micSource = state.audioCtx.createMediaStreamSource(stream);
+        const analyser = state.audioCtx.createAnalyser();
+        analyser.fftSize = 1024;
+        analyser.smoothingTimeConstant = 0.2;
+        micSource.connect(analyser);
+
+        state.micStream = stream;
+        state.micAnalyser = analyser;
+        state.micTimeData = new Float32Array(analyser.fftSize);
+        state.micFreqData = new Float32Array(analyser.frequencyBinCount);
+        state.prevMicSpectrum = new Float32Array(analyser.frequencyBinCount);
+        state.micActive = true;
+
+        document.getElementById('btnToggleMicText').textContent = 'Micrófono Activo (Desactivar)';
+        document.getElementById('micStatusDot').className = 'w-2 h-2 rounded-full bg-emerald-400 animate-ping';
+
+        if (!state.isSynthRunning) {
+          startRealtimeIFFTSynth();
+        }
+        showToast('¡Micrófono conectado! Habla, canta o sopla para modular la IFFT en tiempo real.');
+      } catch (err) {
+        showToast(`No se pudo acceder al micrófono: ${err.message}`);
+      }
+    }
+
+    function updateMicrophoneDescriptors() {
+      if (!state.micActive || !state.micAnalyser) return;
+
+      const analyser = state.micAnalyser;
+      analyser.getFloatTimeDomainData(state.micTimeData);
+      analyser.getFloatFrequencyData(state.micFreqData);
+
+      // --- DESCRIPTOR 1: SEGUIDOR DE ENVOLVENTE (RMS + ATTACK/RELEASE) ---
+      let sumSq = 0;
+      const timeArr = state.micTimeData;
+      for (let i = 0; i < timeArr.length; i++) {
+        sumSq += timeArr[i] * timeArr[i];
+      }
+      const rms = Math.sqrt(sumSq / timeArr.length);
+      const targetEnv = Math.min(1.0, rms * state.micSensitivity);
+
+      // Ataque rápido (12 ms), relajación configurable por el usuario
+      const dt = 16.6 / 1000;
+      const attackCoeff = Math.exp(-dt / 0.012);
+      const releaseCoeff = Math.exp(-dt / (state.micReleaseMs / 1000));
+
+      if (targetEnv > state.envFollower) {
+        state.envFollower = attackCoeff * state.envFollower + (1 - attackCoeff) * targetEnv;
+      } else {
+        state.envFollower = releaseCoeff * state.envFollower + (1 - releaseCoeff) * targetEnv;
+      }
+
+      // --- DESCRIPTOR 2: CENTROIDE ESPECTRAL (BRILLO EN HZ) & DESCRIPTOR 3: ATAQUES ---
+      const freqArr = state.micFreqData;
+      const numBins = freqArr.length;
+      const binHz = (state.sampleRate / 2) / numBins;
+
+      let weightedFreqSum = 0;
+      let magSum = 0;
+      let spectralFlux = 0;
+
+      for (let k = 1; k < numBins; k++) {
+        // Convertir de dB a magnitud lineal
+        const mag = Math.pow(10, freqArr[k] / 20);
+        const f = k * binHz;
+        weightedFreqSum += f * mag;
+        magSum += mag;
+
+        // Flujo espectral positivo (incrementos súbitos de energía)
+        const diff = mag - state.prevMicSpectrum[k];
+        if (diff > 0) spectralFlux += diff;
+        state.prevMicSpectrum[k] = mag;
+      }
+
+      if (magSum > 1e-4 && rms > 0.008) {
+        const rawCentroid = weightedFreqSum / magSum;
+        state.spectralCentroidHz = 0.75 * state.spectralCentroidHz + 0.25 * rawCentroid;
+        state.spectralCentroidNorm = Math.max(0, Math.min(1, (state.spectralCentroidHz - 250) / 3800));
+      }
+
+      // Detección de transiente / ataque percusivo
+      const isAttack = spectralFlux > 0.18 && rms > 0.025;
+      if (isAttack && !state.attackDetected) {
+        state.attackDetected = true;
+        if (state.attackAction === 'phasereset') {
+          partialPhases.fill(0);
+        } else if (state.attackAction === 'boost') {
+          state.attackBoostEnv = 0.65;
+        }
+        setTimeout(() => { state.attackDetected = false; }, 110);
+      }
+
+      // Si el centroide está mapeado al umbral dinámico, re-extraer picos en tiempo real
+      if (state.centroidTarget === 'threshold') {
+        extractDominantPeaks();
+      }
+
+      // Actualizar medidores visuales del micrófono
+      document.getElementById('envFollowerValue').textContent = state.envFollower.toFixed(3);
+      document.getElementById('envMeterBar').style.width = `${(state.envFollower * 100).toFixed(1)}%`;
+
+      document.getElementById('centroidHzValue').textContent = `${Math.round(state.spectralCentroidHz)} Hz`;
+      document.getElementById('centroidMeterBar').style.width = `${(state.spectralCentroidNorm * 100).toFixed(1)}%`;
+
+      const attackLed = document.getElementById('attackLed');
+      if (state.attackDetected) {
+        attackLed.className = 'px-1.5 py-0.5 rounded text-[10px] bg-amber-400 text-slate-950 font-bold border border-amber-300 shadow shadow-amber-500/50';
+      } else {
+        attackLed.className = 'px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-500 border border-slate-700';
+      }
+    }
+
+    /***************************************************************************
+     * 10. VISUALIZADORES EN CANVAS (FORMA DE ONDA, ESPECTRO FFT Y OSCILOSCOPIO IFFT)
+     ***************************************************************************/
+    function resizeCanvasToDisplaySize(canvas) {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.round(rect.width * dpr);
+      const height = Math.round(rect.height * dpr);
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+      return { width, height, dpr };
+    }
+
+    function drawWaveformOverview() {
+      const canvas = document.getElementById('waveformCanvas');
+      if (!canvas || !state.monoSamples) return;
+      const { width, height, dpr } = resizeCanvasToDisplaySize(canvas);
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, width, height);
+
+      const data = state.monoSamples;
+      const step = Math.max(1, Math.floor(data.length / width));
+      const midY = height / 2;
+
+      ctx.strokeStyle = '#06b6d4';
+      ctx.lineWidth = 1 * dpr;
+      ctx.beginPath();
+
+      for (let x = 0; x < width; x++) {
+        const start = x * step;
+        let min = 1.0;
+        let max = -1.0;
+        for (let j = 0; j < step && start + j < data.length; j++) {
+          const val = data[start + j];
+          if (val < min) min = val;
+          if (val > max) max = val;
+        }
+        ctx.moveTo(x, midY + min * midY * 0.9);
+        ctx.lineTo(x, midY + max * midY * 0.9);
+      }
+      ctx.stroke();
+
+      // Dibujar ventana de análisis FFT seleccionada
+      const winRatioWidth = Math.min(1.0, state.fftSize / data.length);
+      const winX = state.windowStartRatio * (1 - winRatioWidth) * width;
+      const winW = Math.max(8 * dpr, winRatioWidth * width);
+
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.22)';
+      ctx.fillRect(winX, 0, winW, height);
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2 * dpr;
+      ctx.strokeRect(winX, 0, winW, height);
+    }
+
+    function drawFFTSpectrum() {
+      const canvas = document.getElementById('fftCanvas');
+      if (!canvas || !state.spectrumMagDb) return;
+      const { width, height, dpr } = resizeCanvasToDisplaySize(canvas);
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, width, height);
+
+      const padLeft = 42 * dpr;
+      const padRight = 14 * dpr;
+      const padTop = 18 * dpr;
+      const padBottom = 26 * dpr;
+      const plotW = width - padLeft - padRight;
+      const plotH = height - padTop - padBottom;
+
+      const minDb = -95;
+      const maxDb = 5;
+      const maxFreq = state.maxFreqView;
+      const fs = state.sampleRate;
+      const N = state.fftSize;
+      const binWidth = fs / N;
+      const maxBin = Math.min(state.spectrumMagDb.length - 1, Math.floor(maxFreq / binWidth));
+
+      const freqToX = (f) => padLeft + (f / maxFreq) * plotW;
+      const dbToY = (db) => padTop + ((maxDb - Math.max(minDb, Math.min(maxDb, db))) / (maxDb - minDb)) * plotH;
+
+      // Ejes de referencia dB
+      ctx.font = `${10 * dpr}px "JetBrains Mono", monospace`;
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+
+      for (let db = 0; db >= -90; db -= 20) {
+        const y = dbToY(db);
+        ctx.strokeStyle = 'rgba(51, 65, 85, 0.45)';
+        ctx.lineWidth = 1 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(padLeft, y);
+        ctx.lineTo(width - padRight, y);
+        ctx.stroke();
+
+        ctx.fillStyle = '#64748b';
+        ctx.fillText(`${db}dB`, padLeft - 6 * dpr, y);
+      }
+
+      // Ejes de referencia Hz
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      const freqStep = maxFreq <= 3000 ? 500 : (maxFreq <= 8000 ? 1000 : 2000);
+      for (let f = 0; f <= maxFreq; f += freqStep) {
+        const x = freqToX(f);
+        ctx.strokeStyle = 'rgba(51, 65, 85, 0.35)';
+        ctx.beginPath();
+        ctx.moveTo(x, padTop);
+        ctx.lineTo(x, padTop + plotH);
+        ctx.stroke();
+
+        ctx.fillStyle = '#64748b';
+        ctx.fillText(`${f}Hz`, x, padTop + plotH + 6 * dpr);
+      }
+
+      // Curva completa del espectro FFT
+      ctx.beginPath();
+      for (let k = 1; k <= maxBin; k++) {
+        const f = k * binWidth;
+        const x = freqToX(f);
+        const y = dbToY(state.spectrumMagDb[k]);
+        if (k === 1) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = 'rgba(6, 182, 212, 0.75)';
+      ctx.lineWidth = 1.4 * dpr;
+      ctx.stroke();
+
+      // Relleno bajo la curva
+      ctx.lineTo(freqToX(maxBin * binWidth), padTop + plotH);
+      ctx.lineTo(padLeft, padTop + plotH);
+      ctx.closePath();
+      const grad = ctx.createLinearGradient(0, padTop, 0, padTop + plotH);
+      grad.addColorStop(0, 'rgba(6, 182, 212, 0.25)');
+      grad.addColorStop(1, 'rgba(6, 182, 212, 0.01)');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Línea de Umbral en dB
+      let effectiveThresholdDb = state.thresholdDb;
+      if (state.micActive && state.centroidTarget === 'threshold') {
+        effectiveThresholdDb = Math.max(-90, Math.min(-5, state.thresholdDb - state.spectralCentroidNorm * 24));
+      }
+      const threshY = dbToY(effectiveThresholdDb);
+
+      // Sombrear zona descartada bajo el umbral
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.07)';
+      ctx.fillRect(padLeft, threshY, plotW, padTop + plotH - threshY);
+
+      ctx.strokeStyle = '#f43f5e';
+      ctx.lineWidth = 2 * dpr;
+      ctx.setLineDash([6 * dpr, 4 * dpr]);
+      ctx.beginPath();
+      ctx.moveTo(padLeft, threshY);
+      ctx.lineTo(width - padRight, threshY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#fda4af';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(`UMBRAL: ${effectiveThresholdDb.toFixed(1)} dB`, padLeft + 8 * dpr, threshY - 4 * dpr);
+
+      // Dibujar tallos y marcadores de los <= 12 picos predominantes seleccionados para la IFFT
+      state.selectedPeaks.forEach((p) => {
+        if (p.freq > maxFreq) return;
+        const x = freqToX(p.freq);
+        const y = dbToY(p.magDb);
+
+        ctx.strokeStyle = p.enabled ? '#f59e0b' : '#475569';
+        ctx.lineWidth = 2 * dpr;
+        ctx.beginPath();
+        ctx.moveTo(x, padTop + plotH);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        ctx.fillStyle = p.enabled ? '#fbbf24' : '#475569';
+        ctx.beginPath();
+        ctx.arc(x, y, 4.5 * dpr, 0, 2 * Math.PI);
+        ctx.fill();
+
+        if (p.enabled) {
+          ctx.fillStyle = '#fef3c7';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(`#${p.rank} (${Math.round(p.freq)}Hz)`, x, y - 6 * dpr);
+        }
+      });
+    }
+
+    function drawRealtimeIFFTScope() {
+      const canvas = document.getElementById('ifftScopeCanvas');
+      if (!canvas) return;
+      const { width, height, dpr } = resizeCanvasToDisplaySize(canvas);
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, width, height);
+
+      const midY = height / 2;
+      ctx.strokeStyle = 'rgba(51, 65, 85, 0.5)';
+      ctx.lineWidth = 1 * dpr;
+      ctx.beginPath();
+      ctx.moveTo(0, midY);
+      ctx.lineTo(width, midY);
+      ctx.stroke();
+
+      const buf = state.outputScopeBuffer;
+      const len = buf.length;
+      const readStart = state.outputScopeWritePtr;
+
+      ctx.strokeStyle = state.isSynthRunning ? '#10b981' : '#475569';
+      ctx.lineWidth = 2 * dpr;
+      ctx.beginPath();
+
+      for (let x = 0; x < width; x++) {
+        const idx = (readStart + Math.floor((x / width) * (len / 2))) % len;
+        const sample = buf[idx];
+        const y = midY - sample * (midY * 0.85);
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Actualizar texto de ratio e inclinación
+      if (state._lastEffectiveRatio !== undefined) {
+        document.getElementById('pitchRatioReadout').textContent =
+          `Escala Frec: ${state._lastEffectiveRatio.toFixed(3)}x | Tilt: ${state._lastEffectiveTilt.toFixed(1)} dB/oct`;
+      }
+    }
+
+    /***************************************************************************
+     * 11. TECLADO DE TRANSPOSICIÓN ESPECTRAL (EN PANTALLA Y FÍSICO)
+     ***************************************************************************/
+    const KEYBOARD_NOTES = [
+      { note: 'C4 (1.0x)', semitones: 0,  key: 'a', isBlack: false },
+      { note: 'C#4',       semitones: 1,  key: 'w', isBlack: true  },
+      { note: 'D4',        semitones: 2,  key: 's', isBlack: false },
+      { note: 'D#4',       semitones: 3,  key: 'e', isBlack: true  },
+      { note: 'E4',        semitones: 4,  key: 'd', isBlack: false },
+      { note: 'F4',        semitones: 5,  key: 'f', isBlack: false },
+      { note: 'F#4',       semitones: 6,  key: 't', isBlack: true  },
+      { note: 'G4',        semitones: 7,  key: 'g', isBlack: false },
+      { note: 'G#4',       semitones: 8,  key: 'y', isBlack: true  },
+      { note: 'A4',        semitones: 9,  key: 'h', isBlack: false },
+      { note: 'A#4',       semitones: 10, key: 'u', isBlack: true  },
+      { note: 'B4',        semitones: 11, key: 'j', isBlack: false },
+      { note: 'C5 (2.0x)', semitones: 12, key: 'k', isBlack: false }
+    ];
+
+    function buildKeyboardUI() {
+      const container = document.getElementById('keyboardContainer');
+      container.innerHTML = '';
+      container.style.gridTemplateColumns = `repeat(${KEYBOARD_NOTES.length}, minmax(0, 1fr))`;
+
+      KEYBOARD_NOTES.forEach((item, index) => {
+        const btn = document.createElement('button');
+        const ratio = Math.pow(2, item.semitones / 12);
+        btn.dataset.index = index;
+        btn.className = `piano-key h-20 rounded-lg border flex flex-col items-center justify-between p-1.5 text-[10px] font-mono-dsp ${
+          item.isBlack
+            ? 'bg-slate-900 border-slate-700 text-slate-300'
+            : 'bg-slate-800/80 border-slate-600 text-slate-100'
+        } ${index === 0 ? 'active' : ''}`;
+
+        btn.innerHTML = `
+          <span class="uppercase text-[9px] px-1 rounded bg-slate-950/70 text-cyan-400">${item.key}</span>
+          <span class="font-bold text-center leading-tight">${item.note}</span>
+          <span class="text-[9px] text-slate-400">${ratio.toFixed(2)}x</span>
+        `;
+
+        const triggerNote = () => {
+          state.pitchRatio = ratio;
+          state.keyGateOpen = true;
+          container.querySelectorAll('.piano-key').forEach(k => k.classList.remove('active'));
+          btn.classList.add('active');
+          if (!state.isSynthRunning) {
+            startRealtimeIFFTSynth();
+          }
+        };
+
+        const releaseNote = () => {
+          const latch = document.getElementById('chkDroneLatch').checked;
+          if (!latch) {
+            state.keyGateOpen = false;
+            btn.classList.remove('active');
+          }
+        };
+
+        btn.addEventListener('mousedown', triggerNote);
+        btn.addEventListener('mouseup', releaseNote);
+        btn.addEventListener('mouseleave', releaseNote);
+        btn.addEventListener('touchstart', (e) => { e.preventDefault(); triggerNote(); });
+        btn.addEventListener('touchend', (e) => { e.preventDefault(); releaseNote(); });
+
+        container.appendChild(btn);
+      });
+
+      // Eventos de teclado de computadora
+      window.addEventListener('keydown', (e) => {
+        if (e.repeat || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+        const k = e.key.toLowerCase();
+        const idx = KEYBOARD_NOTES.findIndex(n => n.key === k);
+        if (idx !== -1) {
+          const buttons = container.querySelectorAll('.piano-key');
+          if (buttons[idx]) buttons[idx].dispatchEvent(new Event('mousedown'));
+        }
+      });
+
+      window.addEventListener('keyup', (e) => {
+        const k = e.key.toLowerCase();
+        const idx = KEYBOARD_NOTES.findIndex(n => n.key === k);
+        if (idx !== -1) {
+          const buttons = container.querySelectorAll('.piano-key');
+          if (buttons[idx]) buttons[idx].dispatchEvent(new Event('mouseup'));
+        }
+      });
+    }
+
+    /***************************************************************************
+     * 12. VINCULACIÓN DE EVENTOS INTERACTIVOS Y BUCLE DE ANIMACIÓN
+     ***************************************************************************/
+    function bindUIEvents() {
+      // Subir archivo MP3/WAV
+      document.getElementById('fileInput').addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          handleFileUpload(e.target.files[0]);
+        }
+      });
+
+      // Cargar muestra sintética de Resonador
+      document.getElementById('btnLoadDemoMRI').addEventListener('click', () => {
+        generateSyntheticMRIBuffer();
+        showToast('Muestra sintética de Resonador Magnético 3T generada y analizada.');
+      });
+
+      // Reproducir audio original para comparar
+      document.getElementById('btnPlayOriginal').addEventListener('click', () => {
+        ensureAudioContext();
+        if (!state.sourceBuffer) return;
+        if (previewSourceNode) {
+          try { previewSourceNode.stop(); } catch (_) {}
+          previewSourceNode = null;
+          document.getElementById('btnPlayOriginal').textContent = '▶ Escuchar Original';
+          return;
+        }
+        previewSourceNode = state.audioCtx.createBufferSource();
+        previewSourceNode.buffer = state.sourceBuffer;
+        previewSourceNode.connect(state.audioCtx.destination);
+        previewSourceNode.onended = () => {
+          previewSourceNode = null;
+          document.getElementById('btnPlayOriginal').textContent = '▶ Escuchar Original';
+        };
+        previewSourceNode.start();
+        document.getElementById('btnPlayOriginal').textContent = '⏹ Detener Original';
+      });
+
+      // Botón Maestro de Resíntesis IFFT
+      document.getElementById('btnMasterToggle').addEventListener('click', () => {
+        if (state.isSynthRunning) stopRealtimeIFFTSynth();
+        else startRealtimeIFFTSynth();
+      });
+
+      // Controles de ventana y FFT
+      document.getElementById('sliderWindowPos').addEventListener('input', (e) => {
+        state.windowStartRatio = parseFloat(e.target.value) / 1000;
+        drawWaveformOverview();
+        performOfflineFFTAnalysis();
+      });
+
+      document.getElementById('selectFftSize').addEventListener('change', (e) => {
+        state.fftSize = parseInt(e.target.value, 10);
+        document.getElementById('fftSizeLabel').textContent = `${state.fftSize} bins`;
+        drawWaveformOverview();
+        performOfflineFFTAnalysis();
+      });
+
+      document.getElementById('sliderMinPeakDist').addEventListener('input', (e) => {
+        state.minPeakDistanceHz = parseFloat(e.target.value);
+        document.getElementById('minPeakDistLabel').textContent = `${state.minPeakDistanceHz} Hz`;
+        extractDominantPeaks();
+      });
+
+      // Controles de Umbral en dB y Límite de Picos (<= 12)
+      document.getElementById('sliderThresholdDb').addEventListener('input', (e) => {
+        state.thresholdDb = parseFloat(e.target.value);
+        document.getElementById('thresholdDbLabel').textContent = `${state.thresholdDb.toFixed(1)} dB`;
+        extractDominantPeaks();
+      });
+
+      document.getElementById('sliderMaxPeaks').addEventListener('input', (e) => {
+        state.maxPeaks = parseInt(e.target.value, 10);
+        document.getElementById('maxPeaksLabel').textContent = `${state.maxPeaks} coef.`;
+        extractDominantPeaks();
+      });
+
+      document.getElementById('sliderMaxFreqView').addEventListener('input', (e) => {
+        state.maxFreqView = parseFloat(e.target.value);
+        document.getElementById('maxFreqViewLabel').textContent = `${state.maxFreqView} Hz`;
+        drawFFTSpectrum();
+      });
+
+      // Interacción directa arrastrando sobre el canvas de forma de onda
+      const waveCanvas = document.getElementById('waveformCanvas');
+      let draggingWave = false;
+      const updateWaveFromMouse = (clientX) => {
+        const rect = waveCanvas.getBoundingClientRect();
+        const relX = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        state.windowStartRatio = relX;
+        document.getElementById('sliderWindowPos').value = Math.round(relX * 1000);
+        drawWaveformOverview();
+        performOfflineFFTAnalysis();
+      };
+      waveCanvas.addEventListener('mousedown', (e) => { draggingWave = true; updateWaveFromMouse(e.clientX); });
+      window.addEventListener('mousemove', (e) => { if (draggingWave) updateWaveFromMouse(e.clientX); });
+      window.addEventListener('mouseup', () => { draggingWave = false; });
+
+      // Interacción directa arrastrando el umbral en dB sobre el espectro FFT
+      const fftCanvas = document.getElementById('fftCanvas');
+      let draggingThresh = false;
+      const updateThresholdFromMouse = (clientY) => {
+        const rect = fftCanvas.getBoundingClientRect();
+        const relY = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+        const db = Math.max(-90, Math.min(-5, 5 - relY * 100));
+        state.thresholdDb = Math.round(db * 2) / 2;
+        document.getElementById('sliderThresholdDb').value = state.thresholdDb;
+        document.getElementById('thresholdDbLabel').textContent = `${state.thresholdDb.toFixed(1)} dB`;
+        extractDominantPeaks();
+      };
+      fftCanvas.addEventListener('mousedown', (e) => { draggingThresh = true; updateThresholdFromMouse(e.clientY); });
+      window.addEventListener('mousemove', (e) => { if (draggingThresh) updateThresholdFromMouse(e.clientY); });
+      window.addEventListener('mouseup', () => { draggingThresh = false; });
+
+      // Restaurar pesos de los 12 coeficientes
+      document.getElementById('btnResetPartials').addEventListener('click', () => {
+        state.selectedPeaks.forEach(p => { p.enabled = true; p.userWeight = 1.0; });
+        renderCoefficientsTable();
+        drawFFTSpectrum();
+      });
+
+      // Selector de Modo de Síntesis Inversa (Overlap-Add IFFT vs Suma IDFT)
+      const btnBlock = document.getElementById('btnModeBlockIFFT');
+      const btnAdd = document.getElementById('btnModeAdditiveIDFT');
+
+      btnBlock.addEventListener('click', () => {
+        state.synthMode = 'blockIFFT';
+        btnBlock.className = 'p-2.5 rounded-lg border border-cyan-500 bg-cyan-950/40 text-left transition flex flex-col justify-between';
+        btnAdd.className = 'p-2.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-900 text-left transition flex flex-col justify-between';
+      });
+
+      btnAdd.addEventListener('click', () => {
+        state.synthMode = 'additiveIDFT';
+        btnAdd.className = 'p-2.5 rounded-lg border border-cyan-500 bg-cyan-950/40 text-left transition flex flex-col justify-between';
+        btnBlock.className = 'p-2.5 rounded-lg border border-slate-800 bg-slate-900/60 hover:bg-slate-900 text-left transition flex flex-col justify-between';
+      });
+
+      // Parámetros globales de síntesis
+      document.getElementById('sliderBaseGain').addEventListener('input', (e) => {
+        state.baseGain = parseFloat(e.target.value);
+        document.getElementById('baseGainLabel').textContent = state.baseGain.toFixed(2);
+      });
+
+      document.getElementById('sliderSpectralTilt').addEventListener('input', (e) => {
+        state.manualSpectralTilt = parseFloat(e.target.value);
+        document.getElementById('spectralTiltLabel').textContent = `${state.manualSpectralTilt.toFixed(1)} dB`;
+      });
+
+      document.getElementById('sliderMriPulseRate').addEventListener('input', (e) => {
+        state.mriPulseRateHz = parseFloat(e.target.value);
+        document.getElementById('mriPulseRateLabel').textContent =
+          state.mriPulseRateHz === 0 ? 'Off (Continuo)' : `${state.mriPulseRateHz.toFixed(1)} Hz`;
+      });
+
+      // Controles de Micrófono y Descriptores
+      document.getElementById('btnToggleMic').addEventListener('click', toggleMicrophone);
+
+      document.getElementById('selectEnvRouting').addEventListener('change', (e) => {
+        state.envRouting = e.target.value;
+      });
+
+      document.getElementById('sliderMicSensitivity').addEventListener('input', (e) => {
+        state.micSensitivity = parseFloat(e.target.value);
+        document.getElementById('micGainLabel').textContent = `${state.micSensitivity.toFixed(1)}x`;
+      });
+
+      document.getElementById('sliderMicSmooth').addEventListener('input', (e) => {
+        state.micReleaseMs = parseFloat(e.target.value);
+        document.getElementById('micSmoothLabel').textContent = `${state.micReleaseMs} ms`;
+      });
+
+      document.getElementById('selectCentroidTarget').addEventListener('change', (e) => {
+        state.centroidTarget = e.target.value;
+        extractDominantPeaks();
+      });
+
+      document.getElementById('selectAttackAction').addEventListener('change', (e) => {
+        state.attackAction = e.target.value;
+      });
+
+      window.addEventListener('resize', () => {
+        drawWaveformOverview();
+        drawFFTSpectrum();
+      });
+    }
+
+    function masterAnimationLoop() {
+      updateMicrophoneDescriptors();
+      drawRealtimeIFFTScope();
+      requestAnimationFrame(masterAnimationLoop);
+    }
+
+    window.addEventListener('load', () => {
+      buildKeyboardUI();
+      bindUIEvents();
+      generateSyntheticMRIBuffer();
+      masterAnimationLoop();
+    });
+  </script>
+</body>
+</html>
