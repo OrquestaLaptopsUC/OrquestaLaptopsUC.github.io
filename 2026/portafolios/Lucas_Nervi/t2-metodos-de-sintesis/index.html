@@ -407,7 +407,12 @@ document.getElementById("renderBeyond").onclick = async ()=>{
 };
 
 // ---- Parte 4: mic + envolvente + onsets ----
-let micStream=null, follower=null, rafId=null, ksLiveGain=null, merger=null, micSource=null, recDest=null, recorder=null, chunks=[];
+// La detección corre en setInterval, no en requestAnimationFrame: rAF se frena
+// mucho cuando la pestaña pierde foco o queda tapada (justo lo que pasa si no
+// estás mirando la pantalla mientras tocas), y eso dejaba el seguidor de
+// envolvente casi sin actualizarse durante una toma real. El dibujo del
+// canvas sí puede ir en rAF, porque es solo visual.
+let micStream=null, follower=null, rafId=null, tickIntervalId=null, ksLiveGain=null, merger=null, micSource=null, recDest=null, recorder=null, chunks=[];
 const canvas = document.getElementById("envCanvas"); const cctx = canvas.getContext("2d");
 function resizeCanvas(){ canvas.width = canvas.clientWidth*2; canvas.height = canvas.clientHeight*2; }
 resizeCanvas(); window.addEventListener("resize", resizeCanvas);
@@ -417,7 +422,7 @@ document.getElementById("micStart").onclick = async ()=>{
   micStream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}});
   micSource = c.createMediaStreamSource(micStream);
   ksLiveGain = c.createGain(); ksLiveGain.gain.value = 0.7; ksLiveGain.connect(c.destination);
-  follower = new Follower(c, micSource, {attackMs:6, releaseMs:150, onsetThreshold:0.05});
+  follower = new Follower(c, micSource, {attackMs:6, releaseMs:150, onsetThreshold:0.003});
   let lastPluck = 0;
   follower.onOnset = (env)=>{
     const now = c.currentTime;
@@ -432,15 +437,18 @@ document.getElementById("micStart").onclick = async ()=>{
   ksLiveGain.connect(merger, 0, 1);  // canal R = salida del modelo
   merger.connect(recDest);
 
-  function loop(){
-    const env = follower.tick();
-    ksLiveGain.gain.setTargetAtTime(0.15 + env*3, c.currentTime, 0.02);
+  let lastEnv = 0;
+  tickIntervalId = setInterval(()=>{
+    lastEnv = follower.tick();
+    ksLiveGain.gain.setTargetAtTime(0.15 + lastEnv*3, c.currentTime, 0.02);
+  }, 15);
+  function draw(){
     const w=canvas.width,h=canvas.height;
     cctx.fillStyle="#0e1114"; cctx.fillRect(0,0,w,h);
-    cctx.fillStyle="#8f9ef0"; cctx.fillRect(0, h-env*h*6, w*0.3, env*h*6);
-    rafId = requestAnimationFrame(loop);
+    cctx.fillStyle="#8f9ef0"; cctx.fillRect(0, h-lastEnv*h*6, w*0.3, lastEnv*h*6);
+    rafId = requestAnimationFrame(draw);
   }
-  loop();
+  draw();
   document.getElementById("micStart").disabled=true;
   document.getElementById("micStop").disabled=false;
   document.getElementById("recStart").disabled=false;
@@ -448,6 +456,7 @@ document.getElementById("micStart").onclick = async ()=>{
 
 document.getElementById("micStop").onclick = ()=>{
   if(rafId) cancelAnimationFrame(rafId);
+  if(tickIntervalId) clearInterval(tickIntervalId);
   if(micStream) micStream.getTracks().forEach(t=>t.stop());
   document.getElementById("micStart").disabled=false;
   document.getElementById("micStop").disabled=true;
