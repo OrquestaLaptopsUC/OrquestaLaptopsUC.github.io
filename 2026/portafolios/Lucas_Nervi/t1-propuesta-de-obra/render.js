@@ -25,31 +25,53 @@ function t2s(tSeg) {
   return Math.floor(tSeg * SR);
 }
 
-// --- síntesis de una nota: seno + un par de armónicos suaves, ADSR simple,
-// panorama equal-power. timbre 0..1 controla cuánto armónico se agrega
-// (variación tímbrica por voz/estación, como pide la Parte 3). ---
+// --- síntesis de un GOLPE de tambor afinado (no una nota sostenida): seno
+// con caída de altura descendente ("thump" de un parche golpeado), caída de
+// amplitud exponencial corta, un parcial inarmónico sutil (timbre) y un
+// golpe de ruido filtrado para el ataque del mazo. La altura la sigue
+// marcando freq (el director, vía las alteraciones); duracionSeg sigue
+// marcando el espacio hasta el próximo golpe (lo que pide la talea), no
+// cuánto resuena este — misma estructura que playNota() en estacion.html.
 function agregaNota(freq, inicioSeg, duracionSeg, gain, pan, timbre) {
   const i0 = t2s(inicioSeg);
-  const dur = Math.max(0.03, duracionSeg);
-  const nSamples = Math.floor(dur * SR);
-  const atk = Math.min(0.012, dur * 0.25);
-  const rel = Math.min(0.09, dur * 0.4);
+  const cuerpo = Math.min(0.42, Math.max(0.12, duracionSeg * 0.55));
+  const caidaAltura = Math.min(0.05, cuerpo * 0.3);
+  const nSamples = Math.floor((cuerpo + 0.05) * SR);
   const panL = Math.cos((Math.min(1, Math.max(0, pan)) * Math.PI) / 2);
   const panR = Math.sin((Math.min(1, Math.max(0, pan)) * Math.PI) / 2);
+  const tauAmp = cuerpo * 0.28;
+  const tauColor = cuerpo * 0.08;
+  const f0 = freq * 1.7;
+  let ph1 = 0, ph2 = 0;
   for (let n = 0; n < nSamples; n++) {
     const idx = i0 + n;
     if (idx < 0 || idx >= N) continue;
     const tt = n / SR;
-    let env;
-    if (tt < atk) env = tt / atk;
-    else if (tt > dur - rel) env = Math.max(0, (dur - tt) / rel);
-    else env = 1;
-    env = env * env; // suaviza el ataque/caída
-    const ph = 2 * Math.PI * freq * tt;
-    let s = Math.sin(ph);
-    s += timbre * 0.28 * Math.sin(2 * ph); // 2do armónico
-    s += timbre * 0.12 * Math.sin(3 * ph); // 3er armónico
-    s *= gain * env;
+    const env = tt < 0.003 ? tt / 0.003 : Math.exp(-(tt - 0.003) / tauAmp);
+    const fInst = tt < caidaAltura ? f0 * Math.pow(freq / f0, tt / caidaAltura) : freq;
+    ph1 += (2 * Math.PI * fInst) / SR;
+    let s = Math.sin(ph1) * env;
+    if (timbre > 0) {
+      ph2 += (2 * Math.PI * freq * 2.76) / SR; // parcial inarmónico, igual relación que en T2
+      s += timbre * 0.35 * Math.sin(ph2) * Math.exp(-tt / tauColor);
+    }
+    s *= gain;
+    L[idx] += s * panL;
+    R[idx] += s * panR;
+  }
+  // golpe de ruido filtrado (pasa-bajos de un polo, centrado ~freq*2.2):
+  // el ataque del mazo contra el parche
+  const nDur = 0.012;
+  const nN = Math.floor(nDur * SR);
+  const fc = Math.min(8000, freq * 2.2);
+  const alpha = 1 - Math.exp((-2 * Math.PI * fc) / SR);
+  let lp = 0;
+  for (let n = 0; n < nN; n++) {
+    const idx = i0 + n;
+    const w = 1 - n / nN;
+    lp += alpha * (Math.random() * 2 - 1 - lp);
+    if (idx < 0 || idx >= N) continue;
+    const s = lp * w * gain * 0.5;
     L[idx] += s * panL;
     R[idx] += s * panR;
   }
@@ -96,15 +118,18 @@ function generaVoz(opts) {
     const tramo = celulasPorTramo[Math.min(tramoActual, celulasPorTramo.length - 1)];
     const celula = tramo.celula;
     const finTramo = tramo.hasta;
-    // genera eventos de este tramo hasta llegar a su límite temporal
-    const evs = M.generarEventos(fila, celula, celula.length * 6); // más que de sobra
-    for (const ev of evs) {
+    // fila truncada al largo de la célula: patrón fijo que se repite
+    // completo (ver motor.js, eventosTruncados), hasta el límite del tramo
+    const eventosBase = M.eventosTruncados(fila, celula);
+    let idxEv = 0;
+    while (tSeg < finTramo && tSeg < DURACION) {
+      const ev = eventosBase[idxEv % eventosBase.length];
       const durSeg = ev.duracionCorcheas * corchea;
-      if (tSeg >= finTramo || tSeg >= DURACION) break;
       const altActual = alteracionesPorTiempo(tSeg);
       const freq = M.gradoAFrecuencia(ev.grado, altActual, octava);
       agregaNota(freq, tSeg, durSeg * 0.92, gain, pan, timbre);
       tSeg += durSeg;
+      idxEv++;
     }
     tramoActual++;
     if (tramoActual >= celulasPorTramo.length && tSeg < DURACION && tSeg >= finTramo) {
@@ -139,9 +164,11 @@ generaArmonia(
   0.05
 );
 
+// un solo pulso por tramo, igual para las 4 voces: todas pegan juntas, cada
+// una en su propia nota (ver eventosTruncados en motor.js)
 const L_ = M.TALEAS.larga;
 const C_ = M.TALEAS.corta;
-const V_ = M.TALEAS.convergencia[0];
+const V_ = M.TALEAS.convergencia;
 
 generaVoz({
   k0: 1,
@@ -154,8 +181,8 @@ generaVoz({
   timbre: 0.15,
   alteracionesPorTiempo,
   celulasPorTramo: [
-    { celula: L_[0], hasta: 28 },
-    { celula: C_[0], hasta: 48 },
+    { celula: L_, hasta: 28 },
+    { celula: C_, hasta: 48 },
     { celula: V_, hasta: 60 },
   ],
 });
@@ -171,15 +198,15 @@ generaVoz({
   timbre: 0.35,
   alteracionesPorTiempo,
   celulasPorTramo: [
-    { celula: L_[1], hasta: 28 },
-    { celula: C_[1], hasta: 48 },
+    { celula: L_, hasta: 28 },
+    { celula: C_, hasta: 48 },
     { celula: V_, hasta: 60 },
   ],
 });
 
 generaVoz({
   k0: 3,
-  lectura: "I",
+  lectura: "P",
   tempoQ: TEMPO_Q,
   inicioSeg: 12,
   pan: 0.65,
@@ -188,15 +215,15 @@ generaVoz({
   timbre: 0.05,
   alteracionesPorTiempo,
   celulasPorTramo: [
-    { celula: L_[2], hasta: 28 },
-    { celula: C_[2], hasta: 48 },
+    { celula: L_, hasta: 28 },
+    { celula: C_, hasta: 48 },
     { celula: V_, hasta: 60 },
   ],
 });
 
 generaVoz({
   k0: 4,
-  lectura: "RI",
+  lectura: "R",
   tempoQ: TEMPO_Q,
   inicioSeg: 16,
   pan: 0.85,
@@ -205,8 +232,8 @@ generaVoz({
   timbre: 0.5,
   alteracionesPorTiempo,
   celulasPorTramo: [
-    { celula: L_[0], hasta: 28 },
-    { celula: C_[0], hasta: 48 },
+    { celula: L_, hasta: 28 },
+    { celula: C_, hasta: 48 },
     { celula: V_, hasta: 60 },
   ],
 });

@@ -73,10 +73,10 @@
   <h2>T A L E A</h2>
   <p>Propuesta para Orquesta de Laptops UC · T1 · Lucas Nervi<br>
   variación de <i>In C</i> con serie diatónica (color) y células rítmicas (talea)</p>
-  <p style="margin-top:14px">Elige tu <b>rol</b> a la izquierda: <b>Armonía</b> o <b>Melodía</b>.
-  El <b>director</b> (<code>director.html</code>, abierto en otra pestaña) controla qué notas están
-  sostenidas o bemoles con su brazalete — esta estación las sigue automáticamente si está abierta en el
-  mismo navegador. Ajusta tus parámetros en vivo y presiona <b>Iniciar</b>.</p>
+  <p style="margin-top:14px">Elige tu <b>rol</b> a la izquierda y presiona <b>Iniciar</b>. No hace falta
+  saber de música: el <b>director</b> (<code>director.html</code>, en otra pestaña) decide las notas y el
+  ritmo en vivo, y esta estación los sigue sola. Vos solo podés ajustar cómo suena tu tambor (grave/agudo,
+  izquierda/derecha, color) y, si querés, tocarlo normal o al revés.</p>
   <div style="margin-top:18px;display:flex;gap:12px;align-items:center">
     <button id="go" style="background:var(--acc);color:#0a0d1c;border-color:var(--acc);font-weight:700;padding:8px 18px">Activar audio</button>
     <span style="color:var(--dim);font-size:11.5px">Chrome o Firefox. Usa audífonos o tu parlante.</span>
@@ -122,31 +122,23 @@
       <div class="fila-botones" style="margin:14px 0 10px">
         <div class="ctl"><label>voz</label>
           <select id="vozN"></select></div>
-        <div class="ctl"><label>octava</label>
+        <div class="ctl"><label>grave ↔ agudo</label>
           <select id="octava"><option>3</option><option selected>4</option><option>5</option></select></div>
-        <div class="ctl"><label>pan</label><input type="range" id="pan" min="-100" max="100" value="0"></div>
-        <div class="ctl"><label>timbre</label><input type="range" id="timbre" min="0" max="100" value="20"></div>
+        <div class="ctl"><label>izquierda ↔ derecha</label><input type="range" id="pan" min="-100" max="100" value="0"></div>
+        <div class="ctl"><label>color del golpe</label><input type="range" id="timbre" min="0" max="100" value="20"></div>
       </div>
       <div style="margin-bottom:10px">
-        <label>lectura de la fila (serie)</label>
+        <label>cómo tocar tu fila</label>
         <div class="fila-botones" id="lecturas">
-          <button data-lectura="P" class="on">P — prima</button>
-          <button data-lectura="R">R — retrogradación</button>
-          <button data-lectura="I">I — inversión</button>
-          <button data-lectura="RI">RI — retrogradación de la inversión</button>
+          <button data-lectura="P" class="on">▶ normal</button>
+          <button data-lectura="R">◀ al revés</button>
         </div>
       </div>
-      <div style="margin-bottom:6px">
-        <label>célula rítmica (talea) — sección larga (comienzo)</label>
-        <div class="fila-botones" id="celdasLarga"></div>
-      </div>
-      <div style="margin-bottom:6px">
-        <label>célula rítmica — sección corta (medio)</label>
-        <div class="fila-botones" id="celdasCorta"></div>
-      </div>
       <div>
-        <label>convergencia final — todas las voces</label>
-        <div class="fila-botones" id="celdasConv"></div>
+        <label>ritmo — lo marca el director, cambia solo</label>
+        <div id="ritmoActual" style="font-size:13px;color:var(--dim);margin-top:4px">—</div>
+        <div id="gridRitmica" style="font-size:20px;letter-spacing:2px;margin-top:6px"></div>
+        <div style="font-size:11px;color:var(--dim);margin-top:2px">cada letra es un golpe, cada <code>0</code> un silencio — un pulso = una corchea</div>
       </div>
     </div>
 
@@ -171,7 +163,7 @@
 
 <footer>
   <span><kbd>espacio</kbd> iniciar / detener</span>
-  <span><kbd>1</kbd>…<kbd>4</kbd> P / R / I / RI (rol Melodía)</span>
+  <span><kbd>1</kbd>/<kbd>2</kbd> normal / al revés (rol Melodía)</span>
   <span class="grow"></span>
   <span style="opacity:.65">motor: motor.js · mismo código usado en render.js</span>
 </footer>
@@ -194,9 +186,18 @@ const alteracionesEl=$('alteraciones');
 
 let rol='voz';
 let lectura='P';
-let celulaActiva=M.TALEAS.larga[0];
+let seccionDirector='A'; // 'A'|'B'|'C'|'E' — la marca el director; de esto sale la célula rítmica sola
 let alt = M.alteracionesPorDefecto();
 let gradoArmonia=1;
+
+// un solo ritmo por sección, igual para todas las voces: todas pegan juntas,
+// cada una en su propia nota. El intérprete no elige nada de esto, lo marca
+// el director.
+function celulaParaSeccion(seccion){
+  if(seccion==='B') return M.TALEAS.corta;
+  if(seccion==='C' || seccion==='E') return M.TALEAS.convergencia;
+  return M.TALEAS.larga; // 'A' o sin director conectado todavía
+}
 
 // ---------- llena selects ----------
 for(let n=1;n<=10;n++){ const o=document.createElement('option'); o.value=n; o.textContent='Melodía '+n; vozNSel.appendChild(o); }
@@ -237,26 +238,6 @@ function pintaAlteraciones(){
 }
 pintaAlteraciones();
 
-function pintaCeldas(contId, lista, tag){
-  const cont=$(contId); cont.innerHTML='';
-  lista.forEach((cel,i)=>{
-    const b=document.createElement('button');
-    const dur=M.duracionTalea(cel);
-    b.innerHTML = cel.join('+') + ' <span class="n">('+dur+')</span>';
-    b.className = 'celula'+(i===0 && tag==='larga' ? ' on':'');
-    b.onclick=()=>{
-      document.querySelectorAll('#celdasLarga button,#celdasCorta button,#celdasConv button').forEach(x=>x.classList.remove('on'));
-      b.classList.add('on');
-      celulaActiva = cel;
-      pintaEstado();
-    };
-    cont.appendChild(b);
-  });
-}
-pintaCeldas('celdasLarga', M.TALEAS.larga, 'larga');
-pintaCeldas('celdasCorta', M.TALEAS.corta, 'corta');
-pintaCeldas('celdasConv', M.TALEAS.convergencia, 'conv');
-
 lecturaBtns.forEach(b=>b.onclick=()=>{
   lecturaBtns.forEach(x=>x.classList.remove('on'));
   b.classList.add('on');
@@ -289,6 +270,7 @@ try{
     if(!msg || msg.tipo!=='estado') return;
     alt = Object.assign(M.alteracionesPorDefecto(), msg.alteraciones||{});
     if(msg.tempo){ bpmEl.value = msg.tempo; bpmv.firstChild.textContent = msg.tempo+' '; }
+    seccionDirector = msg.seccion || 'A';
     syncTag.textContent = 'sincronizado con director';
     syncTag.classList.add('on');
     pintaAlteraciones();
@@ -390,6 +372,19 @@ function dibujaPentagramaRitmica(svg, eventos, activoIdx){
   svg.innerHTML = html;
 }
 
+// grid de pulsos en texto: una letra por golpe, seguida de tantos "0" como
+// corcheas de silencio hasta el próximo golpe — p.ej. célula [3,3,4,4] sobre
+// la fila natural da "C00D00E000F000". Resalta el golpe que está sonando.
+function pintaGridRitmica(eventosBase, activoIdx, corriendo){
+  const html = eventosBase.map((ev,i)=>{
+    const {letra,alteracion}=M.gradoALetraYAlteracion(ev.grado,alt);
+    const token = letra+simboloAlt(alteracion)+'0'.repeat(Math.max(0,ev.duracionCorcheas-1));
+    const activo = corriendo && i===activoIdx;
+    return `<span style="color:${activo?'var(--acc2)':'var(--dim)'};font-weight:${activo?'800':'400'}">${token}</span>`;
+  }).join('');
+  $('gridRitmica').innerHTML = html;
+}
+
 function dibujaRitmo(svg, celula, activoIdx){
   const W = svg.clientWidth || 600, H = 64;
   const total = celula.reduce((a,b)=>a+b,0) || 1;
@@ -411,29 +406,58 @@ let timer=null;
 const LOOKAHEAD=0.1, INTERVAL=25;
 
 let stArmonia={next:0};
-let stVoz={next:0, ic:0, it:0};
+let stVoz={next:0, i:0};
 let historialVoz=[]; // últimos eventos tocados (altura+duración), para ver el ritmo real
 
 function corchea(){ return 60/parseFloat(bpmEl.value)/2; }
 function volMaster(){ return parseFloat(volEl.value)/100; }
 
+// tambor afinado: un GOLPE, no una nota sostenida. La altura la sigue
+// marcando freq (el director, vía las alteraciones) y dur sigue marcando el
+// espacio hasta el próximo golpe (lo que pide la talea), pero el sonido en
+// sí es percusivo: ataque instantáneo, caída corta, una breve caída de
+// altura (el "thump" de un parche golpeado) y un golpe de ruido filtrado
+// para el ataque del mazo — igual estructura que agregaNota() en render.js.
 function playNota(freq, startTime, dur, gain, pan, timbre){
-  const g=ctx.createGain();
   const p=ctx.createStereoPanner(); p.pan.value=Math.max(-1,Math.min(1,pan));
-  g.connect(p); p.connect(master);
-  const atk=Math.min(0.012,dur*0.25), rel=Math.min(0.09,dur*0.4);
+  p.connect(master);
+
+  const cuerpo = Math.min(0.42, Math.max(0.12, dur*0.55)); // cuánto resuena el golpe
+  const caidaAltura = Math.min(0.05, cuerpo*0.3);          // duración del "thump" descendente
+
+  const g=ctx.createGain(); g.connect(p);
   g.gain.setValueAtTime(0,startTime);
-  g.gain.linearRampToValueAtTime(gain,startTime+atk);
-  g.gain.setValueAtTime(gain,Math.max(startTime+atk,startTime+dur-rel));
-  g.gain.linearRampToValueAtTime(0,startTime+dur);
-  function addOsc(mult,amp){
-    const o=ctx.createOscillator(); o.type='sine'; o.frequency.value=freq*mult;
-    const og=ctx.createGain(); og.gain.value=amp;
-    o.connect(og); og.connect(g);
-    o.start(startTime); o.stop(startTime+dur+0.03);
+  g.gain.linearRampToValueAtTime(gain,startTime+0.003);
+  g.gain.setTargetAtTime(0.0001,startTime+0.003,cuerpo*0.28); // caída exponencial corta
+
+  const o=ctx.createOscillator(); o.type='sine';
+  o.frequency.setValueAtTime(freq*1.7,startTime);
+  o.frequency.exponentialRampToValueAtTime(freq,startTime+caidaAltura);
+  o.connect(g);
+  o.start(startTime); o.stop(startTime+cuerpo+0.05);
+
+  if(timbre>0){
+    // parcial inarmónico sutil y breve (misma relación ×2.76 explorada en T2
+    // para el color metálico): da textura de golpe sin tapar la altura.
+    const o2=ctx.createOscillator(); o2.type='sine'; o2.frequency.value=freq*2.76;
+    const g2=ctx.createGain(); g2.connect(p);
+    g2.gain.setValueAtTime(timbre*gain*0.35,startTime);
+    g2.gain.setTargetAtTime(0.0001,startTime,cuerpo*0.08);
+    o2.connect(g2);
+    o2.start(startTime); o2.stop(startTime+cuerpo*0.4);
   }
-  addOsc(1,1);
-  if(timbre>0){ addOsc(2,timbre*0.28); addOsc(3,timbre*0.12); }
+
+  // golpe de ruido filtrado: el ataque del mazo contra el parche
+  const nDur=0.012, nSize=Math.max(1,Math.floor(ctx.sampleRate*nDur));
+  const buf=ctx.createBuffer(1,nSize,ctx.sampleRate);
+  const d=buf.getChannelData(0);
+  for(let i=0;i<nSize;i++) d[i]=(Math.random()*2-1)*(1-i/nSize);
+  const noise=ctx.createBufferSource(); noise.buffer=buf;
+  const bp=ctx.createBiquadFilter(); bp.type='bandpass';
+  bp.frequency.value=Math.min(8000,freq*2.2); bp.Q.value=1.1;
+  const ng=ctx.createGain(); ng.gain.value=gain*0.55;
+  noise.connect(bp); bp.connect(ng); ng.connect(p);
+  noise.start(startTime);
 }
 
 function estadoVoz(){
@@ -462,15 +486,16 @@ function tick(){
       const {k0,octava,timbre,pan}=estadoVoz();
       const base=M.filaGeneradora(k0);
       const fila=M.leer(base,lectura);
-      const grado=fila[stVoz.ic % fila.length];
-      const durC=celulaActiva[stVoz.it % celulaActiva.length];
-      const dur=durC*corchea();
-      const {letra,alteracion}=M.gradoALetraYAlteracion(grado,alt);
+      const celula=celulaParaSeccion(seccionDirector);
+      const eventos=M.eventosTruncados(fila,celula); // fila truncada al largo de la célula — patrón fijo, no isorritmia
+      const ev=eventos[stVoz.i % eventos.length];
+      const dur=ev.duracionCorcheas*corchea();
+      const {letra,alteracion}=M.gradoALetraYAlteracion(ev.grado,alt);
       const freq=M.notaAFrecuencia(letra,alteracion,octava);
       playNota(freq,stVoz.next,dur*0.92,g,pan,timbre);
-      historialVoz.push({letra,alteracion,octava,dur:durC});
+      historialVoz.push({letra,alteracion,octava,dur:ev.duracionCorcheas});
       if(historialVoz.length>6) historialVoz.shift();
-      stVoz.ic++; stVoz.it++;
+      stVoz.i++;
       stVoz.next+=dur;
     }
   }
@@ -484,27 +509,32 @@ function pintaEstado(){
     const {k0,octava}=estadoVoz();
     const base=M.filaGeneradora(k0);
     const fila=M.leer(base,lectura);
+    const celula=celulaParaSeccion(seccionDirector);
+    const eventosBase=M.eventosTruncados(fila,celula); // patrón fijo: una nota por número de la célula
     let eventos, activoIdx;
     if(historialVoz.length>0){
       eventos = historialVoz;
       activoIdx = eventos.length-1;
     } else {
-      // vista previa (detenido): los próximos eventos tal como los generaría
-      // el motor isorrítmico con la fila/célula actuales
-      eventos = M.generarEventos(fila, celulaActiva, 6).map(ev=>{
+      // vista previa (detenido): el mismo patrón fijo, repetido para llenar la vista
+      eventos = Array.from({length:6}, (_,n)=>{
+        const ev = eventosBase[n % eventosBase.length];
         const {letra,alteracion}=M.gradoALetraYAlteracion(ev.grado,alt);
         return {letra,alteracion,octava,dur:ev.duracionCorcheas};
       });
       activoIdx = 0;
     }
     dibujaPentagramaRitmica(pentagramaEl, eventos, activoIdx);
-    dibujaRitmo(ritmoEl, celulaActiva, stVoz.it % celulaActiva.length);
+    // stVoz.i ya avanzó al próximo evento cuando esto se pinta; el que está
+    // sonando es el anterior
+    const golpeActivo = (stVoz.i - 1 + eventosBase.length) % eventosBase.length;
+    dibujaRitmo(ritmoEl, celula, golpeActivo % celula.length);
+    pintaGridRitmica(eventosBase, golpeActivo, historialVoz.length>0);
+    $('ritmoActual').textContent = celula.join('+')+' ('+M.duracionTalea(celula)+' corcheas) · sección '+seccionDirector;
     const evActivo = eventos[activoIdx];
     notaGrandeEl.textContent = nombreNota(evActivo.letra, evActivo.alteracion, evActivo.octava);
     lecturaGrandeEl.textContent = lectura;
-    txt = 'rol: Melodía '+N+' · fila generadora k='+k0+' · lectura '+lectura+
-      '\ncélula activa: '+celulaActiva.join('+')+' ('+M.duracionTalea(celulaActiva)+' corcheas)'+
-      '\nciclo isorrítmico: color['+ (stVoz.ic%7) +'] × talea['+ (stVoz.it%celulaActiva.length) +']'+
+    txt = 'estación: Melodía '+N+' (tambor '+N+') · sección del director: '+seccionDirector+
       (historialVoz.length? '' : '\n(vista previa — aún no inicia)');
   } else if(rol==='armonia'){
     const notas=M.masterChordSobreGrado(gradoArmonia,alt).map(nt=>({letra:nt.letra,alteracion:nt.alteracion,octava:3}));
@@ -520,7 +550,7 @@ function iniciar(){
   running=true;
   btnRun.textContent='Detener espacio'; btnRun.classList.add('on');
   const t0=ctx.currentTime+0.05;
-  stArmonia.next=t0; stVoz.next=t0; stVoz.ic=0; stVoz.it=0; historialVoz=[];
+  stArmonia.next=t0; stVoz.next=t0; stVoz.i=0; historialVoz=[];
   timer=setInterval(tick, INTERVAL);
 }
 function detener(){
@@ -543,8 +573,8 @@ btnRun.onclick=()=>{ running? detener(): iniciar(); };
 
 window.addEventListener('keydown', (e)=>{
   if(e.code==='Space'){ e.preventDefault(); running?detener():iniciar(); }
-  if(rol==='voz' && ['1','2','3','4'].includes(e.key)){
-    const map={'1':'P','2':'R','3':'I','4':'RI'};
+  if(rol==='voz' && ['1','2'].includes(e.key)){
+    const map={'1':'P','2':'R'};
     lectura=map[e.key];
     lecturaBtns.forEach(b=>b.classList.toggle('on', b.dataset.lectura===lectura));
     pintaEstado();

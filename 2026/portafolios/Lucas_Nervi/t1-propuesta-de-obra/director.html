@@ -113,8 +113,17 @@ let alt = M.alteracionesPorDefecto();
 let canal=null;
 try{ canal = new BroadcastChannel('oluc-talea'); }catch(e){}
 
+// sección actual ('A'|'B'|'C'|'E'|null) — se transmite junto con las
+// alteraciones para que cada estación ajuste su ritmo sola, sin que el
+// intérprete tenga que elegir una célula a mano.
+let seccionKey = null;
 function emitir(){
-  if(canal) canal.postMessage({tipo:'estado', alteraciones:alt, tempo:parseInt(bpmEl.value,10)});
+  if(canal) canal.postMessage({tipo:'estado', alteraciones:alt, tempo:parseInt(bpmEl.value,10), seccion:seccionKey});
+}
+function setSeccion(k){
+  if(seccionKey===k) return;
+  seccionKey = k;
+  emitir();
 }
 
 // ---------- brazalete (SVG circular) ----------
@@ -174,6 +183,7 @@ emitir();
 setInterval(emitir, 4000);
 
 // ---------- forma / reloj ----------
+const SECCION_LETRAS = ['A','B','C','E'];
 const FORMA=[
   {ini:0,   fin:150, nombre:'A — Apertura',      cue:'SECCIÓN A',      sub:'talea larga (16 · 14 · 10) · todo natural · entradas escalonadas'},
   {ini:150, fin:300, nombre:'B — Nudo',          cue:'SECCIÓN B',      sub:'talea corta (8 · 5 · 7) · activar 1–2 alteraciones en el brazalete'},
@@ -212,6 +222,7 @@ function tick(){
       cueGrande.textContent = FORMA[idx].cue;
       cueSub.textContent = FORMA[idx].sub;
       pintaTabla(idx);
+      setSeccion(SECCION_LETRAS[idx]);
     } else {
       cueGrande.textContent='—'; cueSub.textContent=''; pintaTabla(-1);
     }
@@ -226,6 +237,7 @@ $('btnReset').onclick=()=>{
   corriendo=false; pausadoEn=0; manual=false;
   reloj.textContent='00:00'; cueGrande.textContent='ESPERANDO'; cueSub.textContent='presiona «Iniciar obra» para comenzar el reloj';
   pintaTabla(-1);
+  setSeccion(null);
 };
 
 const CUES_MANUALES={
@@ -246,6 +258,7 @@ window.addEventListener('keydown',(e)=>{
     manual=true;
     cueGrande.textContent=CUES_MANUALES[k].txt;
     cueSub.textContent=CUES_MANUALES[k].sub;
+    setSeccion(k.toUpperCase());
   }
 });
 </script>

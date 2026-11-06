@@ -120,48 +120,35 @@ const OLUC_TALEA = (function () {
     ];
   }
 
-  // ---------- talea (células rítmicas, en corcheas) ----------
-  // El arco formal de la obra: células largas al comienzo, cortas al medio,
-  // convergencia final de todas las voces en 4-3-4 (11 corcheas).
+  // ---------- talea (ritmo, en corcheas) ----------
+  // Lo más simple posible: un solo pulso parejo por sección, igual para
+  // TODAS las voces (nadie elige ni varía su propio ritmo). El arco formal
+  // de la obra queda en la velocidad del pulso, no en patrones distintos:
+  // golpes lentos al comienzo, el doble de rápido al medio, golpes lentos
+  // de nuevo al converger — todo el ensamble pega junto, cada quien en su
+  // propia nota (ver eventosTruncados).
   const TALEAS = {
-    larga: [
-      [3, 3, 4, 2, 4], // 16 corcheas
-      [3, 3, 4, 4], // 14 corcheas
-      [3, 3, 2, 2], // 10 corcheas
-    ],
-    corta: [
-      [3, 3, 2], // 8 corcheas
-      [2, 3], // 5 corcheas
-      [2, 2, 3], // 7 corcheas
-    ],
-    convergencia: [
-      [4, 3, 4], // 11 corcheas — célula final compartida por todas las voces
-    ],
+    larga: [4, 4, 4, 4], // sección A: un golpe cada negra (lento)
+    corta: [2, 2, 2, 2, 2, 2], // sección B: un golpe cada corchea doble (el doble de rápido)
+    convergencia: [4, 4, 4], // C y Evaporación: todas las voces vuelven al pulso lento, juntas
   };
 
   function duracionTalea(celula) {
     return celula.reduce((a, b) => a + b, 0);
   }
 
-  // Genera n eventos isorrítmicos ciclando la fila (color, largo 7) contra la
-  // célula rítmica (talea, largo variable) de forma independiente: cada una
-  // avanza a su propio paso y solo vuelven a coincidir en la combinación de
-  // origen cada mcm(7, talea.length) eventos.
-  function generarEventos(row, celula, n) {
-    const eventos = [];
-    let ic = 0,
-      it = 0;
-    for (let e = 0; e < n; e++) {
-      eventos.push({
-        grado: row[ic],
-        duracionCorcheas: celula[it],
-        indiceColor: ic,
-        indiceTalea: it,
-      });
-      ic = (ic + 1) % row.length;
-      it = (it + 1) % celula.length;
-    }
-    return eventos;
+  // Trunca la fila (color) al largo de la célula (talea): evento i toma la
+  // nota i de la fila (ciclando si la célula tuviera más de 7 eventos) junto
+  // a la duración i de la célula. Sin cómputo independiente de color y
+  // talea: el patrón resultante es fijo y se repite completo cada vez que
+  // se recorre la célula — por ejemplo, para la célula [3,3,4,4] sobre la
+  // fila natural da C(3) D(3) E(4) F(4), siempre las mismas cuatro notas.
+  function eventosTruncados(row, celula) {
+    return celula.map((duracionCorcheas, i) => ({
+      grado: row[i % row.length],
+      duracionCorcheas,
+      indice: i,
+    }));
   }
 
   return {
@@ -182,7 +169,7 @@ const OLUC_TALEA = (function () {
     posDiatonica,
     TALEAS,
     duracionTalea,
-    generarEventos,
+    eventosTruncados,
   };
 })();
 

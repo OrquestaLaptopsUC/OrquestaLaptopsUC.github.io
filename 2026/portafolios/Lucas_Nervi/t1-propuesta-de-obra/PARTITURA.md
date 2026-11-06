@@ -13,6 +13,8 @@ Cada Melodía tiene una fila fija de 7 grados diatónicos (el **color**), genera
 
 No hay tónica ni colección preestablecida: el **director** decide, nota por nota, cuáles de las siete notas naturales (C D E F G A B) están sostenidas o bemoles, con un brazalete visual circular. Cuando cambia una alteración, todas las estaciones Melodía y Armonía conectadas cambian su patrón al instante — el director no dirige con señas solamente, dirige el material mismo. Esto suena contra una guía métrica implícita: como no hay Pulso, cada Melodía sostiene su propio tempo de talea y todas se realinean por oído cada vez que el director anuncia un cambio, en la misma lógica de tensión y resolución rítmica que Meshuggah logra con riffs de agrupaciones impares sobre una batería estable — aquí, sin batería, la "resolución" la marca el propio cambio de nota del director (ver Parte 1).
 
+**Accesibilidad del ensamble.** No todos los integrantes de la Orquesta de Laptops UC son músicos de formación, y la obra se escribe para ese ensamble real, no para uno ideal (sección 4 del enunciado). Por eso la estación en vivo (`estacion.html`) reduce lo que cada Melodía decide a dos cosas simples — cómo lee su fila (normal o al revés) y cómo suena su "tambor" — y deja que el director decida el resto (altura disponible y ritmo activo) en tiempo real. El aparato compositivo completo (las cuatro lecturas seriales, la elección manual de célula) sigue existiendo en `motor.js` y se usa sin recortes en el render de referencia (Parte 3.3 del enunciado), que es la demostración técnica íntegra de la pieza.
+
 ## 2. Altura
 
 **Filas generadoras**, una por Melodía: `fila(k)[i] = (i·k mod 7) + 1`
@@ -26,7 +28,7 @@ No hay tónica ni colección preestablecida: el **director** decide, nota por no
 | 5 | 1 6 4 2 7 5 3 |
 | 6 | 1 7 6 5 4 3 2 |
 
-**Lecturas** (decisión en vivo): P (tal cual) · R (al revés) · I (invertida sobre el primer grado: `inv(d)=(2·eje−d) mod 7`) · RI (I al revés).
+**Lecturas:** P (tal cual) · R (al revés) · I (invertida sobre el primer grado: `inv(d)=(2·eje−d) mod 7`) · RI (I al revés) — las cuatro existen en `motor.js` y las usa el render (una lectura distinta por cada una de sus 4 Melodías). En vivo, por la razón de accesibilidad explicada en §1, cada intérprete solo elige entre P y R ("normal" / "al revés" en la interfaz); I y RI quedan como parte del aparato compositivo demostrado en el render, no como opción de la estación.
 
 **Grado → nota:** el grado *i* (1–7) es siempre la nota natural i-ésima (1=C, 2=D, 3=E, 4=F, 5=G, 6=A, 7=B), alterada según lo que el director tenga activo en su brazalete. No hay tónica: cambiar una alteración recolorea directamente esa nota en todas las filas que la contengan, sin tener que elegir toda una escala nueva.
 
@@ -40,12 +42,14 @@ No hay tónica ni colección preestablecida: el **director** decide, nota por no
 
 Isorritmia: evento *n* = `fila[n mod 7]` con duración `talea[n mod talea.length]`. Como 7 casi nunca coincide con el largo de la talea, la combinación altura-duración cambia en cada repetición del ciclo.
 
+**Quién elige la célula.** En el render (Parte 3.3), la célula de cada Melodía está escrita de antemano por tramo de tiempo, junto con su lectura. En vivo, la estación la elige sola: toma la sección activa que transmite el director (A → larga, B → corta, C o Coda → convergencia) y, dentro de ese nivel, la variante `(k−1) mod 3` según el número de voz k, para que las Melodías no toquen exactamente el mismo ritmo entre sí. El intérprete no la selecciona a mano; solo la ve, actualizada en pantalla.
+
 ## 4. Roles (7 → 12 estaciones)
 
 | rol | cuántas | decide en vivo |
 |---|---|---|
 | Armonía | 1 → 2 | qué grado (1–7) de master chord sostener; cambia con las alteraciones del director |
-| Melodía | 6 → 10 | lectura (P/R/I/RI), célula, timbre |
+| Melodía | 6 → 10 | lectura (normal/al revés), color del golpe, octava, pan — la célula rítmica la fija la sección del director, no es una decisión del intérprete (ver §1 y §3) |
 | **Director** | 1 (no toca) | qué notas están sostenidas/bemoles (brazalete), tempo, cues de sección |
 
 Con 7 estaciones tocando: Armonía + Melodía 1–6 (más el director, que no es una estación sonora sino la consola `director.html`). Con más: se suman más Melodías (reutilizando filas k=1..6 en otra octava/timbre) o una segunda Armonía en otro grado.
@@ -88,4 +92,6 @@ Estaciones en semicírculo con parlante propio (en fabricación); Armonía al ce
 
 ## 10. Notas técnicas
 
-`motor.js` (filas, P/R/I/RI, alteraciones nota-a-nota, isorritmia, `masterChordSobreGrado`) lo comparten `estacion.html` (Web Audio + partitura SVG en vivo), `director.html` (el brazalete) y `render.js` (Node, sintetiza el mismo motor a un WAV sin dependencias). `director.html` y `estacion.html` se sincronizan por `BroadcastChannel('oluc-talea')`, emitiendo `{alteraciones, tempo}` cada vez que el director cambia algo (y cada 4s por si una estación se conecta tarde). Tempo de referencia: negra = 96 bpm.
+`motor.js` (filas, P/R/I/RI, alteraciones nota-a-nota, isorritmia, `masterChordSobreGrado`) lo comparten `estacion.html` (Web Audio + partitura SVG en vivo), `director.html` (el brazalete) y `render.js` (Node, sintetiza el mismo motor a un WAV sin dependencias). `director.html` y `estacion.html` se sincronizan por `BroadcastChannel('oluc-talea')`, emitiendo `{alteraciones, tempo, seccion}` cada vez que el director cambia algo (y cada 4s por si una estación se conecta tarde); `seccion` (`A`/`B`/`C`/`E`) es lo que hace que cada Melodía ajuste su célula rítmica sola, sin que el intérprete la elija (ver §3). Tempo de referencia: negra = 96 bpm.
+
+**Síntesis: tambor afinado.** Cada nota no es un tono sostenido sino un golpe percusivo, implementado igual en `estacion.html` (Web Audio, `playNota`) y en `render.js` (`agregaNota`, sin dependencias): un seno cuya frecuencia cae de `freq×1.7` a `freq` en los primeros ~50ms (el "thump" de un parche golpeado), envolvente de amplitud con ataque instantáneo y caída exponencial corta, un parcial inarmónico sutil a `freq×2.76` controlado por `timbre` (la misma relación explorada en T2 para color metálico), y un golpe de ruido filtrado pasa-banda alrededor de `freq×2.2` que simula el ataque del mazo contra el parche. La duración que pide la talea (`dur`) sigue marcando el espacio hasta el próximo golpe, no cuánto resuena este.

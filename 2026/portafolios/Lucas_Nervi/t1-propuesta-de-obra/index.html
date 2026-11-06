@@ -149,24 +149,31 @@ las voces a la misma célula (4-3-4).</p>
 </table>
 
 <p><b>Coordinación:</b> sin red entre laptops físicas, todo se sostiene de oído y por el director
-(<a href="director.html">director.html</a>: brazalete, tempo, cues de sección). Dentro de un mismo
-navegador sí hay sincronización real: <code>director.html</code> y <code>estacion.html</code> se
-comunican por <code>BroadcastChannel</code>, así que cambiar una nota en el brazalete recolorea al
-instante todas las pestañas de estación abiertas — pero eso no viaja entre doce laptops distintas; para
-el ensamble real la misma información se anuncia de palabra/gesto o se extendería por OSC
+(<a href="director.html">director.html</a>: brazalete, tempo, cues de sección A/B/C/Coda). Dentro de un
+mismo navegador sí hay sincronización real: <code>director.html</code> y <code>estacion.html</code> se
+comunican por <code>BroadcastChannel</code>, emitiendo tanto las alteraciones del brazalete como la
+sección activa — así cada estación recolorea su material y cambia de célula rítmica al instante, sin que
+el intérprete tenga que elegir nada — pero eso no viaja entre doce laptops distintas; para el ensamble
+real la misma información se anuncia de palabra/gesto o se extendería por OSC
 (<code>/oluc/alteracion</code>, opcional, no implementada). Detalle honesto de esta limitación en
 <a href="PARTITURA.md#7-estrategia-de-coordinación">PARTITURA.md §7</a>.</p>
 
 <p><b>Roles:</b> 7 estaciones = Armonía + Melodía 1–6, más el director (no suena, solo controla).
-<b>Notación:</b> <a href="estacion.html">estacion.html</a> dibuja un pentagrama con ritmo real: cada
-nota lleva su duración (negra, negra con puntillo, blanca hueca) y su ancho es proporcional a esa
-duración, mostrando los últimos eventos realmente tocados (o una vista previa si está detenida) — así se
-verifica de un vistazo que la talea suena como dice, sin adivinar; en Armonía, el grado del master chord
-se elige con siete botones que muestran de entrada las notas del acorde resultante, no un menú de texto.
-<b>Riesgos:</b> perder el
-tempo compartido sin Pulso (mitigado acordando el tempo antes de tocar); que <code>BroadcastChannel</code>
-no sirva para el ensamble real de laptops distintas (documentado, cae a viva voz); que la Convergencia
-no caiga junta (versión reducida: se extiende B y se salta a la Coda).</p>
+Pensando en que no todos los intérpretes del ensamble son músicos de formación, la estación en vivo
+simplifica lo que cada Melodía decide: solo elige cómo lee su fila (<b>normal</b> o <b>al revés</b>,
+equivalentes a P y R) y cómo suena su "tambor" (grave↔agudo, izquierda↔derecha, color del golpe); la
+célula rítmica ya no se elige a mano, la fija sola la sección que transmite el director
+(larga en A, corta en B, convergencia en C/Coda), visible en pantalla como "ritmo — lo marca el
+director". El aparato serial completo (P/R/I/RI) sigue vivo en <code>motor.js</code> y se usa sin
+recortes en el render de la Parte 3.3. <b>Notación:</b> <a href="estacion.html">estacion.html</a> dibuja
+un pentagrama con ritmo real: cada nota lleva su duración (negra, negra con puntillo, blanca hueca) y su
+ancho es proporcional a esa duración, mostrando los últimos eventos realmente tocados (o una vista previa
+si está detenida) — así se verifica de un vistazo que la talea suena como dice, sin adivinar; en Armonía,
+el grado del master chord se elige con siete botones que muestran de entrada las notas del acorde
+resultante, no un menú de texto. <b>Riesgos:</b> perder el tempo compartido sin Pulso (mitigado acordando
+el tempo antes de tocar); que <code>BroadcastChannel</code> no sirva para el ensamble real de laptops
+distintas (documentado, cae a viva voz); que la Convergencia no caiga junta (versión reducida: se extiende
+B y se salta a la Coda).</p>
 
 <p class="dim">Detalle completo en <a href="PARTITURA.md">PARTITURA.md</a>.</p>
 
@@ -174,9 +181,12 @@ no caiga junta (versión reducida: se extiende B y se salta a la Coda).</p>
 
 <div class="card">
 <p><span class="badge">FUNCIONAL</span> Render de 60s: Armonía (master chord, grado 1→5 y el director activa
-Fa♯ a los 28s), y 4 Melodías (k=1,2,3,4; lecturas P/R/I/RI) que entran escalonadas, pasan de célula larga
-a corta a los 28s y convergen a 4-3-4 en los últimos 12s. Sin Pulso: el render demuestra exactamente el
-motor que tocarían las estaciones reales.</p>
+Fa♯ a los 28s), y 4 Melodías (k=1,2,3,4; lecturas P/R/I/RI, el repertorio serial completo — en vivo la
+estación lo simplifica a normal/al revés, ver Parte 2) que entran escalonadas, pasan de célula larga
+a corta a los 28s y convergen a 4-3-4 en los últimos 12s. Cada nota es un golpe de tambor afinado, no un
+tono sostenido: ataque percusivo, una breve caída de altura ("thump" de parche golpeado) y un golpe de
+ruido filtrado para el mazo — mismo instrumento que suena en <code>estacion.html</code>. Sin Pulso: el
+render demuestra exactamente el motor que tocarían las estaciones reales.</p>
 <audio controls src="render.wav"></audio>
 <a class="btn" href="estacion.html">Abrir estacion.html ↗</a>
 <a class="btn alt" href="director.html">Abrir director.html ↗</a>
@@ -190,8 +200,10 @@ Chrome/Firefox, Web Audio API + <code>BroadcastChannel</code>, con pentagrama, b
 dibujados en SVG en vivo (nada que leer en texto: se ve la nota que suena y se ve qué alteró el director).
 <code>render.js</code>: Node.js, sin paquetes externos.
 <b>Reproducir el render:</b> <code>node render.js</code> (determinista).
-<b>Parámetros:</b> rol, voz/fila, lectura P/R/I/RI, célula, grado (Armonía), timbre, tempo — ver
-<code>estacion.html</code>; alteraciones por nota y tempo — ver <code>director.html</code>.
+<b>Parámetros en <code>estacion.html</code>:</b> rol (Armonía/Melodía), voz/fila, lectura normal/al
+revés, grave↔agudo, izquierda↔derecha, color del golpe, grado (Armonía), tempo; la célula rítmica ya no
+es un parámetro del intérprete, la decide la sección que transmite el director. Alteraciones por nota y
+tempo — ver <code>director.html</code>.
 <b>Rol en la obra:</b> reducción de un minuto de la Parte 2 completa, con el motor y material reales (no
 una simulación aparte). Para ver la sincronización real en acción: abrir <code>director.html</code> y
 <code>estacion.html</code> en dos pestañas del mismo navegador y tocar el brazalete.</p>
@@ -250,6 +262,20 @@ pentagrama mostraba las 7 notas siempre parejas, sin información de duración, 
 verlo. Solución implementada: el pentagrama ahora dibuja cada nota con su figura rítmica real (negra,
 negra con puntillo, blanca) y ancho proporcional a la duración, mostrando el historial de eventos
 realmente tocados en vez de una fila fija.</p>
+<p><b>Iteración más reciente (resumen, no cita literal — este pedido se hizo en una sesión de trabajo
+previa cuyo historial de prompts no se conservó):</b> el estudiante pidió simplificar la estación pensando
+en que no todos los integrantes del ensamble tienen formación musical, de modo que cualquiera pudiera
+tocarla sin tener que leer teoría. La IA: redujo las lecturas en vivo de P/R/I/RI a solo normal/al revés
+(P/R; el motor conserva I/RI y el render los sigue usando como demostración técnica completa); eliminó la
+selección manual de célula rítmica, reemplazándola por una elección automática según la sección que
+transmite el director (<code>seccionDirector</code>, propagada por <code>BroadcastChannel</code> junto a
+las alteraciones); cambió la síntesis de una nota sostenida a un golpe de tambor afinado (ataque
+percusivo, caída de altura tipo "thump", golpe de ruido filtrado para el mazo) en
+<code>estacion.html</code> y <code>render.js</code> en paralelo, para que ambos sigan sonando igual; y
+renombró los controles a lenguaje no técnico (grave↔agudo, izquierda↔derecha, color del golpe). Esta
+entrega regeneró <code>render.wav</code> con <code>node render.js</code> para reflejar el nuevo sonido, y
+esta página y <code>PARTITURA.md</code> se actualizaron para describir el diseño tal como quedó, en vez
+del diseño anterior.</p>
 </div>
 
 </main>
