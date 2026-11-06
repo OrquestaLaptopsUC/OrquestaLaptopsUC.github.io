@@ -407,7 +407,6 @@ const LOOKAHEAD=0.1, INTERVAL=25;
 
 let stArmonia={next:0};
 let stVoz={next:0, i:0};
-let historialVoz=[]; // últimos eventos tocados (altura+duración), para ver el ritmo real
 
 function corchea(){ return 60/parseFloat(bpmEl.value)/2; }
 function volMaster(){ return parseFloat(volEl.value)/100; }
@@ -493,8 +492,6 @@ function tick(){
       const {letra,alteracion}=M.gradoALetraYAlteracion(ev.grado,alt);
       const freq=M.notaAFrecuencia(letra,alteracion,octava);
       playNota(freq,stVoz.next,dur*0.92,g,pan,timbre);
-      historialVoz.push({letra,alteracion,octava,dur:ev.duracionCorcheas});
-      if(historialVoz.length>6) historialVoz.shift();
       stVoz.i++;
       stVoz.next+=dur;
     }
@@ -511,31 +508,24 @@ function pintaEstado(){
     const fila=M.leer(base,lectura);
     const celula=celulaParaSeccion(seccionDirector);
     const eventosBase=M.eventosTruncados(fila,celula); // patrón fijo: una nota por número de la célula
-    let eventos, activoIdx;
-    if(historialVoz.length>0){
-      eventos = historialVoz;
-      activoIdx = eventos.length-1;
-    } else {
-      // vista previa (detenido): el mismo patrón fijo, repetido para llenar la vista
-      eventos = Array.from({length:6}, (_,n)=>{
-        const ev = eventosBase[n % eventosBase.length];
-        const {letra,alteracion}=M.gradoALetraYAlteracion(ev.grado,alt);
-        return {letra,alteracion,octava,dur:ev.duracionCorcheas};
-      });
-      activoIdx = 0;
-    }
-    dibujaPentagramaRitmica(pentagramaEl, eventos, activoIdx);
+    // la frase completa SIEMPRE se muestra entera, sin deslizarse — solo se
+    // mueve qué golpe está resaltado como "sonando ahora"
+    const eventos = eventosBase.map(ev=>{
+      const {letra,alteracion}=M.gradoALetraYAlteracion(ev.grado,alt);
+      return {letra,alteracion,octava,dur:ev.duracionCorcheas};
+    });
     // stVoz.i ya avanzó al próximo evento cuando esto se pinta; el que está
     // sonando es el anterior
-    const golpeActivo = (stVoz.i - 1 + eventosBase.length) % eventosBase.length;
+    const golpeActivo = running ? ((stVoz.i - 1 + eventosBase.length) % eventosBase.length) : 0;
+    dibujaPentagramaRitmica(pentagramaEl, eventos, golpeActivo);
     dibujaRitmo(ritmoEl, celula, golpeActivo % celula.length);
-    pintaGridRitmica(eventosBase, golpeActivo, historialVoz.length>0);
+    pintaGridRitmica(eventosBase, golpeActivo, running);
     $('ritmoActual').textContent = celula.join('+')+' ('+M.duracionTalea(celula)+' corcheas) · sección '+seccionDirector;
-    const evActivo = eventos[activoIdx];
+    const evActivo = eventos[golpeActivo];
     notaGrandeEl.textContent = nombreNota(evActivo.letra, evActivo.alteracion, evActivo.octava);
     lecturaGrandeEl.textContent = lectura;
     txt = 'estación: Melodía '+N+' (tambor '+N+') · sección del director: '+seccionDirector+
-      (historialVoz.length? '' : '\n(vista previa — aún no inicia)');
+      (running? '' : '\n(vista previa — aún no inicia)');
   } else if(rol==='armonia'){
     const notas=M.masterChordSobreGrado(gradoArmonia,alt).map(nt=>({letra:nt.letra,alteracion:nt.alteracion,octava:3}));
     dibujaPentagrama(pentagramaArmoniaEl, notas, 'todas');
@@ -550,7 +540,7 @@ function iniciar(){
   running=true;
   btnRun.textContent='Detener espacio'; btnRun.classList.add('on');
   const t0=ctx.currentTime+0.05;
-  stArmonia.next=t0; stVoz.next=t0; stVoz.i=0; historialVoz=[];
+  stArmonia.next=t0; stVoz.next=t0; stVoz.i=0;
   timer=setInterval(tick, INTERVAL);
 }
 function detener(){
