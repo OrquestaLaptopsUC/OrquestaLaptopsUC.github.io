@@ -61,7 +61,7 @@
         </dl></section>
       <section><h3>3 · Cuando cambia el acorde: glissando</h3>
         <p>Las notas que siguen sonando en el cambio <b>se deslizan solas</b> y llegan justo con el acorde nuevo. Así no hace falta seguir el tempo al soltar las notas. Sobre el piano verás adónde irá cada nota (por ejemplo, <i>A♭4 → G♭4</i>).</p>
-        <p>Puedes elegir si van a la nota del acorde más cercana, si se mueven todas juntas (conservan la disonancia) o si se quedan quietas, y cuánto dura el deslizamiento.</p></section>
+        <p>Con el botón <b>🎚️ Cambio de acorde</b> (junto a "Soltar todo") eliges si van a la nota del acorde más cercana, si se mueven todas juntas (conservan la disonancia) o si se quedan quietas, y cuánto dura el deslizamiento.</p></section>
       <section><h3>4 · Efectos</h3>
         <p>Con <b>🎛️ Efectos automáticos</b> encendido, la distorsión, el brillo, la reverb y el volumen cambian solos en cada parte de la obra. Si mueves un control a mano, el modo automático se apaga hasta que lo vuelvas a encender.</p></section>
       <section><h3>5 · Notas que caen</h3>
@@ -69,11 +69,9 @@
         <p>Si la tocas a tiempo se pone verde (<b>Perfecto</b> o <b>Bien</b>); si se te pasa, queda gris. Arriba se cuentan los aciertos y la racha. Puedes apagarlas o cambiar su velocidad. Es una guía, no una obligación: improvisar sigue valiendo.</p></section>
       <section><h3>Tocar con el teclado de la computadora</h3>
         <div class="atajos">
-          <p>El piano muestra <b>solo el registro de tu parte</b> (al menos una octava), y cada tecla tiene su letra:</p>
-          <div class="oct-pc">
-            <div class="fila-teclas">${"QWERTYUIO".split("").map(c => `<kbd class="negra">${c}</kbd>`).join("")}</div>
-            <div class="fila-teclas blancas">${"ASDFGHJKLÑ".split("").map(c => `<kbd>${c}</kbd>`).join("")}</div></div>
-          <p class="muted small">Las blancas van en la fila del medio, desde la A. Cada negra es la tecla de arriba que queda en su hueco: entre A y S está la Q, entre S y D la W, y así. Donde no hay negra (entre Mi y Fa, o entre Si y Do) esa letra no suena. Los números no tocan notas.</p>
+          <p>El piano tiene <b>una tecla ancha por nota, todas en la fila A</b> (A S D F G H J K L Ñ): las notas que pide tu parte y, para completar hasta 10, otras de la escala de la obra (Re♭ mayor), un poco más apagadas, para improvisar. Las notas que caen solo llegan a tus notas.</p>
+          <div class="oct-pc"><div class="fila-teclas blancas">${"ASDFGHJKLÑ".split("").map(c => `<kbd>${c}</kbd>`).join("")}</div></div>
+          <p class="muted small">De izquierda a derecha, de la nota más grave a la más aguda. Cada tecla del piano muestra su nota y su letra. Los números no tocan notas.</p>
           <p><kbd>←</kbd> <kbd>→</kbd> bajar o subir octava · <kbd>8</kbd> normal · <kbd>9</kbd> notas fijas · <kbd>0</kbd> acorde automático · <kbd>Esc</kbd> soltar todo · <kbd>?</kbd> esta ayuda</p>
         </div></section>
     </div>`), { clase: "ancha" });
@@ -82,8 +80,8 @@
   /* ============================== roles ============================== */
   const pf = id => PERFILES.find(p => p.id === id);
   const ROLES = [
-    { id: "teclado-1", titulo: "Teclado 1", sub: "Medio/alto · arpegio", icono: "🎹" },
-    { id: "teclado-2", titulo: "Teclado 2", sub: "Medio/alto · pedal agudo", icono: "🎹" },
+    { id: "teclado-1", titulo: "Teclado 1", sub: "Arpegio · notas graves", icono: "🎹" },
+    { id: "teclado-2", titulo: "Teclado 2", sub: "Arpegio · notas agudas y pedal", icono: "🎹" },
     { id: "teclado-3", titulo: "Teclado 3", sub: "Bajo/medio · el bajo", icono: "🎹" },
     { id: "teclado-4", titulo: "Teclado 4", sub: "Bajo/medio · acordes", icono: "🎹" },
     { id: "bateria", titulo: "Batería", sub: "Kit de FL o base 808", icono: "🥁" },
@@ -129,7 +127,38 @@
   }
   let pistasProm = null;
   const pistas = () => (pistasProm = pistasProm || window.MIDI.pistasDeLaObra());
-  async function pistaDe(id) { const pid = P.midi && P.midi.porPerfil[id]; return pid ? (await pistas()).find(p => p.id === pid) || null : null; }
+  // La pista de cada perfil. Con un "reparto" (partitura → midi.reparto), se juntan las pistas indicadas y se
+  // quedan solo las alturas que le tocan a ese perfil (así los teclados 1 y 2 se reparten la línea de la pista Medio).
+  const cacheReparto = new Map();
+  async function pistaDe(id) {
+    const rep = P.midi && P.midi.reparto && P.midi.reparto[id];
+    if (rep) {
+      if (!cacheReparto.has(id)) cacheReparto.set(id, pistas().then(ps => {
+        const notas = rep.pistas.flatMap(pid => { const p = ps.find(x => x.id === pid); return p ? p.notas : []; }).filter(n => rep.notas.includes(n.m));
+        return notas.length ? window.MIDI.preparar({ id: "reparto-" + id, nombre: "Reparto " + id, notas: notas.map(n => Object.assign({}, n)) }) : null;
+      }));
+      return cacheReparto.get(id);
+    }
+    const pid = P.midi && P.midi.porPerfil[id]; return pid ? (await pistas()).find(p => p.id === pid) || null : null;
+  }
+  // volumen propio de una altura de la pista del perfil (1 si no tiene)
+  const volNota = (id, m) => { const v = P.midi && P.midi.reparto && P.midi.reparto[id] && P.midi.reparto[id].volumen; return v && v[m] != null ? v[m] : 1; };
+  // Piano en carriles: las notas que pide tu parte (todas) más notas de la escala de la obra (Re♭ mayor) para improvisar,
+  // hasta llenar la fila A S D F G H J K L Ñ. Primero las de la escala que caen entre tus notas, después alternando
+  // una más grave y una más aguda.
+  const MAX_CARRILES = 10;
+  function carrilesConEscala(requeridas, maximo = MAX_CARRILES) {
+    if (!requeridas.length || requeridas.length > maximo) return null;
+    const enEscala = m => ESCALA.has(((m % 12) + 12) % 12), set = new Set(requeridas);
+    const lo = requeridas[0], hi = requeridas[requeridas.length - 1];
+    for (let m = lo; m <= hi && set.size < maximo; m++) if (enEscala(m)) set.add(m);
+    let abajo = lo - 1, arriba = hi + 1, turno = 0;
+    while (set.size < maximo && (abajo > 12 || arriba < 108)) {
+      if (turno++ % 2 === 0) { while (!enEscala(abajo)) abajo--; if (abajo > 12) set.add(abajo--); }
+      else { while (!enEscala(arriba)) arriba++; if (arriba < 108) set.add(arriba++); }
+    }
+    return [...set].sort((a, b) => a - b);
+  }
 
   /* Programador de notas MIDI: en cada cuadro agenda las notas de los próximos instantes (en el reloj de audio) */
   function programador(pista, alNota) {
@@ -406,7 +435,11 @@
     const id = perfil.id, k = new Teclado(perfil.preset), pista = await pistaDe(id);
     const defFL = P.sonidos && P.sonidos[id];
     const desplaz = defFL && defFL.real != null ? defFL.base - defFL.real : 0;   // los teclados bajos se tocan una octava arriba de cómo suenan
-    const [lo0, hi0] = registroDe(pista && pista.notas, desplaz, 12 * (k.p.octava + 1));
+    // con carriles, el piano son solo las notas de tu parte, una por tecla en la fila A S D F…
+    const requeridas = pista ? [...new Set(pista.notas.map(n => n.m + desplaz))].sort((a, b) => a - b) : [];
+    const carriles0 = carrilesConEscala(requeridas), esRequerida = m => requeridas.includes(m - 12 * octavas);
+    const [lo0, hi0] = carriles0 ? [carriles0[0], carriles0[carriles0.length - 1]] : registroDe(pista && pista.notas, desplaz, 12 * (k.p.octava + 1));
+    const enCarriles = () => carriles0 ? carriles0.map(m => m + 12 * octavas) : null;
     let octavas = leer("v2:octd:" + id, 0), inicio = lo0 + 12 * octavas, fin = hi0 + 12 * octavas;
     const teclaDe = new Map();   // e.code → nota MIDI del piano visible
     let bucle = null;
@@ -420,7 +453,7 @@
     caja.innerHTML = "";
     const opciones = el(`<div class="paso">
       <div class="paso-cab"><span class="n">1</span><b>Sonido</b><button class="btn btn-ayuda" data-r="ayuda" title="Cómo funciona el teclado">? Cómo funciona</button></div>
-      <div class="fila"><label class="campo"><select data-r="son" aria-label="Sonido"></select></label>
+      <div class="fila"><span class="sonido-fijo" title="El sonido de todos los teclados">🎛️ Square Woof · FL Studio</span>
         <div class="grupo-oct"><button class="btn" data-r="oct-" title="Bajar una octava (←)">− oct</button><span data-r="oct"></span><button class="btn" data-r="oct+" title="Subir una octava (→)">+ oct</button></div></div>
     </div>`);
     const toques = el(`<div class="paso">
@@ -429,7 +462,8 @@
           <button data-v="normal" role="radio">🎹 Normal <kbd>8</kbd></button>
           <button data-v="fijas" role="radio">📌 Notas fijas <kbd>9</kbd></button>
           <button data-v="auto" role="radio">🎶 Acorde automático <kbd>0</kbd></button></div>
-        <button class="btn" data-r="soltar" title="Apaga todas las notas que suenan">✋ Soltar todo <kbd>Esc</kbd></button></div>
+        <button class="btn" data-r="soltar" title="Apaga todas las notas que suenan">✋ Soltar todo <kbd>Esc</kbd></button>
+        <button class="btn btn-glis" data-r="glis" title="Qué hacen las notas que siguen sonando cuando cambia el acorde"></button></div>
       <p class="explica" data-r="explica"></p>
     </div>`);
     const estado = el(`<div class="estado-tec" aria-live="polite"></div>`);
@@ -437,46 +471,43 @@
     const leyenda = el(`<div class="leyenda"><span class="l-acorde">nota del acorde: suena segura</span><span class="l-raiz">raíz del acorde</span>
       <span class="l-escala">de la escala: tensión</span><span class="l-fuera">fuera de la escala: disonancia</span>
       <span class="l-guia">lo que toca tu parte en el arreglo</span><span class="l-sig">nota del acorde que viene</span></div>`);
-    const glis = el(`<div class="paso glis">
-      <div class="paso-cab"><span class="n">3</span><b>Cuando cambia el acorde</b></div>
+    // "Cuando cambia el acorde" vive en una ventana que se abre con su botón
+    const glis = el(`<div class="glis-ventana">
       <div class="fila"><label class="campo">Las notas que siguen sonando
         <select data-r="modo">
           <option value="cercana">se deslizan a la nota del acorde más cercana</option>
-          <option value="paralelo">se mueven junto con el acorde (conservan la disonancia)</option>
+          <option value="paralelo">se mueven junto con el acorde (conservan la tensión)</option>
           <option value="quieto">se quedan donde están</option>
         </select></label>
       <label class="campo corto">El deslizamiento dura <input type="range" min="0.05" max="2" step="0.05" data-r="desliz"><b data-r="deslizv"></b></label></div>
       <p class="explica">Deja una nota apretada (o fija) cuando llega el cambio: se desliza sola y llega justo con el acorde nuevo, sin tener que seguir el tempo.</p>
     </div>`);
     const fx = el(`<div class="efectos"></div>`);
-    const pasoFx = el(`<div class="paso"><div class="paso-cab"><span class="n">4</span><b>Efectos</b></div></div>`);
+    const pasoFx = el(`<div class="paso"><div class="paso-cab"><span class="n">3</span><b>Efectos</b></div></div>`);
     pasoFx.appendChild(fx);
     // tu parte, llevada a la octava visible del piano
-    const mapear = m0 => { let m = m0 + desplaz + 12 * octavas; while (m < inicio) m += 12; while (m > fin) m -= 12; return m; };
+    const mapear = m0 => { let m = m0 + desplaz + 12 * octavas; if (carriles0) return m; while (m < inicio) m += 12; while (m > fin) m -= 12; return m; };
     const cascada = pista && pista.notas.length ? crearCascada(pista, piano, mapear) : null;
-    caja.append(opciones, toques, estado, ...(cascada ? [cascada.caja] : []), piano, leyenda, glis, pasoFx);
+    caja.append(opciones, toques, estado, ...(cascada ? [cascada.caja] : []), piano, leyenda, pasoFx);
     const r = (x, raiz = caja) => $(`[data-r="${x}"]`, raiz);
 
     // sonido
-    const sel = r("son");
-    sel.add(new Option("Partitura (FL Studio)", "fl"));
-    (P.catalogo || []).forEach(c => sel.add(new Option(c.nombre, c.id)));
-    sel.add(new Option("Sintetizado", "sint"));
-    async function ponerSonido(v) {
-      sel.value = v; guardar("v2:son:" + id, v);
+    // Sonido: todos los teclados usan Square Woof (FL Studio); de sus dos muestras se elige la más cercana a tu registro.
+    // Su volumen se iguala con el del sample que tenía antes cada teclado (Square Woof suena más fuerte).
+    const SONIDO_TECLADOS = "square-woof";
+    let ajusteVol = 1;
+    async function ponerSonido() {
       try {
-        if (v === "fl" && defFL) { const s = await cargarSonido(defFL.archivo); k.buffer = s.buffer; bucle = s.bucle; k.base = defFL.base; return; }
-        const c = (P.catalogo || []).find(x => x.id === v);
-        if (c) {
-          const centro = (inicio + fin) / 2 - desplaz;
-          const mu = c.muestras.slice().sort((a, b) => Math.abs(a.real - centro) - Math.abs(b.real - centro))[0];
-          const s = await cargarSonido(mu.archivo); k.buffer = s.buffer; bucle = s.bucle; k.base = mu.real + desplaz; return;
-        }
+        const c = (P.catalogo || []).find(x => x.id === SONIDO_TECLADOS);
+        const centro = (inicio + fin) / 2 - desplaz;
+        const mu = c.muestras.slice().sort((a, b) => Math.abs(a.real - centro) - Math.abs(b.real - centro))[0];
+        const s = await cargarSonido(mu.archivo);
+        if (defFL) { try { ajusteVol = lim(rmsDe((await cargarSonido(defFL.archivo)).buffer) / rmsDe(s.buffer), 0.3, 2); } catch (e) { ajusteVol = 1; } }
+        k.buffer = s.buffer; bucle = s.bucle; k.base = mu.real + desplaz; return;
       } catch (e) { console.warn("sonido:", e.message); }
-      k.buffer = null; bucle = null;
+      k.buffer = null; bucle = null; ajusteVol = 1;   // sin la muestra, el sintetizador del teclado
     }
-    sel.onchange = async () => { const auto = toque === "auto"; soltarTodo(); await ponerSonido(sel.value); if (auto) { toque = "auto"; sostenerAcorde(true); } };
-    await ponerSonido(leer("v2:son:" + id, defFL ? "fl" : "sint"));
+    await ponerSonido();
 
     // voces
     function crearVoz(m, vel, t) {
@@ -485,13 +516,13 @@
       s.buffer = k.buffer; s.playbackRate.value = Math.pow(2, (m - k.base) / 12);
       if (bucle) { s.loop = true; s.loopStart = bucle[0]; s.loopEnd = bucle[1]; }
       g.connect(k.filtro); s.connect(g);
-      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vel, t + 0.008);
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vel * ajusteVol, t + 0.008);
       s.start(t);
       return { g, fuentes: [s], rel: 0.45 };
     }
     function on(m, fija = false) {
       if (voces.has(m)) return;
-      voces.set(m, { v: crearVoz(m, 0.85, Motor.t), m0: m, actual: m, cents: 0, fija });
+      voces.set(m, { v: crearVoz(m, 0.85 * volNota(id, m - desplaz - 12 * octavas), Motor.t), m0: m, actual: m, cents: 0, fija });
       pintarTeclas();
     }
     function off(m) {
@@ -538,7 +569,13 @@
         // cada nota del acorde, en la tecla visible más cercana al centro del piano
         const centro = (inicio + fin) / 2, cerca = pc => { let m = Math.round(centro - 6); while (((m % 12) + 12) % 12 !== pc) m++; return m; };
         let ms = a ? [...new Set(a.intervalos.map(i => cerca((a.raiz + i) % 12)))] : [];
-        if (perfil.preset === "bajo" && a) { let r0 = inicio; while (r0 % 12 !== a.raiz) r0++; ms = r0 + 7 <= fin ? [r0, r0 + 7] : r0 - 5 >= inicio ? [r0 - 5, r0] : [r0]; }
+        const carr = enCarriles();
+        if (carr && a) {
+          const tn = a.intervalos.map(i => (a.raiz + i) % 12); ms = carr.filter(m => tn.includes(m % 12));
+          // el bajo: la raíz más grave y su quinta (si está en el teclado)
+          if (perfil.preset === "bajo") { const r0 = carr.find(m => m % 12 === a.raiz); ms = r0 == null ? ms.slice(0, 1) : [r0, ...carr.filter(m => m === r0 + 7)]; }
+        }
+        if (perfil.preset === "bajo" && a && !carr) { let r0 = inicio; while (r0 % 12 !== a.raiz) r0++; ms = r0 + 7 <= fin ? [r0, r0 + 7] : r0 - 5 >= inicio ? [r0 - 5, r0] : [r0]; }
         ms.sort((x, y) => x - y).forEach(m => on(m, true));
       }
       pintarOpciones();
@@ -548,14 +585,18 @@
     let teclas = [];
     function dibujarPiano() {
       piano.innerHTML = "";
-      const blancas = [];
-      for (let m = inicio; m <= fin; m++) if (!esNegra(m)) blancas.push(m);
       teclaDe.clear();
-      const ancho = 100 / blancas.length;
       teclas = [];
-      for (let m = inicio; m <= fin; m++) {
-        const negra = [1, 3, 6, 8, 10].includes(m % 12);
-        const t = el(`<button class="tecla ${negra ? "negra" : "blanca"}" data-m="${m}" tabindex="-1"><span class="nom"></span><i class="pc"></i></button>`);
+      const carriles = enCarriles();
+      piano.classList.toggle("en-carriles", !!carriles);
+      // con carriles: una tecla ancha por nota, todas en la fila A S D F…; si no, el piano cromático
+      const notas = carriles || Array.from({ length: fin - inicio + 1 }, (_, i) => inicio + i);
+      const blancas = carriles ? notas : notas.filter(m => !esNegra(m));
+      const ancho = 100 / blancas.length;
+      for (const m of notas) {
+        const negra = !carriles && esNegra(m);
+        const libre = carriles && !esRequerida(m);
+        const t = el(`<button class="tecla ${negra ? "negra" : "blanca"}${carriles ? " carril" + (esNegra(m) ? " alterada" : "") + (libre ? " libre" : "") : ""}" data-m="${m}" tabindex="-1"${libre ? ' title="Nota libre de la escala: para improvisar"' : ""}><span class="nom"></span><i class="pc"></i></button>`);
         if (negra) { const iz = blancas.indexOf(m - 1); t.style.left = `calc(${(iz + 1) * ancho}% - ${ancho * 0.31}%)`; t.style.width = ancho * 0.62 + "%"; }
         else t.style.width = ancho + "%";
         // blanca n → fila A–Ñ; negra entre la blanca n y la n+1 → la tecla de arriba en ese hueco (Q, W, E…)
@@ -590,7 +631,7 @@
         t.classList.toggle("escala", !tn.includes(pc) && ESCALA.has(pc)); t.classList.toggle("fuera", !ESCALA.has(pc));
         t.classList.toggle("on", apretadas.has(m)); t.classList.toggle("suena", suenan.has(m) && !apretadas.has(m));
         t.classList.toggle("guia", guia.includes(m)); t.classList.toggle("sig", sigTonos.includes(pc) && !tn.includes(pc));
-        $(".nom", t).textContent = tn.includes(pc) || pc === 0 ? PC[pc] + (pc === 0 ? Math.floor(m / 12) - 1 : "") : "";
+        $(".nom", t).textContent = t.classList.contains("carril") ? nombreNota(m) : tn.includes(pc) || pc === 0 ? PC[pc] + (pc === 0 ? Math.floor(m / 12) - 1 : "") : "";
       });
       caja.style.setProperty("--color", ac.color || "#7c9cff");
     }
@@ -603,6 +644,7 @@
       toques.querySelectorAll("[data-v]").forEach(b => { const si = b.dataset.v === toque; b.classList.toggle("on", si); b.setAttribute("aria-checked", si); });
       r("explica", toques).innerHTML = EXPLICA[toque];
       r("modo", glis).value = modo; r("desliz", glis).value = deslizT; r("deslizv", glis).textContent = deslizT.toFixed(2).replace(".", ",") + " s";
+      r("glis", toques).textContent = `🎚️ Cambio de acorde: ${{ cercana: "se deslizan", paralelo: "se mueven juntas", quieto: "quietas" }[modo]} · ${deslizT.toFixed(2).replace(".", ",")} s`;
     }
     function ponerToque(v) {
       if (v === toque && v !== "auto") return;
@@ -620,9 +662,11 @@
       const auto = toque === "auto"; soltarTodo();
       const o = lim(octavas + Math.sign(d), -3, 3); if (o === octavas || lo0 + 12 * o < 12 || hi0 + 12 * o > 108) return;
       octavas = o; inicio = lo0 + 12 * o; fin = hi0 + 12 * o; guardar("v2:octd:" + id, o); dibujarPiano();
+      ponerSonido();   // la muestra de Square Woof más cercana al registro nuevo
       if (auto) { toque = "auto"; sostenerAcorde(true); }
     }
-    r("modo", glis).onchange = e => { modo = e.target.value; guardar("v2:modo:" + id, modo); };
+    r("modo", glis).onchange = e => { modo = e.target.value; guardar("v2:modo:" + id, modo); pintarOpciones(); };
+    r("glis", toques).onclick = () => abrirVentana("🎚️ Cuando cambia el acorde", glis, { alCerrar: () => glis.remove() });
     r("desliz", glis).oninput = e => { deslizT = +e.target.value; guardar("v2:desliz:" + id, deslizT); pintarOpciones(); };
     r("ayuda", opciones).onclick = () => ayudaTeclado();
     dibujarPiano(); pintarOpciones();
@@ -987,10 +1031,11 @@
   /* ============================== acompañamiento: la orquesta ============================== */
   // Para ensayar: esta laptop toca las pistas MIDI del arreglo. Se elige qué partes suenan y con qué sample.
   const PARTES_ORQ = [
-    { id: "teclado-1", tipo: "teclado", nombre: "Teclado 1", sub: "arpegio", icono: "🎹", def: "teclado-1" },
-    { id: "teclado-2", tipo: "teclado", nombre: "Teclado 2", sub: "pedal agudo", icono: "🎹", def: "teclado-2" },
-    { id: "teclado-3", tipo: "teclado", nombre: "Teclado 3", sub: "el bajo", icono: "🎹", def: "teclado-3" },
-    { id: "teclado-4", tipo: "teclado", nombre: "Teclado 4", sub: "acordes", icono: "🎹", def: "teclado-4" },
+    // def: el sample de FL con que se iguala el volumen; son: el sonido (los teclados, siempre Square Woof)
+    { id: "teclado-1", tipo: "teclado", nombre: "Teclado 1", sub: "arpegio, notas graves", icono: "🎹", def: "teclado-1", son: "square-woof" },
+    { id: "teclado-2", tipo: "teclado", nombre: "Teclado 2", sub: "arpegio agudo y pedal", icono: "🎹", def: "teclado-2", son: "square-woof" },
+    { id: "teclado-3", tipo: "teclado", nombre: "Teclado 3", sub: "el bajo", icono: "🎹", def: "teclado-3", son: "square-woof" },
+    { id: "teclado-4", tipo: "teclado", nombre: "Teclado 4", sub: "acordes", icono: "🎹", def: "teclado-4", son: "square-woof" },
     { id: "ambiente-1", tipo: "ambiente", nombre: "Ambiente", sub: "base grave", icono: "🌊", def: "ambiente-1" },
     { id: "bateria", tipo: "bateria", nombre: "Batería", sub: "", icono: "🥁", def: "fl" },
     { id: "guitarra", tipo: "guitarra", nombre: "Guitarra", sub: "melodía", icono: "🎸", def: "gtr" },
@@ -1007,7 +1052,9 @@
       d("ambiente-1", "Ambiente drone · FL"), d("ambiente-3", "Ambiente brillo · FL"), d("ambiente-4", "Ambiente pulso · FL"), d("ambiente-2", "Ambiente ruido · FL"),
     ].filter(Boolean);
   })();
+  const sonPropio = def => def.son || def.def;   // el sonido de la partitura de cada parte
   function opcionesDe(tipo) {
+    if (tipo === "teclado") return [["square-woof", "Square Woof · FL"]];
     if (tipo === "bateria") return [["fl", "Batería · FL Studio"], ["sint", "Batería sintetizada"], ["808", "Base 808 distorsionada"]];
     const ms = MUESTRAS.map(m => [m.id, m.nombre]);
     if (tipo === "guitarra") return [["gtr", "Guitarra eléctrica · FL"], ["gtr-sint", "Guitarra sintetizada"], ...ms.filter(([v]) => v !== "gtr-nota"), ["sint", "Sintetizado"]];
@@ -1083,7 +1130,7 @@
     } else if (son === "sint" && def.tipo === "ambiente") {
       inst = new Ambiente("drone"); alNota = (n, at) => inst.nota(n.m, n.v, at, n.d); mapa = {};
     } else if (son === "sint") {
-      inst = new Teclado(def.tipo === "guitarra" ? "lead" : perfil.preset); alNota = (n, at) => inst.nota(n.m, n.v, at, n.d);
+      inst = new Teclado(def.tipo === "guitarra" ? "lead" : perfil.preset); alNota = (n, at) => inst.nota(n.m, n.v * volNota(def.id, n.m), at, n.d);
     } else {
       // un sample de FL: se toca con la cadena de efectos de un teclado
       const mu0 = MUESTRAS.find(m => m.id === son) || MUESTRAS[0], med = mediana(pista.notas);
@@ -1096,9 +1143,9 @@
       if (propio && propio.archivo) { try { ref = rmsDe((await cargarMuestraOrq(propio.archivo)).buffer); } catch (e) {} }
       else if (def.tipo === "guitarra") ref = 0.6 * ref;
       const ajuste = lim(ref / rmsDe(s.buffer), 0.25, 4);
-      parte.octavas = son === def.def ? 0 : octavasPara(mu.real, med) / 12;   // con su propio sample, la parte suena como siempre
+      parte.octavas = son === def.def || def.tipo === "teclado" ? 0 : octavasPara(mu.real, med) / 12;   // los teclados suenan en su registro   // con su propio sample, la parte suena como siempre
       const sube = parte.octavas * 12;
-      alNota = (n, at) => vozMuestra(inst, s, mu.real, n.m + sube, n.v * ajuste, at, n.d);
+      alNota = (n, at) => vozMuestra(inst, s, mu.real, n.m + sube, n.v * ajuste * volNota(def.id, n.m), at, n.d);
     }
     parte.inst = inst;
     parte.efx = efectosAuto(perfil, inst, mapa, null, { escala, guardarlo: false });
@@ -1122,7 +1169,7 @@
     const avisar = () => oyentes.forEach(f => f());
     const guardarConf = () => guardar("v2:orq", conf);
     const suena = id => id === propio ? propioSuena : conf.on[id] !== false;
-    const sonDe = def => conf.son[def.id] || def.def;
+    const sonDe = def => def.tipo === "teclado" ? "square-woof" : conf.son[def.id] || def.def;
 
     async function sincronizar() {
       const v = ++version;
@@ -1152,6 +1199,7 @@
       ponerSuena(id, si) { if (id === propio) propioSuena = si; else { conf.on[id] = si; guardarConf(); } sincronizar(); },
       ponerVarias(ids) { PARTES_ORQ.forEach(d => { const si = ids.includes(d.id); if (d.id === propio) propioSuena = si; else conf.on[d.id] = si; }); guardarConf(); sincronizar(); },
       ponerSonido(id, son) { conf.son[id] = son; guardarConf(); sincronizar(); },
+      ponerSonidos(mapa) { Object.assign(conf.son, mapa); guardarConf(); sincronizar(); },
       volumen(v) { conf.vol = v; guardarConf(); partes.forEach(p => { if (p.inst) { p.inst.p.vol = p.base * v; p.inst.aplicar(); } }); },
       // tu propio rol viene apagado: lo tocas tú
       rol(id) { propio = id === "director" ? null : id; propioSuena = false; sincronizar(); },
@@ -1171,6 +1219,9 @@
         <button class="chip" data-r="todos">Todos</button><button class="chip" data-r="ninguno">Ninguno</button>
         <button class="chip" data-r="base" title="Batería, Teclado 3 (bajo) y Ambiente">Solo la base</button>
         <button class="chip" data-r="otros" title="Todos menos tu rol">Todos menos yo</button></div>
+      <div class="fila orq-atajos"><span class="muted small">Sonidos de todos:</span>
+        <button class="chip" data-r="son-fl" title="Cada instrumento con su sample de la partitura, hecho en FL Studio">🎛️ FL Studio (los tuyos)</button>
+        <button class="chip" data-r="son-sint" title="Batería, ambiente y guitarra con el sonido sintetizado en el navegador (los teclados siguen con Square Woof)">🧪 Sintetizados en el navegador</button></div>
       <ul class="orq-lista"></ul>
     </div>`);
     const r = x => $(`[data-r="${x}"]`, caja), lista = $(".orq-lista", caja), filas = {};
@@ -1181,7 +1232,8 @@
         <select aria-label="Sample de ${esc(def.nombre)}"></select>
         <span class="orq-nota muted small"></span></li>`);
       const sel = $("select", li);
-      opcionesDe(def.tipo).forEach(([v, n]) => sel.add(new Option(n + (v === def.def ? " (de la partitura)" : ""), v)));
+      opcionesDe(def.tipo).forEach(([v, n]) => sel.add(new Option(n + (v === sonPropio(def) && def.tipo !== "teclado" ? " (de la partitura)" : ""), v)));
+      if (def.tipo === "teclado") sel.disabled = true;
       $("input", li).onchange = e => orq.ponerSuena(def.id, e.target.checked);
       sel.onchange = () => orq.ponerSonido(def.id, sel.value);
       lista.appendChild(li); filas[def.id] = li;
@@ -1191,6 +1243,10 @@
     r("ninguno").onclick = () => orq.ponerVarias([]);
     r("base").onclick = () => orq.ponerVarias(BASE_ORQ);
     r("otros").onclick = () => orq.ponerVarias(todos.filter(id => id !== orq.propio));
+    // todos los instrumentos a la vez: los samples de FL Studio (los de la partitura) o los sintetizados
+    const SINT = { bateria: "sint", guitarra: "gtr-sint" };
+    r("son-fl").onclick = () => orq.ponerSonidos(Object.fromEntries(orq.PARTES.map(d => [d.id, sonPropio(d)])));
+    r("son-sint").onclick = () => orq.ponerSonidos(Object.fromEntries(orq.PARTES.map(d => [d.id, SINT[d.tipo] || "sint"])));
     r("on").onclick = () => orq.encender(!orq.activa);
     r("vol").value = orq.conf.vol;
     r("vol").oninput = e => { orq.volumen(+e.target.value); pintar(); };
@@ -1198,6 +1254,9 @@
       const b = r("on");
       b.textContent = orq.activa ? "⏸ Detener la orquesta" : "▶ Escuchar la orquesta"; b.classList.toggle("on", orq.activa);
       r("volv").textContent = Math.round(orq.conf.vol * 100) + " %";
+      const sons = orq.PARTES.map(d => orq.sonDe(d));
+      r("son-fl").classList.toggle("on", orq.PARTES.every((d, i) => sons[i] === sonPropio(d)));
+      r("son-sint").classList.toggle("on", orq.PARTES.every((d, i) => d.tipo === "teclado" || sons[i] === (SINT[d.tipo] || "sint")));
       orq.PARTES.forEach(def => {
         const li = filas[def.id], si = orq.suena(def.id), p = orq.parte(def.id), tuyo = def.id === orq.propio;
         $("input", li).checked = si; $("select", li).value = orq.sonDe(def);
