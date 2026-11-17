@@ -1,0 +1,3149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Orquesta Electroacústica — Instrumento Unificado</title>
+<style>
+  :root {
+    --bg-main: #090b10;
+    --bg-panel: #11151f;
+    --bg-card: #171c29;
+    --bg-card-hover: #1e2536;
+    --border: #262f45;
+    --text-main: #eef2f9;
+    --text-dim: #8a96b0;
+    --accent-bell: #f59e0b;
+    --accent-motor: #38bdf8;
+    --accent-reso: #10b981;
+    --accent-net: #a855f7;
+    --alert-warn: #f59e0b;
+    --alert-go: #22c55e;
+    --alert-cut: #ef4444;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: "SF Mono", "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--bg-main);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ==================== BARRA SUPERIOR COMÚN (20% VH) ==================== */
+  .topbar {
+    height: 19vh;
+    min-height: 118px;
+    max-height: 150px;
+    width: 100%;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 250px 1fr 270px 250px;
+    gap: 10px;
+    padding: 8px 12px;
+    align-items: stretch;
+  }
+
+  /* Selector de Pestañas */
+  .tabs-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .tabs-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    flex: 1;
+  }
+  .tab-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+    position: relative;
+    padding: 4px;
+  }
+  .tab-btn svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 1.9;
+  }
+  .tab-btn .tab-lbl {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .tab-btn .tab-shortcut {
+    position: absolute;
+    top: 3px;
+    right: 5px;
+    font-size: 9px;
+    font-family: var(--font-mono);
+    opacity: 0.55;
+  }
+  .tab-btn:hover {
+    background: var(--bg-card-hover);
+    color: var(--text-main);
+  }
+  .tab-btn.active[data-tab="campanas"] {
+    border-color: var(--accent-bell);
+    color: var(--accent-bell);
+    background: rgba(245, 158, 11, 0.12);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
+  }
+  .tab-btn.active[data-tab="motorsynth"] {
+    border-color: var(--accent-motor);
+    color: var(--accent-motor);
+    background: rgba(56, 189, 248, 0.12);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+  }
+  .tab-btn.active[data-tab="resodance"] {
+    border-color: var(--accent-reso);
+    color: var(--accent-reso);
+    background: rgba(16, 185, 129, 0.12);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+  }
+
+  .audio-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  .btn-audio-init {
+    background: #1e293b;
+    color: var(--text-main);
+    border: 1px solid #3b4963;
+    border-radius: 5px;
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn-audio-init.ready {
+    background: rgba(34, 197, 94, 0.16);
+    border-color: var(--alert-go);
+    color: #4ade80;
+  }
+
+  /* Partitura / Estado de Obra y Alertas */
+  .score-box {
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .score-box.alert-warn {
+    border-color: var(--alert-warn);
+    animation: pulseWarn 0.7s infinite alternate;
+  }
+  .score-box.alert-go {
+    border-color: var(--alert-go);
+    animation: pulseGo 0.45s infinite alternate;
+  }
+  .score-box.alert-cut {
+    border-color: var(--alert-cut);
+    animation: pulseCut 0.35s infinite alternate;
+  }
+  @keyframes pulseWarn {
+    from { box-shadow: 0 0 4px rgba(245, 158, 11, 0.2); }
+    to { box-shadow: 0 0 22px rgba(245, 158, 11, 0.75); background: rgba(245, 158, 11, 0.08); }
+  }
+  @keyframes pulseGo {
+    from { box-shadow: 0 0 4px rgba(34, 197, 94, 0.2); }
+    to { box-shadow: 0 0 24px rgba(34, 197, 94, 0.85); background: rgba(34, 197, 94, 0.12); }
+  }
+  @keyframes pulseCut {
+    from { box-shadow: 0 0 4px rgba(239, 68, 68, 0.2); }
+    to { box-shadow: 0 0 26px rgba(239, 68, 68, 0.9); background: rgba(239, 68, 68, 0.15); }
+  }
+
+  .score-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .sec-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sec-num {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 800;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 9px;
+    color: var(--text-main);
+  }
+  .sec-info {
+    display: flex;
+    flex-direction: column;
+  }
+  .sec-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+  .sec-cue {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+  }
+
+  .clock-bpm-cluster {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .clock-readout {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    background: var(--bg-main);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .bpm-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-main);
+    padding: 4px 9px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    font-family: var(--font-mono);
+  }
+  .bpm-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #334155;
+    transition: transform 0.06s, background 0.06s, box-shadow 0.06s;
+  }
+  .bpm-dot.flash {
+    background: var(--accent-net);
+    transform: scale(1.35);
+    box-shadow: 0 0 10px var(--accent-net);
+  }
+  .bpm-dot.flash-downbeat {
+    background: var(--alert-go);
+    transform: scale(1.5);
+    box-shadow: 0 0 12px var(--alert-go);
+  }
+
+  /* Barra de Progreso de Secciones y Cuenta Regresiva */
+  .score-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .sec-steps {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+  }
+  .sec-step-pill {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .sec-step-pill.active {
+    background: var(--accent-net);
+    border-color: #c084fc;
+    box-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+  }
+  .countdown-pill {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 5px;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    min-width: 92px;
+    text-align: center;
+  }
+
+  /* Osciloscopio Maestro Compartido */
+  .scope-box {
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .scope-box canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .scope-overlay {
+    position: absolute;
+    top: 5px;
+    left: 8px;
+    right: 8px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-dim);
+  }
+
+  /* Panel de Red y Dirección */
+  .net-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 7px 9px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 4px;
+  }
+  .net-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+  }
+  .net-indicator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 700;
+  }
+  .net-led {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--alert-warn);
+  }
+  .net-led.online {
+    background: var(--alert-go);
+    box-shadow: 0 0 8px var(--alert-go);
+  }
+  .director-controls {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+  .dir-btn {
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    border-radius: 5px;
+    padding: 4px 2px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .dir-btn:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent-net);
+  }
+  .dir-btn.btn-go {
+    border-color: rgba(34, 197, 94, 0.5);
+    color: #4ade80;
+  }
+  .dir-btn.btn-cut {
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #f87171;
+  }
+
+  /* Botón de Ayuda (?) y Tooltips Flotantes */
+  .help-btn {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 11px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: help;
+    position: relative;
+  }
+  .help-btn:hover {
+    color: var(--text-main);
+    border-color: var(--accent-net);
+  }
+  .help-btn .tooltip {
+    display: none;
+    position: absolute;
+    top: 26px;
+    right: 0;
+    width: 230px;
+    background: #0b0f19;
+    border: 1px solid #3b4963;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.35;
+    color: var(--text-main);
+    z-index: 100;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.65);
+    pointer-events: none;
+    text-align: left;
+  }
+  .help-btn:hover .tooltip {
+    display: block;
+  }
+
+  /* ==================== LIENZO DE INSTRUMENTOS (81% VH) ==================== */
+  .workspace {
+    flex: 1;
+    height: 81vh;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    padding: 10px 14px;
+  }
+  .tab-pane {
+    width: 100%;
+    height: 100%;
+    display: none;
+  }
+  .tab-pane.active {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ==================== PESTAÑA 1: CAMPANAS ==================== */
+  .campanas-layout {
+    display: grid;
+    grid-template-columns: 1fr 230px;
+    gap: 12px;
+    height: 100%;
+  }
+  .campanas-main {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .campanas-status-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .pill-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+  }
+  .pill-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .pill-val {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--accent-bell);
+  }
+  .key-hint {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 5px;
+    color: var(--text-dim);
+  }
+
+  .chords-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 8px;
+    flex: 1;
+    align-items: stretch;
+  }
+  .chord-card {
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px 8px;
+    cursor: pointer;
+    transition: transform 0.08s, border-color 0.12s, background 0.12s, box-shadow 0.12s;
+    position: relative;
+  }
+  .chord-card:hover {
+    background: var(--bg-card-hover);
+  }
+  .chord-card.active {
+    border-color: var(--accent-bell);
+    background: rgba(245, 158, 11, 0.16);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
+    transform: translateY(-2px);
+  }
+  .chord-key-badge {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 800;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-main);
+  }
+  .chord-card.active .chord-key-badge {
+    background: var(--accent-bell);
+    color: #000;
+    border-color: var(--accent-bell);
+  }
+  .chord-name {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-main);
+    text-align: center;
+    margin: auto 0;
+  }
+  .chord-notes-list {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: center;
+    min-height: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  /* Barra Lateral de Complejidad / Morfeo Armónico */
+  .campanas-morph-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: ns-resize;
+  }
+  .morph-tower {
+    flex: 1;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  .morph-step {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.12s;
+  }
+  .morph-step.active {
+    border-color: var(--accent-bell);
+    background: rgba(245, 158, 11, 0.2);
+    box-shadow: inset 0 0 12px rgba(245, 158, 11, 0.25);
+  }
+  .morph-roman {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--accent-bell);
+  }
+  .morph-bars {
+    display: flex;
+    gap: 3px;
+    align-items: flex-end;
+    height: 20px;
+  }
+  .morph-bar-unit {
+    width: 6px;
+    background: var(--text-dim);
+    border-radius: 2px;
+  }
+  .morph-step.active .morph-bar-unit {
+    background: var(--accent-bell);
+  }
+
+  /* ==================== PESTAÑA 2: MOTORSYNTH ==================== */
+  .motor-layout {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 12px;
+    height: 100%;
+  }
+  .motor-keyboard-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .motor-rows-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 7px;
+  }
+  .motor-kb-row {
+    flex: 1;
+    display: flex;
+    gap: 5px;
+    align-items: stretch;
+  }
+  .kb-row-tag {
+    width: 34px;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .motor-key {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 5px 4px;
+    cursor: pointer;
+    transition: all 0.08s;
+    min-width: 0;
+  }
+  .motor-key:hover {
+    border-color: #3b4963;
+    background: var(--bg-card-hover);
+  }
+  .motor-key.active {
+    border-color: var(--accent-motor);
+    background: rgba(56, 189, 248, 0.22);
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+    transform: translateY(1px);
+  }
+  .motor-key-char {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+  .motor-key-freq {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .motor-pedal-bar {
+    height: 40px;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    transition: all 0.12s;
+  }
+  .motor-pedal-bar.hold-active {
+    border-color: var(--accent-bell);
+    background: rgba(245, 158, 11, 0.16);
+    color: var(--accent-bell);
+  }
+  .motor-pedal-bar.braking {
+    border-color: var(--alert-cut);
+    background: rgba(239, 68, 68, 0.18);
+    color: #f87171;
+  }
+
+  /* Trackpad 2D (Inercia X + BPM Y con Imán de Red) */
+  .motor-pad-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .xy-pad-wrapper {
+    flex: 1;
+    background: var(--bg-main);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    cursor: crosshair;
+  }
+  .xy-snap-band {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 44%;
+    height: 12%;
+    background: rgba(168, 85, 247, 0.12);
+    border-top: 1px dashed rgba(168, 85, 247, 0.5);
+    border-bottom: 1px dashed rgba(168, 85, 247, 0.5);
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: #c084fc;
+  }
+  .xy-cursor {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2.5px solid var(--accent-motor);
+    background: rgba(56, 189, 248, 0.3);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    box-shadow: 0 0 14px var(--accent-motor);
+  }
+  .xy-cursor.snapped {
+    border-color: var(--accent-net);
+    background: rgba(168, 85, 247, 0.35);
+    box-shadow: 0 0 16px var(--accent-net);
+  }
+  .motor-gauges {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .gauge-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .gauge-lbl {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .gauge-val {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--accent-motor);
+  }
+
+  /* ==================== PESTAÑA 3: RESODANCE ==================== */
+  .reso-layout {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 8px;
+    height: 100%;
+  }
+  /* Fila Superior: Botones de Pulso Manual + Controles de Secuenciador */
+  .reso-top-bar {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 10px;
+  }
+  .manual-axes-box {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .axis-trigger-btn {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 6px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-family: var(--font-mono);
+    transition: all 0.08s;
+  }
+  .axis-trigger-btn.active-gx {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.22);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+  }
+  .axis-trigger-btn.active-gy {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.22);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+  }
+  .axis-trigger-btn.active-gz {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.22);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+  }
+
+  .seq-toolbar {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .seq-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .seq-btn.playing {
+    border-color: var(--accent-reso);
+    background: rgba(16, 185, 129, 0.18);
+    color: #34d399;
+  }
+  .preset-select {
+    background: var(--bg-main);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 11px;
+    font-family: var(--font-sans);
+  }
+
+  /* Matriz de 16 pasos (Gx, Gy, Gz) */
+  .seq-matrix-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .seq-row {
+    display: grid;
+    grid-template-columns: 44px repeat(16, 1fr);
+    gap: 4px;
+    align-items: center;
+  }
+  .seq-row-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .seq-cell {
+    height: 24px;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.08s;
+  }
+  .seq-cell.beat-4 {
+    border-left: 2px solid #3b4963;
+  }
+  .seq-cell.on-gx { background: #0284c7; border-color: #38bdf8; }
+  .seq-cell.on-gy { background: #059669; border-color: #10b981; }
+  .seq-cell.on-gz { background: #d97706; border-color: #f59e0b; }
+  .seq-cell.playhead {
+    outline: 2px solid #ffffff;
+    transform: scale(1.06);
+  }
+
+  /* 3 Columnas Compactas para los 8 Parámetros Físicos */
+  .reso-params-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .reso-stage-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .stage-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent-reso);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+  }
+  .param-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .param-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+  }
+  .param-val {
+    font-family: var(--font-mono);
+    color: var(--accent-reso);
+    font-weight: 700;
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent-reso);
+    height: 5px;
+    cursor: pointer;
+  }
+
+  /* ==================== MODALES (JSON PATRONES Y SERVIDOR GO) ==================== */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 20px;
+  }
+  .modal-backdrop.open {
+    display: flex;
+  }
+  .modal-card {
+    background: var(--bg-panel);
+    border: 1px solid #3b4963;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 680px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 800;
+    font-size: 14px;
+  }
+  .modal-textarea {
+    width: 100%;
+    height: 220px;
+    background: var(--bg-main);
+    color: #a7f3d0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    resize: none;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== BARRA SUPERIOR COMÚN ==================== -->
+<header class="topbar">
+  <!-- 1. Selector de Instrumento (Pestañas) y Estado de Audio -->
+  <div class="tabs-col">
+    <div class="tabs-row">
+      <button class="tab-btn active" data-tab="campanas" onclick="switchTab('campanas')">
+        <span class="tab-shortcut">F1</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="tab-lbl">Campanas</span>
+      </button>
+      <button class="tab-btn" data-tab="motorsynth" onclick="switchTab('motorsynth')">
+        <span class="tab-shortcut">F2</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="tab-lbl">Motor</span>
+      </button>
+      <button class="tab-btn" data-tab="resodance" onclick="switchTab('resodance')">
+        <span class="tab-shortcut">F3</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 12h4l3-9 4 18 3-9h6"/></svg>
+        <span class="tab-lbl">ResoDance</span>
+      </button>
+    </div>
+    <div class="audio-status-bar">
+      <button id="btnAudioInit" class="btn-audio-init" onclick="ensureAudio()">
+        <span id="audioLed">●</span> <span id="audioBtnTxt">ACTIVAR AUDIO</span>
+      </button>
+      <span style="font-family:var(--font-mono); color:var(--text-dim); font-size:10px;" id="activeVoicesReadout">0 voces</span>
+    </div>
+  </div>
+
+  <!-- 2. Partitura Guía / Secciones / Reloj y BPM Maestro -->
+  <div id="scoreBox" class="score-box">
+    <div class="score-top">
+      <div class="sec-badge">
+        <div id="secNumDisplay" class="sec-num">S1</div>
+        <div class="sec-info">
+          <div id="secTitleDisplay" class="sec-title">I. Apertura Campanas</div>
+          <div id="secCueDisplay" class="sec-cue">Timbre: Campanas · Acordes abiertos</div>
+        </div>
+      </div>
+      <div class="clock-bpm-cluster">
+        <div id="clockDisplay" class="clock-readout">00:00</div>
+        <div class="bpm-badge" title="Pulso Maestro Sincronizado">
+          <div id="bpmDot" class="bpm-dot"></div>
+          <span id="bpmDisplay" style="font-size:16px; font-weight:800;">90</span>
+          <span style="font-size:9px; color:var(--text-dim);">BPM</span>
+        </div>
+      </div>
+    </div>
+    <div class="score-bottom">
+      <div id="secStepsBar" class="sec-steps"></div>
+      <div id="countdownDisplay" class="countdown-pill">EN COMPÁS</div>
+    </div>
+  </div>
+
+  <!-- 3. Osciloscopio Maestro Compartido -->
+  <div class="scope-box">
+    <div class="scope-overlay">
+      <span>OSCILOSCOPIO MAESTRO</span>
+      <span id="scopePeakReadout">-∞ dB</span>
+    </div>
+    <canvas id="masterScopeCanvas"></canvas>
+  </div>
+
+  <!-- 4. Sincronización de Red y Panel de Dirección / Ensayo -->
+  <div class="net-box">
+    <div class="net-header">
+      <div class="net-indicator">
+        <span id="netLed" class="net-led"></span>
+        <span id="netStatusText">ENSAYO LOCAL</span>
+      </div>
+      <div style="display:flex; gap:5px; align-items:center;">
+        <button class="dir-btn" style="padding:2px 6px;" onclick="openServerModal()" title="Código del Servidor Go para Linux/macOS">Go LAN</button>
+        <div class="help-btn">?
+          <div class="tooltip">
+            <strong>Sincronización Orquestal:</strong><br>
+            • Conectado al servidor Go, el reloj, BPM y sección se sincronizan automáticamente.<br>
+            • En modo <em>Ensayo Local</em> puedes controlar secciones, BPM, unísonos y cortes desde esta barra.<br>
+            • Teclas rápidas: <strong>F1/F2/F3</strong> cambian de instrumento.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="director-controls">
+      <button class="dir-btn" onclick="directorChangeSection(-1)" title="Sección Anterior">◀ SEC</button>
+      <button class="dir-btn" onclick="directorChangeSection(1)" title="Siguiente Sección">SEC ▶</button>
+      <button class="dir-btn" onclick="directorAdjustBpm(-5)" title="Bajar BPM">-5 BPM</button>
+      <button class="dir-btn" onclick="directorAdjustBpm(5)" title="Subir BPM">+5 BPM</button>
+    </div>
+    <div class="director-controls">
+      <button class="dir-btn" onclick="directorToggleClock()" id="btnClockToggle">▶ RELOJ</button>
+      <button class="dir-btn" onclick="directorTriggerAlert('warn')" style="color:var(--alert-warn);">¡ATENCIÓN!</button>
+      <button class="dir-btn btn-go" onclick="directorTriggerAlert('go')">UNÍSONO</button>
+      <button class="dir-btn btn-cut" onclick="directorTriggerAlert('cut')">CORTE</button>
+    </div>
+  </div>
+</header>
+
+<!-- ==================== LIENZO PRINCIPAL DE LOS 3 INSTRUMENTOS ==================== -->
+<main class="workspace">
+
+  <!-- ==================== PESTAÑA 1: CAMPANAS ("GRACIAS A LA VIDA") ==================== -->
+  <section id="pane-campanas" class="tab-pane active">
+    <div class="campanas-layout">
+      <div class="campanas-main">
+        <!-- Indicadores Gráficos de Registro, Amplitud y Pedal -->
+        <div class="campanas-status-strip">
+          <div style="display:flex; gap:8px; align-items:center;">
+            <div class="pill-group">
+              <span class="pill-label">Registro</span>
+              <span id="bellOctaveVal" class="pill-val">0</span>
+              <span class="key-hint">Z / X</span>
+            </div>
+            <div class="pill-group">
+              <span class="pill-label">Disposición</span>
+              <span id="bellSpreadVal" class="pill-val">MEDIA</span>
+              <span class="key-hint">C / V</span>
+            </div>
+            <div class="pill-group" id="bellPedalPill">
+              <span class="pill-label">Pedal</span>
+              <span id="bellPedalVal" class="pill-val" style="color:var(--text-dim);">LIBRE</span>
+              <span class="key-hint">ESPACIO</span>
+            </div>
+          </div>
+          <div class="help-btn">?
+            <div class="tooltip">
+              <strong>Campanas FM:</strong><br>
+              • Fila <strong>A S D F G H J K L Ñ</strong> dispara los 10 acordes.<br>
+              • Mueve el cursor verticalmente en la torre derecha (o sobre los acordes) para morfar las 4 voces entre niveles I a IV sin re-atacar.<br>
+              • Mantén <strong>Shift</strong> para variante armónica.<br>
+              • <strong>Z/X</strong>: Octava · <strong>C/V</strong>: Amplitud · <strong>Espacio</strong>: Sostén.
+            </div>
+          </div>
+        </div>
+
+        <!-- 10 Bloques de Acordes (ASDFGHJKLÑ) -->
+        <div id="bellChordsGrid" class="chords-grid"></div>
+      </div>
+
+      <!-- Torre Vertical de Complejidad y Morfeo en Vivo -->
+      <div id="bellMorphArea" class="campanas-morph-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:11px; font-weight:800; text-transform:uppercase; color:var(--accent-bell);">Complejidad (4 Voces)</span>
+          <span id="bellVariantBadge" class="key-hint">SHIFT: A</span>
+        </div>
+        <div id="bellMorphTower" class="morph-tower">
+          <div class="morph-step active" data-level="0" onclick="setBellComplexity(0)">
+            <div>
+              <div class="morph-roman">I</div>
+              <div style="font-size:10px; color:var(--text-dim);">Tríada Pura</div>
+            </div>
+            <div class="morph-bars">
+              <div class="morph-bar-unit" style="height:8px"></div>
+            </div>
+          </div>
+          <div class="morph-step" data-level="1" onclick="setBellComplexity(1)">
+            <div>
+              <div class="morph-roman">II</div>
+              <div style="font-size:10px; color:var(--text-dim);">Séptima</div>
+            </div>
+            <div class="morph-bars">
+              <div class="morph-bar-unit" style="height:8px"></div>
+              <div class="morph-bar-unit" style="height:12px"></div>
+            </div>
+          </div>
+          <div class="morph-step" data-level="2" onclick="setBellComplexity(2)">
+            <div>
+              <div class="morph-roman">III</div>
+              <div style="font-size:10px; color:var(--text-dim);">Novena</div>
+            </div>
+            <div class="morph-bars">
+              <div class="morph-bar-unit" style="height:8px"></div>
+              <div class="morph-bar-unit" style="height:12px"></div>
+              <div class="morph-bar-unit" style="height:16px"></div>
+            </div>
+          </div>
+          <div class="morph-step" data-level="3" onclick="setBellComplexity(3)">
+            <div>
+              <div class="morph-roman">IV</div>
+              <div style="font-size:10px; color:var(--text-dim);">Oncena / Trecena</div>
+            </div>
+            <div class="morph-bars">
+              <div class="morph-bar-unit" style="height:8px"></div>
+              <div class="morph-bar-unit" style="height:12px"></div>
+              <div class="morph-bar-unit" style="height:16px"></div>
+              <div class="morph-bar-unit" style="height:20px"></div>
+            </div>
+          </div>
+        </div>
+        <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-dim); text-align:center;">
+          ↕ Desliza el cursor para morfar en vivo
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PESTAÑA 2: MOTORSYNTH ==================== -->
+  <section id="pane-motorsynth" class="tab-pane">
+    <div class="motor-layout">
+      <!-- Matriz de 4 Filas del Teclado Latinoamericano -->
+      <div class="motor-keyboard-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:11px; font-weight:800; color:var(--accent-motor); text-transform:uppercase;">Matriz Electromecánica Continua (Teclado LatAm)</span>
+          <div class="help-btn">?
+            <div class="tooltip">
+              <strong>MotorSynth Legato:</strong><br>
+              • <strong>Fila 4 (|..¿):</strong> Escala Logarítmica.<br>
+              • <strong>Fila 3 (Q..+):</strong> Escala Microtonal.<br>
+              • <strong>Fila 2 (A..}):</strong> Escala Cromática.<br>
+              • <strong>Fila 1 (&lt;.. .):</strong> Escala Musical.<br>
+              • <strong>Espacio corto (&lt;200ms):</strong> Sostén / Corte.<br>
+              • <strong>Espacio largo (&gt;200ms):</strong> Freno gradual con inercia.
+            </div>
+          </div>
+        </div>
+
+        <div id="motorRowsContainer" class="motor-rows-container"></div>
+
+        <!-- Barra Espaciadora Inteligente -->
+        <div id="motorPedalBar" class="motor-pedal-bar" onmousedown="motorSpaceDown()" onmouseup="motorSpaceUp()">
+          <span><strong>ESPACIO:</strong> Toque corto = Sostén / Apagar · Mantener = Desacelerar con inercia</span>
+          <span id="motorPedalStateTxt" style="font-weight:800;">MOTOR EN REPOSO</span>
+        </div>
+      </div>
+
+      <!-- Pad 2D Trackpad: Inercia Horizontal + BPM Vertical con Acople a Red -->
+      <div class="motor-pad-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:11px; font-weight:800; color:var(--accent-motor); text-transform:uppercase;">Trackpad 2D: Inercia (X) · BPM Motor (Y)</span>
+          <span id="motorSnapBadge" class="key-hint" style="color:#c084fc; border-color:#c084fc;">ACOPLADO A RED</span>
+        </div>
+
+        <div id="motorXYPad" class="xy-pad-wrapper">
+          <div class="xy-snap-band">BANDA IMANTADA · BPM RED</div>
+          <div id="motorXYCursor" class="xy-cursor snapped" style="left:25%; top:50%;"></div>
+        </div>
+
+        <div class="motor-gauges">
+          <div class="gauge-card">
+            <span class="gauge-lbl">Frecuencia</span>
+            <span id="motorFreqReadout" class="gauge-val">--- Hz</span>
+          </div>
+          <div class="gauge-card">
+            <span class="gauge-lbl">Inercia (Masa X)</span>
+            <span id="motorInertiaReadout" class="gauge-val">0.12 s</span>
+          </div>
+          <div class="gauge-card">
+            <span class="gauge-lbl">Pulso Motor (Y)</span>
+            <span id="motorBpmReadout" class="gauge-val">90 BPM</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PESTAÑA 3: RESODANCE ==================== -->
+  <section id="pane-resodance" class="tab-pane">
+    <div class="reso-layout">
+      <!-- Controles Manuales Gx/Gy/Gz (Teclas 1, 2, 3 sostenidas) + Barra de Secuenciador -->
+      <div class="reso-top-bar">
+        <div class="manual-axes-box">
+          <button id="btnAxisGx" class="axis-trigger-btn"
+            onmousedown="resoAxisHold('Gx', true)" onmouseup="resoAxisHold('Gx', false)" onmouseleave="resoAxisHold('Gx', false)">
+            <span style="font-size:13px; font-weight:800; color:#38bdf8;">Gx [1]</span>
+            <span style="font-size:9px; color:var(--text-dim);">Sostener</span>
+          </button>
+          <button id="btnAxisGy" class="axis-trigger-btn"
+            onmousedown="resoAxisHold('Gy', true)" onmouseup="resoAxisHold('Gy', false)" onmouseleave="resoAxisHold('Gy', false)">
+            <span style="font-size:13px; font-weight:800; color:#10b981;">Gy [2]</span>
+            <span style="font-size:9px; color:var(--text-dim);">Sostener</span>
+          </button>
+          <button id="btnAxisGz" class="axis-trigger-btn"
+            onmousedown="resoAxisHold('Gz', true)" onmouseup="resoAxisHold('Gz', false)" onmouseleave="resoAxisHold('Gz', false)">
+            <span style="font-size:13px; font-weight:800; color:#f59e0b;">Gz [3]</span>
+            <span style="font-size:9px; color:var(--text-dim);">Sostener</span>
+          </button>
+        </div>
+
+        <div class="seq-toolbar">
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button id="btnResoSeqPlay" class="seq-btn" onclick="toggleResoSequencer()">▶ SECUENCIADOR (RED)</button>
+            <select id="resoPatternSelect" class="preset-select" onchange="loadResoPatternFromSelect(this.value)"></select>
+            <select id="resoAcousticPresetSelect" class="preset-select" onchange="loadResoAcousticPreset(this.value)"></select>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button class="seq-btn" onclick="clearResoMatrix()">Limpiar</button>
+            <button class="seq-btn" onclick="openPatternModal()">JSON Patrón</button>
+            <div class="help-btn">?
+              <div class="tooltip">
+                <strong>ResoDance MRI Físico:</strong><br>
+                • Mantén presionadas las teclas <strong>1, 2, 3</strong> para sostener pulsos manuales en los ejes Gx, Gy, Gz.<br>
+                • Haz clic en la matriz de 16 pasos para armar patrones sincronizados al BPM de la red.<br>
+                • Usa <strong>JSON Patrón</strong> para exportar o pegar ritmos para <code>CONFIG</code>.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Matriz Rítmica de 16 Pasos (Gx, Gy, Gz) -->
+      <div class="seq-matrix-panel">
+        <div id="seqRowGx" class="seq-row"></div>
+        <div id="seqRowGy" class="seq-row"></div>
+        <div id="seqRowGz" class="seq-row"></div>
+      </div>
+
+      <!-- 3 Columnas Compactas para el Modelo Físico (Excitador, Bobina Lorentz, Resonador Modal) -->
+      <div class="reso-params-grid">
+        <!-- Etapa 1: Excitador Magnético -->
+        <div class="reso-stage-card">
+          <div class="stage-header">
+            <span>1. Excitador Gradiente</span>
+            <span>Gx · Gy · Gz</span>
+          </div>
+          <div class="param-row">
+            <div class="param-top"><span>Slew Rate (Brillo Rampa)</span><span id="val-slewRate" class="param-val">2800 Hz</span></div>
+            <input type="range" id="slider-slewRate" min="300" max="8000" step="50" value="2800" oninput="updateResoParam('slewRate', this.value)">
+          </div>
+          <div class="param-row">
+            <div class="param-top"><span>Ganancia Pulso</span><span id="val-pulseGain" class="param-val">0.75</span></div>
+            <input type="range" id="slider-pulseGain" min="0.1" max="1.5" step="0.05" value="0.75" oninput="updateResoParam('pulseGain', this.value)">
+          </div>
+        </div>
+
+        <!-- Etapa 2: Bobina Lorentz -->
+        <div class="reso-stage-card">
+          <div class="stage-header">
+            <span>2. Bobina Lorentz</span>
+            <span>Tensión Mecánica</span>
+          </div>
+          <div class="param-row">
+            <div class="param-top"><span>Frecuencia Bobina</span><span id="val-coilFreq" class="param-val">420 Hz</span></div>
+            <input type="range" id="slider-coilFreq" min="90" max="1400" step="5" value="420" oninput="updateResoParam('coilFreq', this.value)">
+          </div>
+          <div class="param-row">
+            <div class="param-top"><span>Factor Q Bobina</span><span id="val-coilQ" class="param-val">6.5</span></div>
+            <input type="range" id="slider-coilQ" min="1" max="22" step="0.5" value="6.5" oninput="updateResoParam('coilQ', this.value)">
+          </div>
+          <div class="param-row">
+            <div class="param-top"><span>Empuje Lorentz (Drive)</span><span id="val-lorentzDrive" class="param-val">35</span></div>
+            <input type="range" id="slider-lorentzDrive" min="1" max="100" step="1" value="35" oninput="updateResoParam('lorentzDrive', this.value)">
+          </div>
+        </div>
+
+        <!-- Etapa 3: Resonador Modal Acústico -->
+        <div class="reso-stage-card">
+          <div class="stage-header">
+            <span>3. Túnel Resonador Modal</span>
+            <span>4 Modos + Guía</span>
+          </div>
+          <div class="param-row">
+            <div class="param-top"><span>Desplazamiento Modal</span><span id="val-modalShift" class="param-val">1.00x</span></div>
+            <input type="range" id="slider-modalShift" min="0.5" max="2.2" step="0.02" value="1.0" oninput="updateResoParam('modalShift', this.value)">
+          </div>
+          <div class="param-row">
+            <div class="param-top"><span>Resonancia Modal (Q)</span><span id="val-modalQ" class="param-val">14</span></div>
+            <input type="range" id="slider-modalQ" min="2" max="40" step="1" value="14" oninput="updateResoParam('modalQ', this.value)">
+          </div>
+          <div class="param-row">
+            <div class="param-top"><span>Tubo Guía / Feedback</span><span id="val-decayFeedback" class="param-val">0.62</span></div>
+            <input type="range" id="slider-decayFeedback" min="0.05" max="0.92" step="0.02" value="0.62" oninput="updateResoParam('decayFeedback', this.value)">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ==================== MODAL 1: IMPORTAR / EXPORTAR PATRÓN JSON ==================== -->
+<div id="patternModal" class="modal-backdrop">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span>EXPORTAR / IMPORTAR PATRÓN RÍTMICO (PARA CONFIG.RESODANCE_PATRONES)</span>
+      <button class="seq-btn" onclick="closePatternModal()">✕</button>
+    </div>
+    <textarea id="patternJsonArea" class="modal-textarea" spellcheck="false"></textarea>
+    <div class="modal-footer">
+      <span id="patternModalMsg" style="font-size:11px; color:var(--accent-reso); margin-right:auto; align-self:center;"></span>
+      <button class="seq-btn" onclick="copyTextarea('patternJsonArea', 'patternModalMsg')">Copiar al Portapapeles</button>
+      <button class="seq-btn playing" onclick="applyImportedPatternJson()">Cargar Patrón en Matriz</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL 2: CÓDIGO SERVIDOR GO (LINUX / MACOS) ==================== -->
+<div id="serverModal" class="modal-backdrop">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span>SERVIDOR DE RED LOCAL EN GO (main.go) — SIN DEPENDENCIAS EXTERNAS</span>
+      <button class="seq-btn" onclick="closeServerModal()">✕</button>
+    </div>
+    <div style="font-size:11px; color:var(--text-dim); line-height:1.4;">
+      Guarda este código como <code>main.go</code> en la misma carpeta que <code>index.html</code>. Solo quien dirige necesita compilarlo una vez; el resto de músicos solo se conecta por Wi-Fi a la dirección IP mostrada.
+    </div>
+    <textarea id="serverGoArea" class="modal-textarea" readonly spellcheck="false"></textarea>
+    <div class="modal-footer">
+      <span id="serverModalMsg" style="font-size:11px; color:var(--accent-net); margin-right:auto; align-self:center;"></span>
+      <button class="seq-btn" onclick="copyTextarea('serverGoArea', 'serverModalMsg')">Copiar main.go</button>
+      <button class="seq-btn playing" onclick="downloadGoServerFile()">Descargar main.go</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+ * 1. CONFIGURACIÓN EDITABLE AL INICIO DEL CÓDIGO (CONFIG)
+ *    Modifica aquí las notas de MotorSynth, acordes de Campanas, patrones de
+ *    ResoDance y las secciones de la obra antes del ensayo o concierto.
+ * ============================================================================ */
+const CONFIG = {
+  bpmInicial: 90,
+
+  // Secciones de la obra para la barra superior de partitura guía
+  SECCIONES: [
+    { id: 1, codigo: "S1", titulo: "I. Apertura Cristal", cue: "Campanas · Nivel I-II · Registro medio", tabSugerido: "campanas", bpm: 84 },
+    { id: 2, codigo: "S2", titulo: "II. Ignición Rotores", cue: "MotorSynth · Escala fila 1 · Inercia alta", tabSugerido: "motorsynth", bpm: 92 },
+    { id: 3, codigo: "S3", titulo: "III. Pulso Magnético", cue: "ResoDance · Secuenciador EPI + Campanas III", tabSugerido: "resodance", bpm: 108 },
+    { id: 4, codigo: "S4", titulo: "IV. Convergencia Coral", cue: "Tutti · Acople BPM Red · Complejidad IV", tabSugerido: "campanas", bpm: 116 },
+    { id: 5, codigo: "S5", titulo: "V. Desaceleración Final", cue: "MotorSynth freno largo + Campanas graves", tabSugerido: "motorsynth", bpm: 66 }
+  ],
+
+  // Configuración de las 4 filas de MotorSynth (Teclado Latinoamericano MacBook)
+  // Puedes editar libremente cada frecuencia en Hz:
+  MOTORSYNTH_FILAS: {
+    // Fila 4 Superior (13 teclas): Escala Logarítmica (de 55 Hz a 880 Hz)
+    fila4_log: [
+      { key: "|", code: "Backquote", label: "|", freq: 55.00 },
+      { key: "1", code: "Digit1",    label: "1", freq: 69.30 },
+      { key: "2", code: "Digit2",    label: "2", freq: 87.31 },
+      { key: "3", code: "Digit3",    label: "3", freq: 110.00 },
+      { key: "4", code: "Digit4",    label: "4", freq: 138.59 },
+      { key: "5", code: "Digit5",    label: "5", freq: 174.61 },
+      { key: "6", code: "Digit6",    label: "6", freq: 220.00 },
+      { key: "7", code: "Digit7",    label: "7", freq: 277.18 },
+      { key: "8", code: "Digit8",    label: "8", freq: 349.23 },
+      { key: "9", code: "Digit9",    label: "9", freq: 440.00 },
+      { key: "0", code: "Digit0",    label: "0", freq: 554.37 },
+      { key: "'", code: "Minus",     label: "'", freq: 698.46 },
+      { key: "¿", code: "Equal",     label: "¿", freq: 880.00 }
+    ],
+    // Fila 3 (12 teclas): Escala Microtonal (24-TET / Cuartos de tono sobre La 220 Hz)
+    fila3_micro: [
+      { key: "q", code: "KeyQ",         label: "Q", freq: 220.00 },
+      { key: "w", code: "KeyW",         label: "W", freq: 226.45 },
+      { key: "e", code: "KeyE",         label: "E", freq: 233.08 },
+      { key: "r", code: "KeyR",         label: "R", freq: 239.91 },
+      { key: "t", code: "KeyT",         label: "T", freq: 246.94 },
+      { key: "y", code: "KeyY",         label: "Y", freq: 254.18 },
+      { key: "u", code: "KeyU",         label: "U", freq: 261.63 },
+      { key: "i", code: "KeyI",         label: "I", freq: 269.29 },
+      { key: "o", code: "KeyO",         label: "O", freq: 277.18 },
+      { key: "p", code: "KeyP",         label: "P", freq: 285.30 },
+      { key: "´", code: "BracketLeft",  label: "´", freq: 293.66 },
+      { key: "+", code: "BracketRight", label: "+", freq: 302.27 }
+    ],
+    // Fila 2 (12 teclas): Escala Cromática (12 notas, de Do3 a Si3)
+    fila2_crom: [
+      { key: "a", code: "KeyA",      label: "A", freq: 130.81 },
+      { key: "s", code: "KeyS",      label: "S", freq: 138.59 },
+      { key: "d", code: "KeyD",      label: "D", freq: 146.83 },
+      { key: "f", code: "KeyF",      label: "F", freq: 155.56 },
+      { key: "g", code: "KeyG",      label: "G", freq: 164.81 },
+      { key: "h", code: "KeyH",      label: "H", freq: 174.61 },
+      { key: "j", code: "KeyJ",      label: "J", freq: 185.00 },
+      { key: "k", code: "KeyK",      label: "K", freq: 196.00 },
+      { key: "l", code: "KeyL",      label: "L", freq: 207.65 },
+      { key: "ñ", code: "Semicolon", label: "Ñ", freq: 220.00 },
+      { key: "{", code: "Quote",     label: "{", freq: 233.08 },
+      { key: "}", code: "Backslash", label: "}", freq: 246.94 }
+    ],
+    // Fila 1 Inferior (10 teclas): Escala Musical Editable (La menor armónica / modal)
+    fila1_escala: [
+      { key: "<", code: "IntlBackslash", label: "<", freq: 110.00 }, // La2
+      { key: "z", code: "KeyZ",          label: "Z", freq: 123.47 }, // Si2
+      { key: "x", code: "KeyX",          label: "X", freq: 130.81 }, // Do3
+      { key: "c", code: "KeyC",          label: "C", freq: 146.83 }, // Re3
+      { key: "v", code: "KeyV",          label: "V", freq: 164.81 }, // Mi3
+      { key: "b", code: "KeyB",          label: "B", freq: 174.61 }, // Fa3
+      { key: "n", code: "KeyN",          label: "N", freq: 207.65 }, // Sol#3
+      { key: "m", code: "KeyM",          label: "M", freq: 220.00 }, // La3
+      { key: ",", code: "Comma",         label: ",", freq: 246.94 }, // Si3
+      { key: ".", code: "Period",        label: ".", freq: 261.63 }  // Do4
+    ]
+  },
+
+  // Acordes para la Pestaña 1: Campanas ("Gracias a la vida")
+  // Cada nivel de complejidad (0..3) define las 3 notas superiores sobre el bajo (4 voces en total),
+  // corrigiendo la colisión entre la 3ª y 4ª complejidad para que cada peldaño tenga su color propio.
+  CAMPANAS_ACORDES: [
+    { key: "a", code: "KeyA", label: "A", nombre: "Am",  bajo: 45, niveles: [[57,60,64], [55,60,64], [55,59,64], [55,59,62]], varianteShift: [53,59,64] },
+    { key: "s", code: "KeyS", label: "S", nombre: "E7",  bajo: 40, niveles: [[52,56,59], [50,56,59], [50,56,62], [50,57,61]], varianteShift: [50,53,59] },
+    { key: "d", code: "KeyD", label: "D", nombre: "Dm",  bajo: 50, niveles: [[57,62,65], [57,60,65], [57,60,64], [55,60,64]], varianteShift: [56,60,65] },
+    { key: "f", code: "KeyF", label: "F", nombre: "G7",  bajo: 43, niveles: [[55,59,62], [53,59,62], [53,59,65], [53,60,64]], varianteShift: [53,56,62] },
+    { key: "g", code: "KeyG", label: "G", nombre: "C",   bajo: 48, niveles: [[55,60,64], [55,59,64], [55,59,62], [57,59,66]], varianteShift: [56,60,64] },
+    { key: "h", code: "KeyH", label: "H", nombre: "F",   bajo: 41, niveles: [[53,57,60], [52,57,60], [52,57,64], [52,59,64]], varianteShift: [53,56,60] },
+    { key: "j", code: "KeyJ", label: "J", nombre: "B°7", bajo: 47, niveles: [[53,59,62], [53,56,62], [53,56,60], [52,56,60]], varianteShift: [53,57,62] },
+    { key: "k", code: "KeyK", label: "K", nombre: "A7",  bajo: 45, niveles: [[57,61,64], [55,61,64], [55,61,67], [55,62,66]], varianteShift: [55,58,64] },
+    { key: "l", code: "KeyL", label: "L", nombre: "Dm/F",bajo: 41, niveles: [[57,62,65], [57,60,65], [57,60,64], [59,62,67]], varianteShift: [56,62,65] },
+    { key: "ñ", code: "Semicolon", label: "Ñ", nombre: "E7b9", bajo: 40, niveles: [[52,56,59], [50,56,59], [50,56,60], [50,57,60]], varianteShift: [51,56,60] }
+  ],
+
+  // Patrones rítmicos predeterminados de 16 pasos para ResoDance
+  RESODANCE_PATRONES: {
+    "EPI Clásico (Lectura/Fase)": {
+      Gx: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],
+      Gy: [0,1,0,1, 0,1,0,1, 0,1,0,1, 0,1,0,1],
+      Gz: [1,0,0,0, 0,0,0,0, 1,0,0,0, 0,0,0,0]
+    },
+    "Difusión Polirrítmica (DWI)": {
+      Gx: [1,0,0,1, 0,0,1,0, 0,1,0,0, 1,0,0,0],
+      Gy: [0,0,1,0, 1,0,0,1, 0,0,1,0, 0,1,0,1],
+      Gz: [1,1,0,0, 0,0,1,1, 0,0,0,0, 1,0,1,0]
+    },
+    "Cadencia Espectroscópica": {
+      Gx: [1,1,1,0, 1,1,1,0, 1,1,1,0, 1,1,1,0],
+      Gy: [0,0,0,1, 0,0,0,1, 0,0,0,1, 0,0,0,1],
+      Gz: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,1,1]
+    },
+    "Pulso Minimalista In C": {
+      Gx: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],
+      Gy: [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
+      Gz: [0,0,0,0, 0,0,0,0, 1,0,0,0, 1,0,0,0]
+    }
+  },
+
+  // Presets Acústicos del modelo físico de ResoDance
+  RESODANCE_PRESETS_FISICOS: {
+    "Eco Planar (EPI)":       { slewRate: 3400, pulseGain: 0.80, coilFreq: 520, coilQ: 8.5,  lorentzDrive: 42, modalShift: 1.00, modalQ: 16, decayFeedback: 0.64 },
+    "Difusión Pesada (DWI)":  { slewRate: 1400, pulseGain: 0.95, coilFreq: 210, coilQ: 5.0,  lorentzDrive: 65, modalShift: 0.72, modalQ: 12, decayFeedback: 0.76 },
+    "T1 Cristalino":          { slewRate: 5800, pulseGain: 0.65, coilFreq: 780, coilQ: 12.0, lorentzDrive: 22, modalShift: 1.35, modalQ: 24, decayFeedback: 0.55 },
+    "Cavidad Subterránea":    { slewRate: 950,  pulseGain: 1.10, coilFreq: 145, coilQ: 9.0,  lorentzDrive: 50, modalShift: 0.58, modalQ: 28, decayFeedback: 0.84 }
+  }
+};
+
+/* ============================================================================
+ * 2. MOTOR DE AUDIO COMPARTIDO Y OSCILOSCOPIO MAESTRO
+ * ============================================================================ */
+let audioCtx = null;
+let masterGain = null;
+let masterAnalyser = null;
+let currentTab = "campanas";
+
+function ensureAudio() {
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContextClass();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.85;
+
+    masterAnalyser = audioCtx.createAnalyser();
+    masterAnalyser.fftSize = 1024;
+    masterAnalyser.smoothingTimeConstant = 0.82;
+
+    masterGain.connect(masterAnalyser);
+    masterAnalyser.connect(audioCtx.destination);
+
+    initMotorSynthAudio();
+    initResoDanceAudio();
+  }
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+  const btn = document.getElementById("btnAudioInit");
+  btn.classList.add("ready");
+  document.getElementById("audioBtnTxt").textContent = "AUDIO ACTIVO";
+  return audioCtx;
+}
+
+// Dibujo del Osciloscopio Maestro en Tiempo Real
+function startMasterScopeLoop() {
+  const canvas = document.getElementById("masterScopeCanvas");
+  const ctx = canvas.getContext("2d");
+  const buffer = new Uint8Array(512);
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = Math.max(180, Math.floor(rect.width));
+    canvas.height = Math.max(70, Math.floor(rect.height));
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  function render() {
+    requestAnimationFrame(render);
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.fillStyle = "#090b10";
+    ctx.fillRect(0, 0, w, h);
+
+    // Línea guía central
+    ctx.strokeStyle = "#1a2234";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, h / 2);
+    ctx.lineTo(w, h / 2);
+    ctx.stroke();
+
+    if (!masterAnalyser) return;
+    masterAnalyser.getByteTimeDomainData(buffer);
+
+    let maxPeak = 0;
+    const colorMap = {
+      campanas: "#f59e0b",
+      motorsynth: "#38bdf8",
+      resodance: "#10b981"
+    };
+    ctx.strokeStyle = colorMap[currentTab] || "#38bdf8";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    const slice = w / buffer.length;
+    let x = 0;
+    for (let i = 0; i < buffer.length; i++) {
+      const v = (buffer[i] - 128) / 128.0;
+      const absV = Math.abs(v);
+      if (absV > maxPeak) maxPeak = absV;
+      const y = (h / 2) + v * (h * 0.42);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+      x += slice;
+    }
+    ctx.stroke();
+
+    const dbEl = document.getElementById("scopePeakReadout");
+    if (maxPeak < 0.002) {
+      dbEl.textContent = "-∞ dB";
+    } else {
+      const db = (20 * Math.log10(maxPeak)).toFixed(1);
+      dbEl.textContent = `${db} dB`;
+    }
+  }
+  render();
+}
+
+/* ============================================================================
+ * 3. PESTAÑA 1: CAMPANAS ("GRACIAS A LA VIDA" — SÍNTESIS FM Y MORFEO ARMÓNICO)
+ * ============================================================================ */
+const bellState = {
+  octava: 0,              // -2 a +2 (Z / X)
+  amplitudIdx: 1,         // 0: Cerrada, 1: Media, 2: Abierta (C / V)
+  complejidad: 0,         // 0..3 (I, II, III, IV)
+  shiftVariante: false,
+  pedalSosten: false,
+  acordeActivoIdx: -1,
+  teclasPresionadas: new Set(),
+  vocesActivas: new Map() // midiNote -> { osc, mod, gain, stopFn }
+};
+
+const AMPLITUDES_NOMBRES = ["CERRADA", "MEDIA", "ABIERTA"];
+const NOTAS_NOMBRES = ["Do", "Do#", "Re", "Re#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
+
+function midiToFreq(m) {
+  return 440 * Math.pow(2, (m - 69) / 12);
+}
+function midiToName(m) {
+  const n = ((m % 12) + 12) % 12;
+  const oct = Math.floor(m / 12) - 1;
+  return `${NOTAS_NOMBRES[n]}${oct}`;
+}
+
+// Síntesis FM pura del timbre Campana extraída de "Gracias a la vida"
+function crearVozCampanaFM(midiNote) {
+  const ctx = ensureAudio();
+  const now = ctx.currentTime;
+  const freq = midiToFreq(midiNote);
+
+  const carrier = ctx.createOscillator();
+  const modulator = ctx.createOscillator();
+  const modGain = ctx.createGain();
+  const envGain = ctx.createGain();
+
+  carrier.type = "sine";
+  carrier.frequency.setValueAtTime(freq, now);
+
+  // Relación inarmónica de campana cristalina (3.47) con caída rápida de índice
+  modulator.type = "sine";
+  modulator.frequency.setValueAtTime(freq * 3.47, now);
+
+  modGain.gain.setValueAtTime(freq * 1.85, now);
+  modGain.gain.exponentialRampToValueAtTime(freq * 0.08, now + 1.4);
+
+  envGain.gain.setValueAtTime(0.0001, now);
+  envGain.gain.linearRampToValueAtTime(0.18, now + 0.012);
+  envGain.gain.exponentialRampToValueAtTime(0.0008, now + 3.2);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(envGain);
+  envGain.connect(masterGain);
+
+  carrier.start(now);
+  modulator.start(now);
+
+  let stopped = false;
+  const stopVoice = (fast = false) => {
+    if (stopped) return;
+    stopped = true;
+    const t = ctx.currentTime;
+    const rel = fast ? 0.09 : 0.45;
+    try {
+      envGain.gain.cancelScheduledValues(t);
+      envGain.gain.setValueAtTime(Math.max(0.0001, envGain.gain.value), t);
+      envGain.gain.exponentialRampToValueAtTime(0.0001, t + rel);
+      carrier.stop(t + rel + 0.02);
+      modulator.stop(t + rel + 0.02);
+    } catch (e) {}
+  };
+
+  return { midiNote, stopVoice };
+}
+
+// Calcula las 4 voces exactas del acorde según octava, amplitud, complejidad y Shift
+function calcularVocesAcorde(chordIdx) {
+  const acorde = CONFIG.CAMPANAS_ACORDES[chordIdx];
+  if (!acorde) return [];
+  const offsetOct = bellState.octava * 12;
+  const bajo = acorde.bajo + offsetOct;
+
+  const baseTriad = bellState.shiftVariante
+    ? acorde.varianteShift
+    : acorde.niveles[bellState.complejidad];
+
+  let superiores = baseTriad.map(n => n + offsetOct);
+
+  // Ajuste de disposición (Cerrada, Media, Abierta)
+  if (bellState.amplitudIdx === 0) {
+    // Cerrada: compactar dentro de la misma octava
+    superiores = superiores.map((n, i) => (i === 2 ? n - 12 : n));
+  } else if (bellState.amplitudIdx === 2) {
+    // Abierta: expandir la voz intermedia y aguda una octava arriba
+    superiores = [superiores[0], superiores[1] + 12, superiores[2] + 12];
+  }
+
+  return [bajo, ...superiores];
+}
+
+// Función morfar(): añade las notas nuevas y apaga suavemente las que salen sin re-atacar las comunes
+function morfarCampanas(chordIdx, reatacarTodo = false) {
+  ensureAudio();
+  const nuevasNotas = calcularVocesAcorde(chordIdx);
+  const nuevoSet = new Set(nuevasNotas);
+
+  if (reatacarTodo) {
+    for (const [, voz] of bellState.vocesActivas.entries()) {
+      voz.stopVoice(true);
+    }
+    bellState.vocesActivas.clear();
+  } else {
+    // Apagar únicamente las voces que ya no pertenecen al acorde actual
+    for (const [nota, voz] of bellState.vocesActivas.entries()) {
+      if (!nuevoSet.has(nota)) {
+        voz.stopVoice(false);
+        bellState.vocesActivas.delete(nota);
+      }
+    }
+  }
+
+  // Disparar las notas nuevas
+  nuevasNotas.forEach(nota => {
+    if (!bellState.vocesActivas.has(nota)) {
+      bellState.vocesActivas.set(nota, crearVozCampanaFM(nota));
+    }
+  });
+
+  bellState.acordeActivoIdx = chordIdx;
+  actualizarUICampanas();
+}
+
+function detenerCampanasSiNoPedal() {
+  if (bellState.pedalSosten || bellState.teclasPresionadas.size > 0) return;
+  for (const [, voz] of bellState.vocesActivas.entries()) {
+    voz.stopVoice(false);
+  }
+  bellState.vocesActivas.clear();
+  bellState.acordeActivoIdx = -1;
+  actualizarUICampanas();
+}
+
+function setBellComplexity(nivel) {
+  const clamped = Math.max(0, Math.min(3, nivel));
+  if (clamped === bellState.complejidad) return;
+  bellState.complejidad = clamped;
+  if (bellState.acordeActivoIdx >= 0) {
+    morfarCampanas(bellState.acordeActivoIdx, false);
+  } else {
+    actualizarUICampanas();
+  }
+}
+
+function renderizarTarjetasCampanas() {
+  const grid = document.getElementById("bellChordsGrid");
+  grid.innerHTML = "";
+  CONFIG.CAMPANAS_ACORDES.forEach((ac, idx) => {
+    const card = document.createElement("div");
+    card.className = "chord-card";
+    card.id = `bell-card-${idx}`;
+    card.innerHTML = `
+      <div class="chord-key-badge">${ac.label}</div>
+      <div class="chord-name">${ac.nombre}</div>
+      <div class="chord-notes-list" id="bell-notes-${idx}"></div>
+    `;
+    card.addEventListener("mousedown", () => {
+      bellState.teclasPresionadas.add(idx);
+      morfarCampanas(idx, true);
+    });
+    card.addEventListener("mouseup", () => {
+      bellState.teclasPresionadas.delete(idx);
+      detenerCampanasSiNoPedal();
+    });
+    card.addEventListener("mouseleave", () => {
+      if (bellState.teclasPresionadas.has(idx)) {
+        bellState.teclasPresionadas.delete(idx);
+        detenerCampanasSiNoPedal();
+      }
+    });
+    grid.appendChild(card);
+  });
+
+  // Control vertical del mouse para morfar complejidad en vivo
+  const morphArea = document.getElementById("pane-campanas");
+  let accumY = 0;
+  morphArea.addEventListener("mousemove", (e) => {
+    if (e.ShiftKey !== undefined) {
+      bellState.shiftVariante = e.shiftKey;
+    }
+    accumY -= e.movementY;
+    const threshold = 42;
+    if (Math.abs(accumY) >= threshold) {
+      const step = accumY > 0 ? 1 : -1;
+      accumY = 0;
+      setBellComplexity(bellState.complejidad + step);
+    }
+  });
+}
+
+function actualizarUICampanas() {
+  document.getElementById("bellOctaveVal").textContent =
+    bellState.octava > 0 ? `+${bellState.octava}` : `${bellState.octava}`;
+  document.getElementById("bellSpreadVal").textContent =
+    AMPLITUDES_NOMBRES[bellState.amplitudIdx];
+
+  const pedalVal = document.getElementById("bellPedalVal");
+  if (bellState.pedalSosten) {
+    pedalVal.textContent = "SOSTÉN ACTIVO";
+    pedalVal.style.color = "var(--accent-bell)";
+  } else {
+    pedalVal.textContent = "LIBRE";
+    pedalVal.style.color = "var(--text-dim)";
+  }
+
+  document.getElementById("bellVariantBadge").textContent =
+    bellState.shiftVariante ? "SHIFT: VARIANTE B" : "SHIFT: A";
+
+  // Actualizar pasos de la torre de complejidad
+  document.querySelectorAll("#bellMorphTower .morph-step").forEach(el => {
+    const lv = parseInt(el.getAttribute("data-level"), 10);
+    el.classList.toggle("active", lv === bellState.complejidad);
+  });
+
+  // Actualizar tarjetas de acordes y notas activas
+  CONFIG.CAMPANAS_ACORDES.forEach((_, idx) => {
+    const card = document.getElementById(`bell-card-${idx}`);
+    const notesEl = document.getElementById(`bell-notes-${idx}`);
+    if (!card || !notesEl) return;
+    const isAct = idx === bellState.acordeActivoIdx && bellState.vocesActivas.size > 0;
+    card.classList.toggle("active", isAct);
+    const notas = calcularVocesAcorde(idx).map(midiToName);
+    notesEl.textContent = notas.join(" · ");
+  });
+
+  actualizarContadorVoces();
+}
+
+/* ============================================================================
+ * 4. PESTAÑA 2: MOTORSYNTH (SÍNTESIS CONTINUA LEGATO, 4 FILAS Y TRACKPAD 2D)
+ * ============================================================================ */
+const motorState = {
+  initialized: false,
+  running: false,
+  currentTargetFreq: 130.81,
+  inertiaTau: 0.12,        // Eje X: 0.008s a 0.85s
+  localBpm: 90,            // Eje Y: 30 a 240 BPM
+  snappedToNet: true,      // Acoplado al BPM de la red en el rango central
+  sustainHold: false,
+  pressedKeys: [],         // Pila de teclas presionadas para Legato
+  spaceDownTime: 0,
+  spaceBrakeTimer: null,
+  nodes: null
+};
+
+function initMotorSynthAudio() {
+  if (motorState.initialized || !audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  const motorOut = audioCtx.createGain();
+  motorOut.gain.setValueAtTime(0.0001, now);
+
+  // 3 Osciladores Electromecánicos (Rotor fundamental, sub-armónico y armónico metálico)
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const osc3 = audioCtx.createOscillator();
+  osc1.type = "sawtooth";
+  osc2.type = "square";
+  osc3.type = "triangle";
+
+  const g1 = audioCtx.createGain(); g1.gain.value = 0.22;
+  const g2 = audioCtx.createGain(); g2.gain.value = 0.14;
+  const g3 = audioCtx.createGain(); g3.gain.value = 0.10;
+
+  // Ruido mecánico de escobillas filtrado
+  const bufferSize = audioCtx.sampleRate * 2;
+  const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = noiseBuffer;
+  noise.loop = true;
+
+  const noiseFilter = audioCtx.createBiquadFilter();
+  noiseFilter.type = "bandpass";
+  noiseFilter.frequency.value = 320;
+  noiseFilter.Q.value = 3.5;
+
+  const gNoise = audioCtx.createGain();
+  gNoise.gain.value = 0.08;
+
+  // LFO de pulsación por BPM del motor
+  const lfo = audioCtx.createOscillator();
+  lfo.type = "sine";
+  lfo.frequency.value = CONFIG.bpmInicial / 60;
+
+  const lfoDepth = audioCtx.createGain();
+  lfoDepth.gain.value = 0.12;
+
+  const pulseModGain = audioCtx.createGain();
+  pulseModGain.gain.value = 0.85;
+
+  lfo.connect(lfoDepth);
+  lfoDepth.connect(pulseModGain.gain);
+
+  osc1.connect(g1); g1.connect(pulseModGain);
+  osc2.connect(g2); g2.connect(pulseModGain);
+  osc3.connect(g3); g3.connect(pulseModGain);
+  noise.connect(noiseFilter); noiseFilter.connect(gNoise); gNoise.connect(pulseModGain);
+
+  pulseModGain.connect(motorOut);
+  motorOut.connect(masterGain);
+
+  osc1.start(now);
+  osc2.start(now);
+  osc3.start(now);
+  noise.start(now);
+  lfo.start(now);
+
+  motorState.nodes = { osc1, osc2, osc3, noiseFilter, lfo, motorOut };
+  motorState.initialized = true;
+}
+
+function setMotorFrequency(freq) {
+  ensureAudio();
+  const now = audioCtx.currentTime;
+  const tau = Math.max(0.008, motorState.inertiaTau);
+  motorState.currentTargetFreq = freq;
+
+  const { osc1, osc2, osc3, noiseFilter, motorOut } = motorState.nodes;
+  osc1.frequency.setTargetAtTime(freq, now, tau);
+  osc2.frequency.setTargetAtTime(freq * 0.5, now, tau);
+  osc3.frequency.setTargetAtTime(freq * 2.5, now, tau);
+  noiseFilter.frequency.setTargetAtTime(Math.min(4500, freq * 2.2), now, tau);
+
+  if (!motorState.running) {
+    motorState.running = true;
+    motorOut.gain.cancelScheduledValues(now);
+    motorOut.gain.setTargetAtTime(0.65, now, Math.min(0.18, tau * 0.7 + 0.02));
+  }
+  actualizarUIMotorSynth();
+}
+
+function powerDownMotor(useInertia = false) {
+  if (!motorState.initialized || !motorState.running) return;
+  const now = audioCtx.currentTime;
+  const tau = useInertia ? Math.max(0.08, motorState.inertiaTau * 1.4) : 0.025;
+  const { osc1, osc2, osc3, motorOut } = motorState.nodes;
+
+  if (useInertia) {
+    // Desaceleración física del tono hacia reposo (~28 Hz) mientras cae la ganancia
+    osc1.frequency.setTargetAtTime(28, now, tau);
+    osc2.frequency.setTargetAtTime(14, now, tau);
+    osc3.frequency.setTargetAtTime(70, now, tau);
+  }
+  motorOut.gain.cancelScheduledValues(now);
+  motorOut.gain.setTargetAtTime(0.0001, now, tau * 0.65);
+
+  motorState.running = false;
+  motorState.sustainHold = false;
+  actualizarUIMotorSynth();
+}
+
+function actualizarBpmMotor() {
+  if (!motorState.initialized) return;
+  const effectiveBpm = motorState.snappedToNet ? netState.bpm : motorState.localBpm;
+  const now = audioCtx.currentTime;
+  motorState.nodes.lfo.frequency.setTargetAtTime(effectiveBpm / 60, now, 0.06);
+  document.getElementById("motorBpmReadout").textContent = `${Math.round(effectiveBpm)} BPM`;
+}
+
+// Barra Espaciadora Inteligente en MotorSynth (<200ms = Sostén/Corte; >200ms = Freno gradual con inercia)
+function motorSpaceDown() {
+  if (motorState.spaceDownTime > 0) return;
+  motorState.spaceDownTime = performance.now();
+  const bar = document.getElementById("motorPedalBar");
+
+  motorState.spaceBrakeTimer = setTimeout(() => {
+    // Mantenido más de 200ms: inicia desaceleración gradual con inercia
+    bar.classList.add("braking");
+    document.getElementById("motorPedalStateTxt").textContent = "FRENANDO CON INERCIA...";
+    powerDownMotor(true);
+  }, 200);
+}
+
+function motorSpaceUp() {
+  if (motorState.spaceDownTime === 0) return;
+  const elapsed = performance.now() - motorState.spaceDownTime;
+  motorState.spaceDownTime = 0;
+  clearTimeout(motorState.spaceBrakeTimer);
+
+  const bar = document.getElementById("motorPedalBar");
+  bar.classList.remove("braking");
+
+  if (elapsed < 200) {
+    // Toque rápido (<200ms)
+    if (motorState.sustainHold && motorState.pressedKeys.length === 0) {
+      // Si ya estaba en sostén sin teclas presionadas, apaga al instante
+      powerDownMotor(false);
+    } else if (motorState.running) {
+      motorState.sustainHold = !motorState.sustainHold;
+      actualizarUIMotorSynth();
+    }
+  } else {
+    actualizarUIMotorSynth();
+  }
+}
+
+function renderizarTecladoMotorSynth() {
+  const container = document.getElementById("motorRowsContainer");
+  container.innerHTML = "";
+
+  const filasDef = [
+    { id: "fila4_log",    tag: "LOG", items: CONFIG.MOTORSYNTH_FILAS.fila4_log },
+    { id: "fila3_micro",  tag: "MIC", items: CONFIG.MOTORSYNTH_FILAS.fila3_micro },
+    { id: "fila2_crom",   tag: "CRO", items: CONFIG.MOTORSYNTH_FILAS.fila2_crom },
+    { id: "fila1_escala", tag: "ESC", items: CONFIG.MOTORSYNTH_FILAS.fila1_escala }
+  ];
+
+  filasDef.forEach(fila => {
+    const rowEl = document.createElement("div");
+    rowEl.className = "motor-kb-row";
+    rowEl.innerHTML = `<div class="kb-row-tag">${fila.tag}</div>`;
+
+    fila.items.forEach(item => {
+      const keyBtn = document.createElement("div");
+      keyBtn.className = "motor-key";
+      keyBtn.dataset.code = item.code;
+      keyBtn.dataset.key = item.key;
+      keyBtn.innerHTML = `
+        <span class="motor-key-char">${item.label}</span>
+        <span class="motor-key-freq">${item.freq.toFixed(1)}</span>
+      `;
+      keyBtn.addEventListener("mousedown", () => triggerMotorKeyDown(item));
+      keyBtn.addEventListener("mouseup", () => triggerMotorKeyUp(item));
+      keyBtn.addEventListener("mouseleave", () => triggerMotorKeyUp(item));
+      rowEl.appendChild(keyBtn);
+    });
+    container.appendChild(rowEl);
+  });
+
+  // Trackpad 2D interactivo (Eje X: Inercia, Eje Y: BPM con banda central acoplada a la red)
+  const pad = document.getElementById("motorXYPad");
+  const updateXY = (e) => {
+    const rect = pad.getBoundingClientRect();
+    const normX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const normY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+
+    // Inercia exponencial suave de 0.008s (izquierda) a 0.85s (derecha)
+    motorState.inertiaTau = 0.008 + Math.pow(normX, 2) * 0.84;
+
+    // Banda central (44% a 56%) engancha al BPM de la red
+    const cursor = document.getElementById("motorXYCursor");
+    const snapBadge = document.getElementById("motorSnapBadge");
+    if (normY >= 0.44 && normY <= 0.56) {
+      motorState.snappedToNet = true;
+      cursor.style.top = "50%";
+      cursor.classList.add("snapped");
+      snapBadge.textContent = "ACOPLADO A RED";
+      snapBadge.style.opacity = "1";
+    } else {
+      motorState.snappedToNet = false;
+      cursor.style.top = `${(normY * 100).toFixed(1)}%`;
+      cursor.classList.remove("snapped");
+      // Arriba = 220 BPM, Abajo = 35 BPM
+      motorState.localBpm = Math.round(220 - normY * 185);
+      snapBadge.textContent = "BPM LIBRE";
+      snapBadge.style.opacity = "0.55";
+    }
+    cursor.style.left = `${(normX * 100).toFixed(1)}%`;
+    document.getElementById("motorInertiaReadout").textContent = `${motorState.inertiaTau.toFixed(2)} s`;
+    actualizarBpmMotor();
+  };
+
+  pad.addEventListener("pointermove", (e) => {
+    updateXY(e);
+  });
+}
+
+function triggerMotorKeyDown(item) {
+  if (!motorState.pressedKeys.find(k => k.code === item.code)) {
+    motorState.pressedKeys.push(item);
+  }
+  setMotorFrequency(item.freq);
+}
+
+function triggerMotorKeyUp(item) {
+  motorState.pressedKeys = motorState.pressedKeys.filter(k => k.code !== item.code);
+  if (motorState.pressedKeys.length > 0) {
+    // Legato: vuelve a deslizarse hacia la tecla previa que sigue presionada
+    const prev = motorState.pressedKeys[motorState.pressedKeys.length - 1];
+    setMotorFrequency(prev.freq);
+  } else if (!motorState.sustainHold) {
+    powerDownMotor(false);
+  } else {
+    actualizarUIMotorSynth();
+  }
+}
+
+function actualizarUIMotorSynth() {
+  const activeCodes = new Set(motorState.pressedKeys.map(k => k.code));
+  document.querySelectorAll(".motor-key").forEach(el => {
+    const isPressed = activeCodes.has(el.dataset.code);
+    const isHeldFreq = motorState.running &&
+      motorState.sustainHold &&
+      Math.abs(parseFloat(el.querySelector(".motor-key-freq").textContent) - motorState.currentTargetFreq) < 0.15;
+    el.classList.toggle("active", isPressed || isHeldFreq);
+  });
+
+  document.getElementById("motorFreqReadout").textContent =
+    motorState.running ? `${motorState.currentTargetFreq.toFixed(1)} Hz` : "--- Hz";
+
+  const bar = document.getElementById("motorPedalBar");
+  const stateTxt = document.getElementById("motorPedalStateTxt");
+  bar.classList.toggle("hold-active", motorState.sustainHold);
+  if (motorState.sustainHold) {
+    stateTxt.textContent = "SOSTÉN ACTIVO (TOQUE ESPACIO PARA CORTAR)";
+  } else if (motorState.running) {
+    stateTxt.textContent = "MOTOR EN MARCHA";
+  } else {
+    stateTxt.textContent = "MOTOR EN REPOSO";
+  }
+  actualizarBpmMotor();
+  actualizarContadorVoces();
+}
+
+/* ============================================================================
+ * 5. PESTAÑA 3: RESODANCE (MODELO FÍSICO MRI + PULSOS SOSTENIDOS + SECUENCIADOR)
+ * ============================================================================ */
+const resoState = {
+  initialized: false,
+  seqPlaying: false,
+  currentStep: 0,
+  params: { ...CONFIG.RESODANCE_PRESETS_FISICOS["Eco Planar (EPI)"] },
+  matrix: JSON.parse(JSON.stringify(CONFIG.RESODANCE_PATRONES["EPI Clásico (Lectura/Fase)"])),
+  manualHeld: { Gx: false, Gy: false, Gz: false },
+  activeLoops: {},
+  nodes: null
+};
+
+function makeLorentzCurve(drive) {
+  const n = 4096;
+  const curve = new Float32Array(n);
+  const k = Math.max(1, drive);
+  for (let i = 0; i < n; i++) {
+    const x = (i * 2) / n - 1;
+    curve[i] = Math.tanh(x * (1 + k * 0.08));
+  }
+  return curve;
+}
+
+function initResoDanceAudio() {
+  if (resoState.initialized || !audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  // Etapa 1: Filtro Slew Rate de los pulsos magnéticos
+  const slewFilter = audioCtx.createBiquadFilter();
+  slewFilter.type = "lowpass";
+  slewFilter.frequency.setValueAtTime(resoState.params.slewRate, now);
+
+  // Etapa 2: Resonancia mecánica de la bobina + Saturación Lorentz
+  const coilFilter = audioCtx.createBiquadFilter();
+  coilFilter.type = "peaking";
+  coilFilter.frequency.setValueAtTime(resoState.params.coilFreq, now);
+  coilFilter.Q.setValueAtTime(resoState.params.coilQ, now);
+  coilFilter.gain.setValueAtTime(10, now);
+
+  const shaper = audioCtx.createWaveShaper();
+  shaper.curve = makeLorentzCurve(resoState.params.lorentzDrive);
+  shaper.oversample = "2x";
+
+  // Etapa 3: 4 Bandas Modales del cilindro + Guía de onda con retroalimentación
+  const baseModes = [185, 390, 740, 1320];
+  const modalFilters = baseModes.map(freq => {
+    const f = audioCtx.createBiquadFilter();
+    f.type = "bandpass";
+    f.frequency.setValueAtTime(freq * resoState.params.modalShift, now);
+    f.Q.setValueAtTime(resoState.params.modalQ, now);
+    return f;
+  });
+
+  const modalSum = audioCtx.createGain();
+  modalSum.gain.value = 0.65;
+
+  const wgDelay = audioCtx.createDelay(0.2);
+  wgDelay.delayTime.setValueAtTime(0.014, now);
+
+  const wgFeedback = audioCtx.createGain();
+  wgFeedback.gain.setValueAtTime(resoState.params.decayFeedback, now);
+
+  const resoOut = audioCtx.createGain();
+  resoOut.gain.value = 0.85;
+
+  slewFilter.connect(coilFilter);
+  coilFilter.connect(shaper);
+
+  modalFilters.forEach(mf => {
+    shaper.connect(mf);
+    mf.connect(modalSum);
+  });
+
+  modalSum.connect(wgDelay);
+  wgDelay.connect(wgFeedback);
+  wgFeedback.connect(modalSum);
+
+  modalSum.connect(resoOut);
+  resoOut.connect(masterGain);
+
+  resoState.nodes = { slewFilter, coilFilter, shaper, modalFilters, baseModes, wgFeedback };
+  resoState.initialized = true;
+}
+
+// Disparo de ráfaga de gradiente (corta para secuenciador o continua mientras se sostiene 1/2/3)
+function triggerResoBurst(axis, durationSec = 0.085) {
+  ensureAudio();
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const env = audioCtx.createGain();
+
+  const axisProfiles = {
+    Gx: { type: "sawtooth", freq: 135 },
+    Gy: { type: "square",   freq: 215 },
+    Gz: { type: "triangle", freq: 92 }
+  };
+  const prof = axisProfiles[axis] || axisProfiles.Gx;
+  osc.type = prof.type;
+  osc.frequency.setValueAtTime(prof.freq, now);
+
+  const peak = resoState.params.pulseGain * 0.45;
+  env.gain.setValueAtTime(0.0001, now);
+  env.gain.linearRampToValueAtTime(peak, now + 0.004);
+  env.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
+
+  osc.connect(env);
+  env.connect(resoState.nodes.slewFilter);
+
+  osc.start(now);
+  osc.stop(now + durationSec + 0.01);
+}
+
+// Sostén continuo cuando se mantienen presionadas las teclas 1 (Gx), 2 (Gy) o 3 (Gz)
+function resoAxisHold(axis, isDown) {
+  ensureAudio();
+  const btnMap = { Gx: "btnAxisGx", Gy: "btnAxisGy", Gz: "btnAxisGz" };
+  const clsMap = { Gx: "active-gx", Gy: "active-gy", Gz: "active-gz" };
+  const btn = document.getElementById(btnMap[axis]);
+
+  if (isDown) {
+    if (resoState.manualHeld[axis]) return;
+    resoState.manualHeld[axis] = true;
+    if (btn) btn.classList.add(clsMap[axis]);
+
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const pulseLfo = audioCtx.createOscillator();
+    const pulseGain = audioCtx.createGain();
+    const env = audioCtx.createGain();
+
+    const axisProfiles = {
+      Gx: { type: "sawtooth", freq: 135, rate: 18 },
+      Gy: { type: "square",   freq: 215, rate: 26 },
+      Gz: { type: "sawtooth", freq: 92,  rate: 11 }
+    };
+    const prof = axisProfiles[axis];
+    osc.type = prof.type;
+    osc.frequency.setValueAtTime(prof.freq, now);
+
+    // Modulación de tren de pulsos trapezoides mientras se mantiene la tecla
+    pulseLfo.type = "square";
+    pulseLfo.frequency.setValueAtTime(prof.rate, now);
+    pulseLfo.connect(pulseGain.gain);
+
+    env.gain.setValueAtTime(0.001, now);
+    env.gain.linearRampToValueAtTime(resoState.params.pulseGain * 0.38, now + 0.01);
+
+    osc.connect(pulseGain);
+    pulseGain.connect(env);
+    env.connect(resoState.nodes.slewFilter);
+
+    osc.start(now);
+    pulseLfo.start(now);
+    resoState.activeLoops[axis] = { osc, pulseLfo, env };
+  } else {
+    if (!resoState.manualHeld[axis]) return;
+    resoState.manualHeld[axis] = false;
+    if (btn) btn.classList.remove(clsMap[axis]);
+
+    const active = resoState.activeLoops[axis];
+    if (active) {
+      const now = audioCtx.currentTime;
+      active.env.gain.cancelScheduledValues(now);
+      active.env.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+      active.osc.stop(now + 0.06);
+      active.pulseLfo.stop(now + 0.06);
+      delete resoState.activeLoops[axis];
+    }
+  }
+  actualizarContadorVoces();
+}
+
+function updateResoParam(param, rawVal) {
+  const val = parseFloat(rawVal);
+  resoState.params[param] = val;
+
+  const fmtMap = {
+    slewRate: `${Math.round(val)} Hz`,
+    pulseGain: val.toFixed(2),
+    coilFreq: `${Math.round(val)} Hz`,
+    coilQ: val.toFixed(1),
+    lorentzDrive: `${Math.round(val)}`,
+    modalShift: `${val.toFixed(2)}x`,
+    modalQ: `${Math.round(val)}`,
+    decayFeedback: val.toFixed(2)
+  };
+  const labelEl = document.getElementById(`val-${param}`);
+  if (labelEl) labelEl.textContent = fmtMap[param] || val;
+
+  if (!resoState.initialized) return;
+  const now = audioCtx.currentTime;
+  const n = resoState.nodes;
+
+  if (param === "slewRate") n.slewFilter.frequency.setTargetAtTime(val, now, 0.03);
+  if (param === "coilFreq") n.coilFilter.frequency.setTargetAtTime(val, now, 0.03);
+  if (param === "coilQ") n.coilFilter.Q.setTargetAtTime(val, now, 0.03);
+  if (param === "lorentzDrive") n.shaper.curve = makeLorentzCurve(val);
+  if (param === "modalShift") {
+    n.modalFilters.forEach((mf, idx) => {
+      mf.frequency.setTargetAtTime(n.baseModes[idx] * val, now, 0.04);
+    });
+  }
+  if (param === "modalQ") {
+    n.modalFilters.forEach(mf => mf.Q.setTargetAtTime(val, now, 0.04));
+  }
+  if (param === "decayFeedback") {
+    n.wgFeedback.gain.setTargetAtTime(val, now, 0.04);
+  }
+}
+
+function renderizarResoDanceUI() {
+  // Poblar selectores de patrones y presets físicos
+  const patSel = document.getElementById("resoPatternSelect");
+  patSel.innerHTML = "";
+  Object.keys(CONFIG.RESODANCE_PATRONES).forEach(name => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = `Patrón: ${name}`;
+    patSel.appendChild(opt);
+  });
+
+  const preSel = document.getElementById("resoAcousticPresetSelect");
+  preSel.innerHTML = "";
+  Object.keys(CONFIG.RESODANCE_PRESETS_FISICOS).forEach(name => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = `Acústica: ${name}`;
+    preSel.appendChild(opt);
+  });
+
+  dibujarMatrizResoDance();
+}
+
+function dibujarMatrizResoDance() {
+  const axes = [
+    { key: "Gx", rowId: "seqRowGx", color: "#38bdf8", cls: "on-gx" },
+    { key: "Gy", rowId: "seqRowGy", color: "#10b981", cls: "on-gy" },
+    { key: "Gz", rowId: "seqRowGz", color: "#f59e0b", cls: "on-gz" }
+  ];
+
+  axes.forEach(ax => {
+    const row = document.getElementById(ax.rowId);
+    row.innerHTML = `<div class="seq-row-label" style="color:${ax.color}">${ax.key}</div>`;
+    for (let i = 0; i < 16; i++) {
+      const cell = document.createElement("div");
+      const isOn = resoState.matrix[ax.key][i] === 1;
+      cell.className = `seq-cell ${i % 4 === 0 ? "beat-4" : ""} ${isOn ? ax.cls : ""}`;
+      cell.dataset.axis = ax.key;
+      cell.dataset.step = i;
+      cell.addEventListener("click", () => {
+        resoState.matrix[ax.key][i] = resoState.matrix[ax.key][i] ? 0 : 1;
+        dibujarMatrizResoDance();
+      });
+      row.appendChild(cell);
+    }
+  });
+}
+
+function loadResoPatternFromSelect(name) {
+  const pat = CONFIG.RESODANCE_PATRONES[name];
+  if (!pat) return;
+  resoState.matrix = JSON.parse(JSON.stringify(pat));
+  dibujarMatrizResoDance();
+}
+
+function loadResoAcousticPreset(name) {
+  const pre = CONFIG.RESODANCE_PRESETS_FISICOS[name];
+  if (!pre) return;
+  Object.entries(pre).forEach(([k, v]) => {
+    const slider = document.getElementById(`slider-${k}`);
+    if (slider) slider.value = v;
+    updateResoParam(k, v);
+  });
+}
+
+function clearResoMatrix() {
+  resoState.matrix = {
+    Gx: new Array(16).fill(0),
+    Gy: new Array(16).fill(0),
+    Gz: new Array(16).fill(0)
+  };
+  dibujarMatrizResoDance();
+}
+
+function toggleResoSequencer() {
+  ensureAudio();
+  resoState.seqPlaying = !resoState.seqPlaying;
+  const btn = document.getElementById("btnResoSeqPlay");
+  btn.classList.toggle("playing", resoState.seqPlaying);
+  btn.textContent = resoState.seqPlaying ? "■ DETENER SECUENCIADOR" : "▶ SECUENCIADOR (RED)";
+  if (!resoState.seqPlaying) {
+    document.querySelectorAll(".seq-cell.playhead").forEach(el => el.classList.remove("playhead"));
+  }
+}
+
+// Modal de Importar / Exportar Patrón JSON para ResoDance
+function openPatternModal() {
+  const area = document.getElementById("patternJsonArea");
+  area.value = JSON.stringify(resoState.matrix, null, 2);
+  document.getElementById("patternModalMsg").textContent = "";
+  document.getElementById("patternModal").classList.add("open");
+}
+function closePatternModal() {
+  document.getElementById("patternModal").classList.remove("open");
+}
+function applyImportedPatternJson() {
+  const raw = document.getElementById("patternJsonArea").value;
+  const msg = document.getElementById("patternModalMsg");
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed.Gx) || !Array.isArray(parsed.Gy) || !Array.isArray(parsed.Gz)) {
+      msg.style.color = "var(--alert-cut)";
+      msg.textContent = "El JSON debe incluir arreglos Gx, Gy y Gz de 16 pasos.";
+      return;
+    }
+    resoState.matrix = {
+      Gx: parsed.Gx.slice(0, 16).map(v => (v ? 1 : 0)),
+      Gy: parsed.Gy.slice(0, 16).map(v => (v ? 1 : 0)),
+      Gz: parsed.Gz.slice(0, 16).map(v => (v ? 1 : 0))
+    };
+    dibujarMatrizResoDance();
+    msg.style.color = "var(--accent-reso)";
+    msg.textContent = "¡Patrón cargado en la matriz!";
+    setTimeout(closePatternModal, 550);
+  } catch (e) {
+    msg.style.color = "var(--alert-cut)";
+    msg.textContent = "Formato JSON inválido.";
+  }
+}
+
+/* ============================================================================
+ * 6. CAPA DE RED LOCAL (ESTILO IN C + RELOJ DE ALTA PRECISIÓN + MODO ENSAYO)
+ * ============================================================================ */
+const netState = {
+  connected: false,
+  ws: null,
+  running: true,
+  baseElapsedMs: 0,
+  lastSyncPerf: performance.now(),
+  bpm: CONFIG.bpmInicial,
+  seccionIdx: 0,
+  lastStep16: -1,
+  lastBeat: -1
+};
+
+function getElapsedMs() {
+  if (!netState.running) return netState.baseElapsedMs;
+  return netState.baseElapsedMs + (performance.now() - netState.lastSyncPerf);
+}
+
+function connectLocalNetwork() {
+  if (location.protocol === "file:") {
+    // Abierto con doble clic directo: funciona en Modo Ensayo Local
+    updateNetStatusUI(false);
+    return;
+  }
+  try {
+    const proto = location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${proto}//${location.host}/conjunto`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      netState.connected = true;
+      netState.ws = ws;
+      updateNetStatusUI(true);
+      sendMusicianState();
+    };
+
+    ws.onmessage = (ev) => {
+      try {
+        const msg = JSON.parse(ev.data);
+        if (typeof msg.ms === "number") {
+          netState.baseElapsedMs = msg.ms;
+          netState.lastSyncPerf = performance.now();
+        }
+        if (typeof msg.corriendo === "boolean") {
+          netState.running = msg.corriendo;
+        }
+        if (typeof msg.bpm === "number" && msg.bpm >= 30 && msg.bpm <= 260) {
+          netState.bpm = msg.bpm;
+          actualizarBpmMotor();
+        }
+        if (typeof msg.seccionIdx === "number") {
+          applySectionChange(msg.seccionIdx, false);
+        }
+        if (msg.alerta) {
+          triggerVisualAlert(msg.alerta, false);
+        }
+        updateClockAndBpmUI();
+      } catch (e) {}
+    };
+
+    ws.onclose = () => {
+      netState.connected = false;
+      netState.ws = null;
+      updateNetStatusUI(false);
+      setTimeout(connectLocalNetwork, 3000);
+    };
+  } catch (e) {
+    updateNetStatusUI(false);
+  }
+}
+
+function sendMusicianState(extra = {}) {
+  if (!netState.connected || !netState.ws || netState.ws.readyState !== 1) return;
+  const payload = {
+    instrumento: currentTab,
+    sonando: isAnyInstrumentSounding(),
+    ...extra
+  };
+  netState.ws.send(JSON.stringify(payload));
+}
+
+function updateNetStatusUI(online) {
+  const led = document.getElementById("netLed");
+  const txt = document.getElementById("netStatusText");
+  led.classList.toggle("online", online);
+  txt.textContent = online ? "RED ORQUESTA" : "ENSAYO LOCAL";
+}
+
+// Bucle Maestro de Sincronización Rítmica (BPM, Pulsos Visuales y Secuenciador ResoDance)
+function startMasterClockLoop() {
+  function tick() {
+    requestAnimationFrame(tick);
+    const ms = getElapsedMs();
+
+    // Formatear mm:ss
+    const totalSec = Math.floor(ms / 1000);
+    const mm = String(Math.floor(totalSec / 60)).padStart(2, "0");
+    const ss = String(totalSec % 60).padStart(2, "0");
+    document.getElementById("clockDisplay").textContent = `${mm}:${ss}`;
+
+    const beatDurationMs = 60000 / netState.bpm;
+    const step16DurationMs = beatDurationMs / 4;
+
+    const currentBeat = Math.floor(ms / beatDurationMs);
+    const currentStep16 = Math.floor(ms / step16DurationMs) % 16;
+
+    // Destello del indicador de pulso maestro
+    if (netState.running && currentBeat !== netState.lastBeat) {
+      netState.lastBeat = currentBeat;
+      const dot = document.getElementById("bpmDot");
+      const isDownbeat = (currentBeat % 4) === 0;
+      dot.classList.add(isDownbeat ? "flash-downbeat" : "flash");
+      setTimeout(() => {
+        dot.classList.remove("flash", "flash-downbeat");
+      }, 95);
+
+      const beatInBar = (currentBeat % 4) + 1;
+      document.getElementById("countdownDisplay").textContent = `PULSO ${beatInBar} / 4`;
+    }
+
+    // Avance de semicorchea (16 pasos) para el Secuenciador de ResoDance
+    if (netState.running && currentStep16 !== netState.lastStep16) {
+      netState.lastStep16 = currentStep16;
+      if (resoState.seqPlaying) {
+        avanzarPasoResoDance(currentStep16);
+      }
+    }
+  }
+  tick();
+}
+
+function avanzarPasoResoDance(step) {
+  resoState.currentStep = step;
+  const stepDurSec = (60 / netState.bpm) / 4;
+
+  ["Gx", "Gy", "Gz"].forEach(axis => {
+    if (resoState.matrix[axis][step] === 1) {
+      triggerResoBurst(axis, stepDurSec * 0.85);
+    }
+  });
+
+  document.querySelectorAll(".seq-cell").forEach(cell => {
+    const s = parseInt(cell.dataset.step, 10);
+    cell.classList.toggle("playhead", s === step);
+  });
+}
+
+// Controles del Director (funcionan en Red si es la laptop Maestra o en Modo Ensayo Local)
+function directorChangeSection(delta) {
+  const next = Math.max(0, Math.min(CONFIG.SECCIONES.length - 1, netState.seccionIdx + delta));
+  applySectionChange(next, true);
+}
+
+function applySectionChange(idx, broadcast = false) {
+  const sec = CONFIG.SECCIONES[idx];
+  if (!sec) return;
+  netState.seccionIdx = idx;
+  netState.bpm = sec.bpm;
+
+  document.getElementById("secNumDisplay").textContent = sec.codigo;
+  document.getElementById("secTitleDisplay").textContent = sec.titulo;
+  document.getElementById("secCueDisplay").textContent = sec.cue;
+  document.getElementById("bpmDisplay").textContent = sec.bpm;
+
+  document.querySelectorAll(".sec-step-pill").forEach((pill, i) => {
+    pill.classList.toggle("active", i === idx);
+  });
+
+  actualizarBpmMotor();
+  triggerVisualAlert("warn", false);
+
+  if (broadcast) {
+    sendMusicianState({ comando: "seccion", seccionIdx: idx, bpm: sec.bpm });
+  }
+}
+
+function directorAdjustBpm(delta) {
+  netState.bpm = Math.max(35, Math.min(240, netState.bpm + delta));
+  document.getElementById("bpmDisplay").textContent = netState.bpm;
+  actualizarBpmMotor();
+  sendMusicianState({ comando: "bpm", bpm: netState.bpm });
+}
+
+function directorToggleClock() {
+  if (netState.running) {
+    netState.baseElapsedMs = getElapsedMs();
+    netState.running = false;
+  } else {
+    netState.lastSyncPerf = performance.now();
+    netState.running = true;
+  }
+  updateClockAndBpmUI();
+  sendMusicianState({ comando: "reloj", corriendo: netState.running, ms: netState.baseElapsedMs });
+}
+
+function directorTriggerAlert(type) {
+  triggerVisualAlert(type, true);
+}
+
+function triggerVisualAlert(type, broadcast = false) {
+  const box = document.getElementById("scoreBox");
+  const cd = document.getElementById("countdownDisplay");
+  box.classList.remove("alert-warn", "alert-go", "alert-cut");
+
+  if (type === "warn") {
+    box.classList.add("alert-warn");
+    cd.textContent = "¡PREPARAR CAMBIO!";
+  } else if (type === "go") {
+    box.classList.add("alert-go");
+    cd.textContent = "¡UNÍSONO AHORA!";
+    // Dispara un golpe sincronizado según el instrumento activo
+    if (audioCtx) {
+      if (currentTab === "campanas") morfarCampanas(Math.max(0, bellState.acordeActivoIdx), true);
+      else if (currentTab === "motorsynth") setMotorFrequency(motorState.currentTargetFreq);
+      else if (currentTab === "resodance") triggerResoBurst("Gx", 0.16);
+    }
+  } else if (type === "cut") {
+    box.classList.add("alert-cut");
+    cd.textContent = "¡CORTE GENERAL!";
+    cortarTodoElSonido();
+  }
+
+  setTimeout(() => {
+    box.classList.remove("alert-warn", "alert-go", "alert-cut");
+  }, 2200);
+
+  if (broadcast) {
+    sendMusicianState({ comando: "alerta", alerta: type });
+  }
+}
+
+function cortarTodoElSonido() {
+  // Apagar Campanas
+  bellState.pedalSosten = false;
+  bellState.teclasPresionadas.clear();
+  for (const [, voz] of bellState.vocesActivas.entries()) {
+    voz.stopVoice(true);
+  }
+  bellState.vocesActivas.clear();
+  actualizarUICampanas();
+
+  // Apagar MotorSynth
+  motorState.pressedKeys = [];
+  powerDownMotor(false);
+
+  // Apagar ResoDance
+  resoState.seqPlaying = false;
+  const btnSeq = document.getElementById("btnResoSeqPlay");
+  if (btnSeq) {
+    btnSeq.classList.remove("playing");
+    btnSeq.textContent = "▶ SECUENCIADOR (RED)";
+  }
+  ["Gx", "Gy", "Gz"].forEach(ax => resoAxisHold(ax, false));
+}
+
+function updateClockAndBpmUI() {
+  document.getElementById("bpmDisplay").textContent = netState.bpm;
+  const btn = document.getElementById("btnClockToggle");
+  btn.textContent = netState.running ? "⏸ PAUSA" : "▶ RELOJ";
+}
+
+function renderizarBarraSecciones() {
+  const bar = document.getElementById("secStepsBar");
+  bar.innerHTML = "";
+  CONFIG.SECCIONES.forEach((sec, idx) => {
+    const pill = document.createElement("div");
+    pill.className = `sec-step-pill ${idx === 0 ? "active" : ""}`;
+    pill.title = `${sec.codigo}: ${sec.titulo} (${sec.bpm} BPM)`;
+    pill.addEventListener("click", () => applySectionChange(idx, true));
+    bar.appendChild(pill);
+  });
+}
+
+/* ============================================================================
+ * 7. CAMBIO DE PESTAÑAS Y MANEJO UNIFICADO DEL TECLADO LATINOAMERICANO
+ * ============================================================================ */
+function switchTab(tabName) {
+  currentTab = tabName;
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === tabName);
+  });
+  document.querySelectorAll(".tab-pane").forEach(pane => {
+    pane.classList.toggle("active", pane.id === `pane-${tabName}`);
+  });
+  sendMusicianState();
+}
+
+function isAnyInstrumentSounding() {
+  return (
+    bellState.vocesActivas.size > 0 ||
+    motorState.running ||
+    resoState.seqPlaying ||
+    resoState.manualHeld.Gx ||
+    resoState.manualHeld.Gy ||
+    resoState.manualHeld.Gz
+  );
+}
+
+function actualizarContadorVoces() {
+  let count = bellState.vocesActivas.size;
+  if (motorState.running) count += 3;
+  ["Gx", "Gy", "Gz"].forEach(ax => { if (resoState.manualHeld[ax]) count += 1; });
+  document.getElementById("activeVoicesReadout").textContent = `${count} voces`;
+}
+
+// Captura global de teclado adaptada al layout Latinoamericano de MacBook
+window.addEventListener("keydown", (e) => {
+  // Ignorar si un modal de texto está abierto
+  if (document.querySelector(".modal-backdrop.open")) return;
+
+  // Cambio rápido de pestaña con F1, F2, F3
+  if (e.key === "F1") { e.preventDefault(); switchTab("campanas"); return; }
+  if (e.key === "F2") { e.preventDefault(); switchTab("motorsynth"); return; }
+  if (e.key === "F3") { e.preventDefault(); switchTab("resodance"); return; }
+
+  const keyLower = (e.key || "").toLowerCase();
+  const code = e.code || "";
+
+  // ---------------- PESTAÑA 1: CAMPANAS ----------------
+  if (currentTab === "campanas") {
+    if (e.key === "Shift") {
+      bellState.shiftVariante = true;
+      if (bellState.acordeActivoIdx >= 0) morfarCampanas(bellState.acordeActivoIdx, false);
+      else actualizarUICampanas();
+      return;
+    }
+    if (code === "Space") {
+      e.preventDefault();
+      if (!e.repeat) {
+        bellState.pedalSosten = !bellState.pedalSosten;
+        if (!bellState.pedalSosten) detenerCampanasSiNoPedal();
+        else actualizarUICampanas();
+      }
+      return;
+    }
+    if (!e.repeat) {
+      if (keyLower === "z" || code === "KeyZ") {
+        bellState.octava = Math.max(-2, bellState.octava - 1);
+        if (bellState.acordeActivoIdx >= 0) morfarCampanas(bellState.acordeActivoIdx, false);
+        else actualizarUICampanas();
+        return;
+      }
+      if (keyLower === "x" || code === "KeyX") {
+        bellState.octava = Math.min(2, bellState.octava + 1);
+        if (bellState.acordeActivoIdx >= 0) morfarCampanas(bellState.acordeActivoIdx, false);
+        else actualizarUICampanas();
+        return;
+      }
+      if (keyLower === "c" || code === "KeyC") {
+        bellState.amplitudIdx = Math.max(0, bellState.amplitudIdx - 1);
+        if (bellState.acordeActivoIdx >= 0) morfarCampanas(bellState.acordeActivoIdx, false);
+        else actualizarUICampanas();
+        return;
+      }
+      if (keyLower === "v" || code === "KeyV") {
+        bellState.amplitudIdx = Math.min(2, bellState.amplitudIdx + 1);
+        if (bellState.acordeActivoIdx >= 0) morfarCampanas(bellState.acordeActivoIdx, false);
+        else actualizarUICampanas();
+        return;
+      }
+
+      const chordIdx = CONFIG.CAMPANAS_ACORDES.findIndex(
+        ac => ac.key === keyLower || ac.code === code
+      );
+      if (chordIdx !== -1) {
+        e.preventDefault();
+        bellState.teclasPresionadas.add(chordIdx);
+        morfarCampanas(chordIdx, true);
+      }
+    }
+    return;
+  }
+
+  // ---------------- PESTAÑA 2: MOTORSYNTH ----------------
+  if (currentTab === "motorsynth") {
+    if (code === "Space") {
+      e.preventDefault();
+      if (!e.repeat) motorSpaceDown();
+      return;
+    }
+    if (!e.repeat) {
+      const allMotorKeys = [
+        ...CONFIG.MOTORSYNTH_FILAS.fila4_log,
+        ...CONFIG.MOTORSYNTH_FILAS.fila3_micro,
+        ...CONFIG.MOTORSYNTH_FILAS.fila2_crom,
+        ...CONFIG.MOTORSYNTH_FILAS.fila1_escala
+      ];
+      const found = allMotorKeys.find(k => k.code === code || k.key === keyLower);
+      if (found) {
+        e.preventDefault();
+        triggerMotorKeyDown(found);
+      }
+    }
+    return;
+  }
+
+  // ---------------- PESTAÑA 3: RESODANCE ----------------
+  if (currentTab === "resodance") {
+    if (keyLower === "1" || code === "Digit1") { e.preventDefault(); resoAxisHold("Gx", true); }
+    if (keyLower === "2" || code === "Digit2") { e.preventDefault(); resoAxisHold("Gy", true); }
+    if (keyLower === "3" || code === "Digit3") { e.preventDefault(); resoAxisHold("Gz", true); }
+    if (code === "Space" && !e.repeat) { e.preventDefault(); toggleResoSequencer(); }
+  }
+});
+
+window.addEventListener("keyup", (e) => {
+  if (document.querySelector(".modal-backdrop.open")) return;
+  const keyLower = (e.key || "").toLowerCase();
+  const code = e.code || "";
+
+  if (currentTab === "campanas") {
+    if (e.key === "Shift") {
+      bellState.shiftVariante = false;
+      if (bellState.acordeActivoIdx >= 0) morfarCampanas(bellState.acordeActivoIdx, false);
+      else actualizarUICampanas();
+      return;
+    }
+    const chordIdx = CONFIG.CAMPANAS_ACORDES.findIndex(
+      ac => ac.key === keyLower || ac.code === code
+    );
+    if (chordIdx !== -1) {
+      bellState.teclasPresionadas.delete(chordIdx);
+      detenerCampanasSiNoPedal();
+    }
+    return;
+  }
+
+  if (currentTab === "motorsynth") {
+    if (code === "Space") {
+      e.preventDefault();
+      motorSpaceUp();
+      return;
+    }
+    const allMotorKeys = [
+      ...CONFIG.MOTORSYNTH_FILAS.fila4_log,
+      ...CONFIG.MOTORSYNTH_FILAS.fila3_micro,
+      ...CONFIG.MOTORSYNTH_FILAS.fila2_crom,
+      ...CONFIG.MOTORSYNTH_FILAS.fila1_escala
+    ];
+    const found = allMotorKeys.find(k => k.code === code || k.key === keyLower);
+    if (found) {
+      triggerMotorKeyUp(found);
+    }
+    return;
+  }
+
+  if (currentTab === "resodance") {
+    if (keyLower === "1" || code === "Digit1") resoAxisHold("Gx", false);
+    if (keyLower === "2" || code === "Digit2") resoAxisHold("Gy", false);
+    if (keyLower === "3" || code === "Digit3") resoAxisHold("Gz", false);
+  }
+});
+
+/* ============================================================================
+ * 8. UTILIDADES DE PORTAPAPELES Y SERVIDOR GO EMBEBIDO PARA DESCARGA
+ * ============================================================================ */
+function copyTextarea(textareaId, msgId) {
+  const area = document.getElementById(textareaId);
+  area.select();
+  document.execCommand("copy");
+  const msg = document.getElementById(msgId);
+  if (msg) {
+    msg.textContent = "¡Copiado al portapapeles!";
+  }
+}
+
+const GO_SERVER_SOURCE = `package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"sync"
+	"time"
+)
+
+// Servidor Orquesta Electroacústica (macOS & Linux)
+// Sirve index.html en el puerto 8080 y sincroniza BPM, Secciones y Alertas.
+
+type EstadoOrquesta struct {
+	mu         sync.Mutex
+	Corriendo  bool   \`json:"corriendo"\`
+	BaseMs     int64  \`json:"ms"\`
+	UltimoTick time.Time
+	Bpm        int    \`json:"bpm"\`
+	SeccionIdx int    \`json:"seccionIdx"\`
+	Alerta     string \`json:"alerta,omitempty"\`
+}
+
+var estado = EstadoOrquesta{
+	Corriendo:  true,
+	BaseMs:     0,
+	UltimoTick: time.Now(),
+	Bpm:        90,
+	SeccionIdx: 0,
+}
+
+func (e *EstadoOrquesta) ObtenerMs() int64 {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if !e.Corriendo {
+		return e.BaseMs
+	}
+	return e.BaseMs + time.Since(e.UltimoTick).Milliseconds()
+}
+
+func main() {
+	http.Handle("/", http.FileServer(http.Dir(".")))
+	http.HandleFunc("/estado", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		ms := estado.ObtenerMs()
+		estado.mu.Lock()
+		resp, _ := json.Marshal(map[string]interface{}{
+			"corriendo":  estado.Corriendo,
+			"ms":         ms,
+			"bpm":        estado.Bpm,
+			"seccionIdx": estado.SeccionIdx,
+		})
+		estado.mu.Unlock()
+		w.Write(resp)
+	})
+
+	ip := obtenerIPLocal()
+	fmt.Println("====================================================")
+	fmt.Println(" ORQUESTA ELECTROACÚSTICA — SERVIDOR LAN ACTIVO")
+	fmt.Printf(" Músicos conectarse en el navegador a: http://%s:8080\\n", ip)
+	fmt.Printf(" Directora (esta laptop):              http://localhost:8080\\n")
+	fmt.Println("====================================================")
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func obtenerIPLocal() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return "localhost"
+	}
+	for _, a := range addrs {
+		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && ipnet.IP.To4() != nil {
+			return ipnet.IP.String()
+		}
+	}
+	return "localhost"
+}
+`;
+
+function openServerModal() {
+  document.getElementById("serverGoArea").value = GO_SERVER_SOURCE;
+  document.getElementById("serverModalMsg").textContent = "";
+  document.getElementById("serverModal").classList.add("open");
+}
+function closeServerModal() {
+  document.getElementById("serverModal").classList.remove("open");
+}
+function downloadGoServerFile() {
+  const blob = new Blob([GO_SERVER_SOURCE], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "main.go";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ============================================================================
+ * 9. INICIALIZACIÓN AL CARGAR LA VENTANA
+ * ============================================================================ */
+window.onload = function () {
+  renderizarBarraSecciones();
+  renderizarTarjetasCampanas();
+  actualizarUICampanas();
+  renderizarTecladoMotorSynth();
+  renderizarResoDanceUI();
+  startMasterScopeLoop();
+  startMasterClockLoop();
+  connectLocalNetwork();
+};
+</script>
+</body>
+</html>
