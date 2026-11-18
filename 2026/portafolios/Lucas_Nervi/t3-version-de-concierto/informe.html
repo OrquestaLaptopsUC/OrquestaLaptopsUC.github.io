@@ -166,17 +166,24 @@ Web Audio API.</p>
 <ul>
 <li><b>Dependencias:</b> ninguna. Laptops: onda sinusoidal. Handpan (sonido de referencia): onda
 triangular. Sin samples.</li>
-<li><b>Contenido del archivo:</b> partitura completa de las 7 secciones, reloj de la obra y controles de
-swing y decay por laptop.</li>
-<li><b>Carpeta de la obra:</b> una copia del archivo en cada laptop, junto con esta documentación. La
-carpeta completa se entrega como zip.</li>
-<li><b>Handpan:</b> es un instrumento físico y no usa software.</li>
+<li><b>Contenido del archivo:</b> partitura completa de las 7 secciones, reloj de la obra, pantalla de
+entrada para elegir laptop y controles de swing y decay por voz.</li>
+<li><b>Selección de laptop:</b> al abrir <code>yo_tenia_10_laptops.html</code>, antes de mostrar
+cualquier control, la página pregunta "¿Qué laptop eres?" con un botón por laptop (1 a 10) y una opción
+"Todas" para ensayar la obra completa en un solo equipo. Al elegir, la interfaz se reduce a esa sola
+voz — sin parámetros de URL ni configuración previa. Un botón "Cambiar laptop" en la cabecera detiene la
+obra y vuelve a mostrar esa pantalla, por si alguien se equivocó de número o hay que reasignar un
+equipo.</li>
+<li><b>Panel del handpan:</b> <code>handpan.html</code> es un archivo aparte, sin audio, pensado para el
+handpanista: muestra en qué momento de la obra está (partida, silencios, entradas y las 7 secciones con
+cuenta regresiva y barra de progreso). No toca ni simula el instrumento, solo ubica en el tiempo; se
+inicia a mano junto con la partida de la laptop 1.</li>
+<li><b>Carpeta de la obra:</b> una copia de <code>yo_tenia_10_laptops.html</code> y <code>handpan.html</code>
+en cada equipo que corresponda, junto con esta documentación. La carpeta completa se entrega como zip.</li>
+<li><b>Handpan (instrumento):</b> es físico y no usa software para sonar; solo el panel de tiempo de
+arriba es digital.</li>
 <li><span class="pend"><b>Pendiente:</b></span> qué número OLUC corresponde a cada una de las laptops 1
 a 10.</li>
-<li><span class="pend"><b>Resuelto tras este registro:</b></span> cada laptop ya muestra solo su propia
-tarjeta en el concierto — al abrir <code>yo_tenia_10_laptops.html</code> la página pregunta "¿Qué laptop
-eres?" y reduce la interfaz a esa voz; la opción "Todas" conserva las 10 tarjetas para ensayar en un solo
-equipo.</li>
 </ul>
 
 <h2>2. Puesta en marcha y estado inicial</h2>
@@ -184,7 +191,9 @@ equipo.</li>
 bits desactivados y el swing en 50 %.</p>
 <ol>
 <li>Encender la laptop y abrir <code>yo_tenia_10_laptops.html</code> en Chrome o Safari.</li>
-<li>Verificar que la tarjeta de la laptop muestra su nota, su frase base y su swing en 50 %.</li>
+<li>En la pantalla de entrada, elegir el número de la laptop (o "Todas" solo para ensayar en un
+equipo).</li>
+<li>Verificar que la tarjeta muestra la nota correcta, la frase base y el swing en 50 %.</li>
 <li>Ajustar el volumen del sistema al nivel de referencia de la sección 4 (pendiente de medir).</li>
 <li>Confirmar que no suena nada y que los bits están desactivados.</li>
 <li>Esperar la señal de inicio. Solo entonces se activa el reloj con el botón Empezar.</li>
@@ -194,16 +203,19 @@ inicio entre laptops (ver sección 4).</p>
 
 <h2>3. Mapeo de control</h2>
 <p>Cada laptop tiene dos controles propios, y los dos afectan solo a su sonido. El handpan no tiene
-controles en pantalla.</p>
+controles de sonido en pantalla; su panel (<code>handpan.html</code>) solo tiene Empezar y Detener,
+igual que las laptops pero sin producir audio.</p>
 <table>
 <tr><th>Control</th><th>Afecta a</th><th>Rango</th><th>Reinicio</th><th>Efecto sonoro</th></tr>
 <tr><td>Swing</td><td>Cada laptop</td><td>50 % a 75 %</td><td>50 % al cambiar de sección</td><td>Retrasa las corcheas pares de la pulsación. Con 50 % el pulso es recto.</td></tr>
-<tr><td>Decay</td><td>Cada laptop</td><td>0,2 a 1,5 corcheas</td><td>Valor inicial, sin cambio automático</td><td>Duración de cada golpe: corto y seco o largo y sostenido.</td></tr>
+<tr><td>Decay</td><td>Cada laptop</td><td>0,1 a 3 corcheas</td><td>Valor inicial, sin cambio automático</td><td>Duración de cada golpe: corto y seco o largo y sostenido.</td></tr>
 <tr><td>Bits (casillas de la frase)</td><td>Cada laptop</td><td>Activo / inactivo</td><td>Desactivados al inicio</td><td>Activa o silencia cada ataque X de la frase.</td></tr>
 <tr><td>Usar sugerencia</td><td>Cada laptop</td><td>Botón</td><td>No aplica</td><td>Carga la frase sugerida de la sección en curso.</td></tr>
-<tr><td>Empezar / Detener</td><td>Obra completa</td><td>Botón</td><td>No aplica</td><td>Inicia o detiene el reloj de la obra.</td></tr>
+<tr><td>Empezar / Detener</td><td>Obra completa (laptop) o reloj de tiempo (handpan)</td><td>Botón</td><td>No aplica</td><td>Inicia o detiene el reloj de la obra.</td></tr>
+<tr><td>Cambiar laptop</td><td>La propia laptop</td><td>Botón</td><td>No aplica</td><td>Detiene la obra en esa laptop y vuelve a la pantalla de selección.</td></tr>
 </table>
-<p>Entre cambios de sección se puede mover el swing y el decay libremente.</p>
+<p>Entre cambios de sección se puede mover el swing y el decay libremente. El rango de decay se amplió de
+0,2–1,5 a 0,1–3 corcheas, para poder llegar a golpes más secos y a golpes más sostenidos que antes.</p>
 <p class="pend">Pendiente: valor inicial de decay para cada laptop.</p>
 
 <h2>4. Nivel, red y sincronía</h2>
