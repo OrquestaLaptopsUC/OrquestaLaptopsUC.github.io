@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Handpan — panel de tiempo · Yo tenía 10 laptops</title>
+<style>
+  :root{--bg:#141414;--panel:#1f1f1f;--line:#333;--tx:#eee;--dim:#9a9a9a;--acc:#f0b429;--acc2:#3b6ea5}
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:var(--bg);color:var(--tx);
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:18px 14px 40px}
+  header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin-bottom:16px;width:100%;max-width:640px}
+  button{padding:10px 18px;font-size:15px;border:0;border-radius:6px;background:var(--acc2);color:#fff;cursor:pointer}
+  button.alt{background:#4a4a4a}
+  main{width:100%;max-width:640px;display:flex;flex-direction:column;gap:16px;align-items:center}
+  .pulse{width:16px;height:16px;border-radius:50%;background:#2a2a2a;border:1px solid #555;margin:0 auto 4px;transition:background .04s,transform .04s}
+  .pulse.hit{background:var(--acc);transform:scale(1.35)}
+  .fase{font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);text-align:center}
+  .faseGrande{font-size:34px;font-weight:800;text-align:center;line-height:1.15}
+  .faseSub{font-size:16px;color:var(--acc);text-align:center;min-height:22px}
+  .countdown{font-size:72px;font-weight:800;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    text-align:center;line-height:1;margin:4px 0}
+  .countdown.chica{font-size:46px}
+  .totales{display:flex;justify-content:space-between;width:100%;font-size:13px;color:var(--dim);
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  .barraWrap{width:100%;height:10px;background:#2a2a2a;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+  .barra{height:100%;background:var(--acc2);width:0%;transition:width .15s linear}
+  .timeline{display:flex;gap:4px;width:100%;margin-top:4px}
+  .seg{flex:1;height:34px;border-radius:5px;background:var(--panel);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--dim);
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;transition:background .2s,color .2s,border-color .2s}
+  .seg.hecha{color:#5a5a5a}
+  .seg.actual{background:var(--acc);color:#1a1204;border-color:var(--acc);font-weight:800}
+  .nota{font-size:13px;color:var(--dim);text-align:center;max-width:520px;margin-top:4px}
+</style>
+</head>
+<body>
+<header>
+  <button id="start">Empezar</button>
+  <button id="stop" class="alt">Detener</button>
+</header>
+<main>
+  <div class="pulse" id="pulseDot"></div>
+  <div class="fase" id="faseChica">Esperando</div>
+  <div class="faseGrande" id="faseGrande">ESPERANDO</div>
+  <div class="faseSub" id="faseSub"></div>
+  <div class="countdown" id="countdown">—</div>
+  <div class="totales">
+    <span id="elapsed">0:00</span>
+    <span id="totalTxt">de 0:00</span>
+  </div>
+  <div class="barraWrap"><div class="barra" id="barra"></div></div>
+  <div class="timeline" id="timeline"></div>
+  <p class="nota">Panel de solo lectura, sin audio: la obra no incluye handpan, así que el software no toca
+  ni simula su parte. Sirve para ubicarte en el tiempo. Presioná «Empezar» en el mismo instante en que la
+  laptop 1 da la partida (sus primeras 10 corcheas) para quedar sincronizado de oído con el resto.</p>
+</main>
+
+<script>
+// ---------- Parámetros (idénticos a las 10 laptops, sin audio) ----------
+const T = 60 / 90 / 2;          // una corchea a 90 BPM (negra = pulso) = 1/3 s
+const SILENCE = 15;             // silencio entre secciones (s)
+
+function secLen(s){ return s<6 ? 4*(10-s)*(10-s) : 120; } // corcheas
+
+// ---------- Plan de la obra (en segundos desde el instante 0 = partida) ----------
+let plan=[], secStart=[], secEnd=[], endAll=0;
+function buildPlan(){
+  plan=[]; secStart=[]; secEnd=[];
+  let now=0;
+  plan.push({type:'entrada', s:0, k:10, start:now, end:now+10*T});
+  now+=10*T;
+  for(let s=0;s<7;s++){
+    if(s>0){
+      plan.push({type:'silencio', s, start:now, end:now+SILENCE});
+      now+=SILENCE;
+      const k=10-s;
+      plan.push({type:'entrada', s, k, start:now, end:now+k*T});
+      now+=k*T;
+    }
+    const L=secLen(s);
+    secStart[s]=now;
+    plan.push({type:'seccion', s, start:now, end:now+L*T});
+    secEnd[s]=now+L*T;
+    now+=L*T;
+  }
+  endAll=now;
+}
+buildPlan();
+
+// ---------- Reloj (sin Web Audio: el handpan no suena desde el software) ----------
+let running=false, startPerf=0;
+function elapsedSec(){ return running ? (performance.now()-startPerf)/1000 : -1; }
+
+function fmt(sec){
+  sec=Math.max(0,Math.round(sec));
+  const m=Math.floor(sec/60), s=sec%60;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+// ---------- Línea de tiempo (7 secciones) ----------
+const tlEl=document.getElementById('timeline');
+for(let s=0;s<7;s++){
+  const d=document.createElement('div');
+  d.className='seg'; d.id='seg'+s; d.textContent=(s+1);
+  tlEl.appendChild(d);
+}
+
+function render(){
+  const now=elapsedSec();
+  document.getElementById('elapsed').textContent=fmt(Math.max(0,now));
+  document.getElementById('totalTxt').textContent='de '+fmt(endAll);
+  document.getElementById('barra').style.width=(running ? Math.min(100, now/endAll*100) : 0)+'%';
+
+  for(let s=0;s<7;s++){
+    const seg=document.getElementById('seg'+s);
+    seg.className='seg'+(running && now>=secEnd[s] ? ' hecha' : '')+
+                   (running && now>=secStart[s] && now<secEnd[s] ? ' actual' : '');
+  }
+
+  if(!running){
+    document.getElementById('faseChica').textContent='Esperando';
+    document.getElementById('faseGrande').textContent='ESPERANDO';
+    document.getElementById('faseSub').textContent='';
+    document.getElementById('countdown').textContent='—';
+    document.getElementById('countdown').className='countdown';
+    document.getElementById('pulseDot').classList.remove('hit');
+    return;
+  }
+  if(now>=endAll){
+    document.getElementById('faseChica').textContent='Obra terminada';
+    document.getElementById('faseGrande').textContent='FIN';
+    document.getElementById('faseSub').textContent='';
+    document.getElementById('countdown').textContent='0:00';
+    return;
+  }
+  const it=plan.find(p=>now>=p.start && now<p.end) || plan[0];
+  const rem=it.end-now;
+  const cdEl=document.getElementById('countdown');
+  cdEl.textContent = rem<60 ? rem.toFixed(1) : fmt(rem);
+  cdEl.className='countdown'+(rem<60?' chica':'');
+
+  if(it.type==='entrada'){
+    const idx=Math.min(it.k, Math.floor((now-it.start)/T)+1);
+    document.getElementById('faseChica').textContent = it.s===0 ? 'Partida' : `Entrada · sección ${it.s+1}`;
+    document.getElementById('faseGrande').textContent = `CORCHEA ${idx} DE ${it.k}`;
+    document.getElementById('faseSub').textContent = it.s===0
+      ? 'La laptop 1 cuenta 10 corcheas antes de empezar'
+      : `La laptop 1 cuenta ${it.k} corcheas antes de la sección ${it.s+1}`;
+    const beat=Math.floor((now-it.start)/T);
+    document.getElementById('pulseDot').classList.toggle('hit', (now-it.start - beat*T) < 0.08);
+  } else if(it.type==='silencio'){
+    document.getElementById('faseChica').textContent='Silencio entre secciones';
+    document.getElementById('faseGrande').textContent='SILENCIO';
+    document.getElementById('faseSub').textContent=`preparando la sección ${it.s+1} de 7`;
+    document.getElementById('pulseDot').classList.remove('hit');
+  } else {
+    document.getElementById('faseChica').textContent=`Sección ${it.s+1} de 7`;
+    document.getElementById('faseGrande').textContent=`SECCIÓN ${it.s+1} / 7`;
+    document.getElementById('faseSub').textContent = it.s===6 ? 'bloques finales, convergencia' : '';
+    const beat=Math.floor((now-it.start)/T);
+    document.getElementById('pulseDot').classList.toggle('hit', (now-it.start - beat*T) < 0.08);
+  }
+}
+
+function start(){
+  if(running) return;
+  running=true;
+  startPerf=performance.now();
+}
+function stop(){
+  running=false;
+}
+document.getElementById('start').addEventListener('click', start);
+document.getElementById('stop').addEventListener('click', stop);
+
+setInterval(render, 50);
+render();
+</script>
+</body>
+</html>

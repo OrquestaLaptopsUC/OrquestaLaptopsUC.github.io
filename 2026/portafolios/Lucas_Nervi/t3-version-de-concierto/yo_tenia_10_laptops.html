@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yo tenía 10 laptops</title>
+<style>
+  body{font-family:system-ui,-apple-system,sans-serif;margin:14px;background:#141414;color:#eee}
+  header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
+  button{padding:8px 14px;font-size:15px;border:0;border-radius:6px;background:#3b6ea5;color:#fff;cursor:pointer}
+  button.alt{background:#4a4a4a}
+  select{font-size:15px;padding:6px}
+  #status{font-size:16px;font-weight:600}
+  #total{font-size:13px;color:#aaa}
+  #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+  .card{background:#1f1f1f;border:1px solid #333;border-radius:8px;padding:10px}
+  .card.off{opacity:.3}
+  .card.hidden{display:none}
+  .title{font-weight:700}
+  .bits{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0;min-height:26px}
+  .bit{width:24px;height:24px;border-radius:4px;border:1px solid #555;background:#2a2a2a;cursor:pointer;padding:0}
+  .bit.on{background:#f0b429;border-color:#f0b429}
+  .sugg{font-family:monospace;font-size:22px;letter-spacing:3px;text-align:center;margin:6px 0}
+  .lbl{font-size:12px;color:#aaa;text-align:center}
+  label{display:block;font-size:13px;margin-top:8px}
+  input[type=range]{width:100%}
+  #splash{position:fixed;inset:0;background:rgba(10,10,10,.97);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+  #splash .box{max-width:480px;width:100%;background:#1f1f1f;border:1px solid #333;border-radius:10px;padding:22px 24px}
+  #splash h1{margin:0 0 6px;font-size:20px}
+  #splash p{margin:0 0 16px;color:#aaa;font-size:13px}
+  #splashGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  #splashGrid button{width:100%}
+</style>
+</head>
+<body>
+<div id="splash">
+  <div class="box">
+    <h1>¿Qué laptop eres?</h1>
+    <p>Elige tu voz para tocar en el concierto, o "Todas" para ensayar la obra completa en un solo equipo.</p>
+    <div id="splashGrid"></div>
+  </div>
+</div>
+<header>
+  <button id="btnCambiar" class="alt">Cambiar laptop</button>
+  <button id="start">Empezar</button>
+  <button id="stop" class="alt">Detener</button>
+  <label style="margin:0;display:inline">Sección a mostrar
+    <select id="secSel">
+      <option value="auto">Automática</option>
+      <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+      <option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option>
+    </select>
+  </label>
+  <span id="status">Listo.</span>
+  <span id="total"></span>
+</header>
+<div id="grid"></div>
+
+<script>
+// ---------- Parámetros ----------
+const T = 60 / 90 / 2;          // una corchea a 90 BPM (negra = pulso) = 1/3 s
+const LOOK = 0.15;              // anticipación de programación (s)
+const SILENCE = 15;             // silencio entre secciones (s)
+const NOTE_OF = {1:"B4",2:"A4",3:"F4",4:"E4",5:"D4",6:"B3",7:"A3",8:"F3",9:"E3",10:"D3"};
+
+// Frases sugeridas: SUG[laptop][sección 0..5]. X = ataque, O = silencio.
+const SUG = {
+  1:{0:"XOOXOOXOXO"},
+  2:{0:"XXXOOOOOOO",1:"XOOOXOOOO"},
+  3:{0:"OOOXXXOOOO",1:"XOXOXOOOO",2:"XOOOXOOO"},
+  4:{0:"XOXOXOXOXO",1:"XOXXOOOOO",2:"XOOXOOXO",3:"XOOOXOO"},
+  5:{0:"XOOXOOXOXO",1:"OOOOXXXXX",2:"XOXOXOXO",3:"XOOXXOO",4:"XOOOXO"},
+  6:{0:"XOOXOOOOOO",1:"OOXXOOXXO",2:"XOXXXOXX",3:"XXXOOOO",4:"XOOXOO",5:"XOOOO"},
+  7:{0:"OXOOXOXOXO",1:"XOOXXOOXO",2:"XOXXOXXO",3:"XOXOXOO",4:"XOXOXO",5:"XOOXO"},
+  8:{0:"OOXOOXXOXO",1:"OOXOOXOOX",2:"OXOOXOOX",3:"XXOXXXO",4:"XXXXOO",5:"XOOOX"},
+  9:{0:"XOOOOOXOXO",1:"XOOOXOOXO",2:"XOXXOXXX",3:"XXOXOXX",4:"XOXXOO",5:"XOXOX"},
+  10:{0:"XOOOOXXOXO",1:"XOOOXOOOO",2:"XOXXXOXX",3:"XXXXXOO",4:"XOOOOO",5:"XXXOO"}
+};
+// Sección 7 (índice 6): bloques en orden para cada laptop
+const S7 = {
+  7:[["XOOO",16]],
+  8:[["XOOO",16],["XOO",12]],
+  9:[["XOOO",16],["XOO",12],["XO",8]],
+  10:[["XOOO",16],["XOO",12],["XO",8],["X",4]]
+};
+
+// Laptop activa: 0 = todas (ensayo en un equipo); 1..10 = modo concierto, solo esa voz
+// Se elige en la pantalla de entrada (#splash); no hay valor por defecto hasta que el usuario escoge.
+let LAP = 0;
+const solo = () => LAP !== 0;
+
+// ---------- Estado ----------
+function present(j,s){ return s<6 ? SUG[j][s]!==undefined : S7[j]!==undefined; }
+function blocksFor(j,s){
+  if(s<6) return [{sugg:SUG[j][s], reps:4*(10-s)}];
+  return S7[j].map(([sugg,reps])=>({sugg,reps}));
+}
+function secLen(s){ return s<6 ? 4*(10-s)*(10-s) : 120; } // corcheas
+function makeState(j,s){
+  const blocks=blocksFor(j,s);
+  return {j, s, blocks,
+    bits: blocks.map(b=>Array(b.sugg.length).fill(false)),
+    swing:0.5, b:0, i:0, r:0, n:0, t0:0, done:true};
+}
+const states={};
+const decay={};
+const vol={};                   // volumen por laptop (0 a 1)
+for(let j=1;j<=10;j++){
+  states[j]={}; decay[j]=0.5; vol[j]=1;
+  for(let s=0;s<7;s++) if(present(j,s)) states[j][s]=makeState(j,s);
+}
+
+let ac=null, running=false, timer=null, plan=[], secEnd=[], endAll=0;
+let s1Start=0, active=[];
+let curSec=0; const lastKey={};
+
+// ---------- Audio ----------
+function freqOf(n){
+  const m=/^([A-G])(#|b)?(\d)$/.exec(n);
+  const base={C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1]];
+  const alt=m[2]==='#'?1:(m[2]==='b'?-1:0);
+  const midi=(+m[3]+1)*12+base+alt;
+  return 440*Math.pow(2,(midi-69)/12);
+}
+function playPulse(f,t,dur,wave='sine',level=0.08){
+  const o=ac.createOscillator(), g=ac.createGain();
+  o.type=wave; o.frequency.value=f;
+  const d=Math.max(dur,0.03);
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(level,t+0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+  o.connect(g); g.connect(ac.destination);
+  o.start(t); o.stop(t+d+0.05);
+}
+
+// ---------- Planificación ----------
+// En modo concierto (LAP != 0) la laptop 1 también toca partida y entradas.
+// La obra no incluye handpan: el software no toca ni simula su parte.
+function presentLaptops(s){
+  const out=[];
+  for(let j=1;j<=10;j++) if(states[j][s]) out.push(j);
+  return out;
+}
+function resetStates(){
+  for(const k of Object.keys(states)) for(const st of Object.values(states[k])){
+    st.b=0; st.i=0; st.r=0; st.n=0; st.done=true; st.t0=0;
+  }
+  active=[];
+}
+function buildPlan(t0){
+  plan=[]; active=[]; secEnd=[];
+  const playsCues = !solo() || LAP===1;
+  let now=t0;
+  // Partida: laptop 1 da 10 corcheas
+  plan.push({type:'entrada', s:0, k:10, start:now, end:now+10*T});
+  if(playsCues) for(let q=0;q<10;q++) playPulse(freqOf(NOTE_OF[1]), now+q*T, 0.25, 'sine', 0.08*vol[1]);
+  now+=10*T;
+  for(let s=0;s<7;s++){
+    if(s>0){
+      plan.push({type:'silencio', s, start:now, end:now+SILENCE});
+      now+=SILENCE;
+      const k=10-s;
+      plan.push({type:'entrada', s, k, start:now, end:now+k*T});
+      if(playsCues) for(let q=0;q<k;q++) playPulse(freqOf(NOTE_OF[1]), now+q*T, 0.25, 'sine', 0.08*vol[1]);
+      now+=k*T;
+    }
+    const L=secLen(s);
+    plan.push({type:'seccion', s, start:now, end:now+L*T});
+    secEnd[s]=now+L*T;
+    if(s===0) s1Start=now;
+    for(const j of presentLaptops(s)){
+      if(solo() && j!==LAP) continue;
+      const st=states[j][s];
+      Object.assign(st,{t0:now, n:0, b:0, i:0, r:0, done:false, swing:0.5});
+      active.push(st);
+    }
+    now+=L*T;
+  }
+  endAll=now;
+}
+
+// ---------- Scheduler ----------
+function stepTime(st){
+  return st.t0 + Math.floor(st.n/2)*2*T + (st.n%2)*2*T*st.swing;
+}
+function advance(st){
+  st.i++; st.n++;
+  if(st.i>=st.blocks[st.b].sugg.length){
+    st.i=0; st.r++;
+    if(st.r>=st.blocks[st.b].reps){ st.b++; st.r=0; }
+  }
+  if(st.b>=st.blocks.length) st.done=true;
+}
+function tick(){
+  if(!running) return;
+  const horizon=ac.currentTime+LOOK;
+  for(const st of active){
+    while(!st.done){
+      const tt=stepTime(st);
+      if(tt>=horizon) break;
+      if(st.bits[st.b][st.i]){
+        const f=st.freq ?? freqOf(NOTE_OF[st.j]);
+        const dur=(st.fixedDecay ?? decay[st.j])*T;
+        const v = vol[st.j];
+        playPulse(f, tt, dur, st.wave ?? 'sine', 0.08*v);
+      }
+      advance(st);
+    }
+  }
+  if(ac.currentTime>endAll+0.5){ running=false; clearInterval(timer); }
+}
+async function start(){
+  if(running) return;
+  if(ac) ac.close();
+  ac=new (window.AudioContext||window.webkitAudioContext)();
+  await ac.resume();
+  resetStates();
+  buildPlan(ac.currentTime+0.3);
+  running=true;
+  timer=setInterval(tick,25);
+}
+function stop(){
+  running=false; clearInterval(timer);
+  if(ac){ ac.close(); ac=null; }
+  resetStates();
+}
+
+// ---------- Interfaz ----------
+function displayBlock(j){
+  const st=states[j] && states[j][curSec];
+  if(!st) return 0;
+  if(running && ac && ac.currentTime>=st.t0 && !st.done) return Math.min(st.b, st.blocks.length-1);
+  return 0;
+}
+function renderCard(j){
+  const el=document.getElementById('card'+j);
+  el.classList.toggle('hidden', solo() && j!==LAP);
+  if(solo() && j!==LAP) return;
+  const st=states[j][curSec];
+  if(!st){
+    el.className='card off' + (solo() && j!==LAP ? ' hidden' : '');
+    el.innerHTML=`<div class="title">Laptop ${j} · ${NOTE_OF[j]}</div><div class="lbl">No participa en esta sección</div>`;
+    return;
+  }
+  el.className='card';
+  const b=displayBlock(j);
+  const blk=st.blocks[b];
+  const bitsHtml=[...blk.sugg].map((c,i)=>
+    `<button class="bit${st.bits[b][i]?' on':''}" data-j="${j}" data-bit="${i}"></button>`).join('');
+  const sw=Math.round(st.swing*100);
+  el.innerHTML=`
+    <div class="title">Laptop ${j} · ${NOTE_OF[j]}</div>
+    <div class="bits">${bitsHtml}</div>
+    <div class="sugg">${blk.sugg}</div>
+    <div class="lbl">frase sugerida × ${blk.reps}${st.blocks.length>1?` (bloque ${b+1} de ${st.blocks.length})`:''}</div>
+    <button class="alt" data-j="${j}" data-suggest="1" style="width:100%;margin-top:8px">Usar sugerencia</button>
+    <label>Swing: <span>${sw}</span> %
+      <input type="range" min="50" max="75" step="1" value="${sw}" data-j="${j}" data-swing="1"></label>
+    <label>Decay: <span>${decay[j].toFixed(1)}</span> corcheas
+      <input type="range" min="0.1" max="3" step="0.1" value="${decay[j]}" data-j="${j}" data-decay="1"></label>
+    <label>Volumen: <span>${Math.round(vol[j]*100)}</span> %
+      <input type="range" min="0" max="100" step="1" value="${Math.round(vol[j]*100)}" data-j="${j}" data-vol="1"></label>`;
+}
+function updateUI(){
+  const now=running && ac ? ac.currentTime : -1;
+  let autoSec=0;
+  if(running){
+    autoSec=6;
+    for(let s=0;s<7;s++){ if(now<secEnd[s]){ autoSec=s; break; } }
+  }
+  const sel=document.getElementById('secSel').value;
+  curSec = sel==='auto' ? autoSec : (+sel-1);
+  for(let j=1;j<=10;j++){
+    const key=curSec+'|'+displayBlock(j)+'|'+(states[j][curSec]?1:0);
+    if(key!==lastKey[j]){ lastKey[j]=key; renderCard(j); }
+  }
+  let msg='Listo. Activa los bits (o usa "Usar sugerencia") y presiona Empezar.';
+  if(running){
+    msg='Preparando…';
+    const it=plan.find(p=>now>=p.start && now<p.end);
+    if(it){
+      const r=Math.ceil(it.end-now);
+      if(it.type==='entrada') msg=`Entrada: laptop 1 toca ${it.k} corcheas`;
+      else if(it.type==='silencio') msg=`Silencio: ${r} s · ajusten los bits a la sugerencia de la sección ${it.s+1}`;
+      else msg=`Sección ${it.s+1} de 7 · faltan ${r} s`;
+    } else if(now>=endAll) msg='Obra terminada';
+  }
+  document.getElementById('status').textContent=msg;
+}
+
+// Crear tarjetas
+const grid=document.getElementById('grid');
+for(let j=1;j<=10;j++){
+  const d=document.createElement('div');
+  d.className='card'; d.id='card'+j;
+  grid.appendChild(d);
+}
+grid.addEventListener('click', e=>{
+  const t=e.target;
+  if(t.dataset.bit!==undefined){
+    const j=+t.dataset.j, i=+t.dataset.bit;
+    const st=states[j][curSec], b=displayBlock(j);
+    st.bits[b][i]=!st.bits[b][i];
+    renderCard(j);
+  } else if(t.dataset.suggest!==undefined){
+    const j=+t.dataset.j;
+    const st=states[j][curSec], b=displayBlock(j);
+    st.bits[b]=[...st.blocks[b].sugg].map(c=>c==='X');
+    renderCard(j);
+  }
+});
+grid.addEventListener('input', e=>{
+  const t=e.target;
+  if(t.dataset.swing!==undefined){
+    const j=+t.dataset.j;
+    states[j][curSec].swing=t.value/100;
+    t.parentElement.querySelector('span').textContent=t.value;
+  }
+  if(t.dataset.decay!==undefined){
+    const j=+t.dataset.j;
+    decay[j]=+t.value;
+    t.parentElement.querySelector('span').textContent=(+t.value).toFixed(1);
+  }
+  if(t.dataset.vol!==undefined){
+    const j=+t.dataset.j;
+    vol[j]=t.value/100;
+    t.parentElement.querySelector('span').textContent=t.value;
+  }
+});
+
+// Pantalla de entrada: elegir laptop (o "Todas") antes de poder tocar
+const splash=document.getElementById('splash');
+const splashGrid=document.getElementById('splashGrid');
+for(let j=1;j<=10;j++){
+  const b=document.createElement('button');
+  b.textContent=`${j} · ${NOTE_OF[j]}`;
+  b.dataset.lap=j;
+  splashGrid.appendChild(b);
+}
+const bTodas=document.createElement('button');
+bTodas.textContent='Todas (ensayo en un equipo)';
+bTodas.dataset.lap=0;
+bTodas.className='alt';
+bTodas.style.gridColumn='1 / -1';
+splashGrid.appendChild(bTodas);
+splashGrid.addEventListener('click', e=>{
+  if(e.target.dataset.lap===undefined) return;
+  stop();
+  LAP=+e.target.dataset.lap;
+  splash.style.display='none';
+  for(const k of Object.keys(lastKey)) delete lastKey[k];
+  updateUI();
+});
+
+// Cambiar de laptop en cualquier momento: detiene la obra y vuelve a preguntar
+document.getElementById('btnCambiar').addEventListener('click', ()=>{
+  stop();
+  splash.style.display='flex';
+});
+
+document.getElementById('start').addEventListener('click', start);
+document.getElementById('stop').addEventListener('click', stop);
+
+// Duración prevista
+let totalSec=10*T;
+for(let s=0;s<7;s++){ totalSec+=secLen(s)*T; if(s>0) totalSec+=SILENCE+(10-s)*T; }
+const tm=Math.floor(totalSec/60), ts=Math.round(totalSec%60);
+document.getElementById('total').textContent=`Duración prevista: ${tm} min ${ts} s`;
+
+setInterval(updateUI, 150);
+updateUI();
+</script>
+</body>
+</html>

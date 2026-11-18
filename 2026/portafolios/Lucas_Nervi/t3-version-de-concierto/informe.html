@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T3 — Informe · Lucas Nervi · Orquesta de Laptops UC</title>
+<style>
+  :root{
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --tx:#dfe5ec; --dim:#8b97a6;
+    --acc:#8f9ef0; --acc2:#e8b25a; --ok:#7fc47f;
+    --mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --serif: Georgia, "Times New Roman", serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 var(--serif)}
+  header{position:sticky;top:0;z-index:5;background:rgba(11,13,16,.92);backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);padding:14px 24px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  header .t{font:600 15px var(--mono);letter-spacing:.08em}
+  header .t small{color:var(--dim);font-weight:400;margin-left:8px}
+  nav{display:flex;gap:14px;flex-wrap:wrap;font:12px var(--mono)}
+  nav a{color:var(--dim);text-decoration:none;border-bottom:1px solid transparent}
+  nav a:hover{color:var(--acc);border-color:var(--acc)}
+  main{max-width:820px;margin:0 auto;padding:8px 24px 90px}
+  h1{font-family:var(--mono);font-size:22px;letter-spacing:.03em;margin:46px 0 4px}
+  h1 small{display:block;font-family:var(--serif);font-size:14px;color:var(--dim);margin-top:6px;font-weight:400}
+  h1.parteTitulo{margin-top:60px;padding-top:30px;border-top:2px solid var(--acc)}
+  h2{font-family:var(--mono);font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);
+    margin:40px 0 4px;padding-top:10px;border-top:1px solid var(--line)}
+  h3{font-size:16px;margin:20px 0 4px;color:var(--tx)}
+  p{margin:8px 0}
+  .dim{color:var(--dim);font-size:13px}
+  .pend{color:var(--acc2)}
+  code{font-family:var(--mono);font-size:12.5px;background:#171c22;padding:1px 5px;border-radius:3px}
+  ul,ol{padding-left:22px;margin:8px 0}
+  li{margin:6px 0}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+  td,th{border-bottom:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+  th{color:var(--acc);font:600 11px var(--mono);letter-spacing:.04em;text-transform:uppercase}
+  a{color:var(--acc)}
+  footer{max-width:820px;margin:50px auto 40px;padding:0 24px;color:var(--dim);font-size:12px;font-family:var(--mono)}
+  .toc{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 0;font:12px var(--mono)}
+  .toc a{border:1px solid var(--line);padding:5px 10px;border-radius:6px;text-decoration:none;color:var(--dim)}
+  .toc a:hover{color:var(--acc);border-color:var(--acc)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="t">LUCAS NERVI <small>· OLUC · IEE2003</small></div>
+  <nav>
+    <a href="#p1">Parte 1</a>
+    <a href="#p2">Parte 2</a>
+    <a href="#p3">Parte 3</a>
+    <a href="#p4">Parte 4</a>
+    <a href="index.html">← T3</a>
+  </nav>
+</header>
+
+<main>
+
+<h1>T3 — Versión de concierto <small>Informe: partitura y partes, sistema técnico, registro de decisiones, nota de programa, ficha técnica y declaración de uso de IA</small></h1>
+<p class="dim">Lucas Nervi · IEE2003 Orquesta de Laptops UC · 18 de noviembre de 2026</p>
+<div class="toc">
+  <a href="#p1">1 · Partitura y partes</a>
+  <a href="#p2">2 · Sistema técnico</a>
+  <a href="#p3">3 · Registro de decisiones</a>
+  <a href="#p4">4 · Nota de programa, ficha técnica y declaración de IA</a>
+</div>
+
+<!-- ===================== PARTE 1 ===================== -->
+<h1 id="p1" class="parteTitulo">Parte 1 <small>Partitura y partes</small></h1>
+
+<h2>1. Forma cerrada</h2>
+<p>La obra tiene 10 laptops y 7 secciones. Las secciones suman 1.540 corcheas, unos 8 min 33 s a 90 BPM,
+tomando la negra como pulso (una corchea dura 1/3 s). Con las entradas y los silencios de 15 s, la obra
+dura unos 10 min 20 s.</p>
+<table>
+<tr><th>Sección</th><th>Laptops</th><th>Largo de frase</th><th>Repeticiones</th><th>Duración aprox.</th></tr>
+<tr><td>1</td><td>1 a 10</td><td>10</td><td>40</td><td>133 s</td></tr>
+<tr><td>2</td><td>2 a 10</td><td>9</td><td>36</td><td>108 s</td></tr>
+<tr><td>3</td><td>3 a 10</td><td>8</td><td>32</td><td>85 s</td></tr>
+<tr><td>4</td><td>4 a 10</td><td>7</td><td>28</td><td>65 s</td></tr>
+<tr><td>5</td><td>5 a 10</td><td>6</td><td>24</td><td>48 s</td></tr>
+<tr><td>6</td><td>6 a 10</td><td>5</td><td>20</td><td>33 s</td></tr>
+<tr><td>7</td><td>7 a 10</td><td>4, 3, 2 y 1 en bloques seguidos</td><td>16, 12, 8 y 4</td><td>40 s</td></tr>
+</table>
+<p>Cada frase de una sección tiene el mismo largo para todos los laptops que participan. En la sección 7,
+cada laptop toca sus frases en orden, de la más larga a la más corta: primero el bloque de 4 para los
+laptops 7 a 10, luego el de 3 para los laptops 8 a 10, después el de 2 para los laptops 9 y 10, y por
+último el de 1 para el laptop 10. Cada laptop sale al terminar su último bloque.</p>
+
+<h2>2. Comienzo, transiciones y final</h2>
+<ul>
+<li><b>Partida:</b> el laptop 1 da 10 corcheas con B4. A 90 BPM son unos 3,3 s, y después empieza la
+sección 1.</li>
+<li><b>Cambios de sección:</b> cada cambio se marca con un golpe del handpan. Antes de cada sección hay
+un silencio de 15 s y después el laptop 1 da la entrada con k corcheas: 9 para la sección 2, luego 8, 7,
+6, 5 y 4 para la sección 7. En ese silencio los intérpretes ajustan sus bits a la frase sugerida.</li>
+<li><b>Final:</b> la obra termina cuando sale el laptop 10. No hay señal adicional.</li>
+</ul>
+
+<h2>3. Decisiones del intérprete</h2>
+<p>Cada laptop tiene dos dimensiones de decisión libre sobre su propio sonido, además del handpan.</p>
+<ul>
+<li><b>Notas:</b> solo usa las notas del conjunto, D3, E3, F3, A3, B3, D4, E4, F4, A4 y B4, sumando D5 y
+F5.</li>
+<li><b>Forma de tocar:</b> frases repetitivas tipo mantra.</li>
+<li><b>Tiempo:</b> improvisa libremente desde el inicio hasta el golpe de la sección 7.</li>
+<li><b>Desde la sección 7:</b> se suma a la frase rítmica normal. En la sección 7 toca XOOO ×16, XOO
+×12, XO ×8 y X ×4. <span class="pend">Nota por definir.</span></li>
+</ul>
+<h3>Decisiones de los laptops</h3>
+<table>
+<tr><th>Dimensión</th><th>Rango</th><th>Actúa sobre</th><th>Criterio</th></tr>
+<tr><td>Swing</td><td>De 50 % a 75 %</td><td>El propio laptop</td><td>Al cambiar de sección vuelve a
+50 %. Entre cambios se puede manipular libremente.</td></tr>
+<tr><td>Decay</td><td>De 0,2 a 1,5 corcheas</td><td>El propio laptop</td><td>Libre</td></tr>
+</table>
+
+<h2>4. Partitura de las 10 laptops</h2>
+<p>X es ataque y O es silencio. Cada celda muestra la frase base de ese laptop en esa sección, seguida de
+sus repeticiones. La sección 7 agrupa el resto de la obra: cada laptop toca sus bloques en orden, de más
+largo a más corto.</p>
+<table>
+<tr><th>Laptop</th><th>Nota</th><th>Sección 1</th><th>Sección 2</th><th>Sección 3</th><th>Sección 4</th><th>Sección 5</th><th>Sección 6</th><th>Sección 7</th></tr>
+<tr><td>1</td><td>B4</td><td>XOOXOOXOXO ×40</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>2</td><td>A4</td><td>XXXOOOOOOO ×40</td><td>XOOOXOOOO ×36</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>3</td><td>F4</td><td>OOOXXXOOOO ×40</td><td>XOXOXOOOO ×36</td><td>XOOOXOOO ×32</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>4</td><td>E4</td><td>XOXOXOXOXO ×40</td><td>XOXXOOOOO ×36</td><td>XOOXOOXO ×32</td><td>XOOOXOO ×28</td><td></td><td></td><td></td></tr>
+<tr><td>5</td><td>D4</td><td>XOOXOOXOXO ×40</td><td>OOOOXXXXX ×36</td><td>XOXOXOXO ×32</td><td>XOOXXOO ×28</td><td>XOOOXO ×24</td><td></td><td></td></tr>
+<tr><td>6</td><td>B3</td><td>XOOXOOOOOO ×40</td><td>OOXXOOXXO ×36</td><td>XOXXXOXX ×32</td><td>XXXOOOO ×28</td><td>XOOXOO ×24</td><td>XOOOO ×20</td><td></td></tr>
+<tr><td>7</td><td>A3</td><td>OXOOXOXOXO ×40</td><td>XOOXXOOXO ×36</td><td>XOXXOXXO ×32</td><td>XOXOXOO ×28</td><td>XOXOXO ×24</td><td>XOOXO ×20</td><td>XOOO ×16</td></tr>
+<tr><td>8</td><td>F3</td><td>OOXOOXXOXO ×40</td><td>OOXOOXOOX ×36</td><td>OXOOXOOX ×32</td><td>XXOXXXO ×28</td><td>XXXXOO ×24</td><td>XOOOX ×20</td><td>XOOO ×16, XOO ×12</td></tr>
+<tr><td>9</td><td>E3</td><td>XOOOOOXOXO ×40</td><td>XOOOXOOXO ×36</td><td>XOXXOXXX ×32</td><td>XXOXOXX ×28</td><td>XOXXOO ×24</td><td>XOXOX ×20</td><td>XOOO ×16, XOO ×12, XO ×8</td></tr>
+<tr><td>10</td><td>D3</td><td>XOOOOXXOXO ×40</td><td>XOOOXOOOO ×36</td><td>XOXXXOXX ×32</td><td>XXXXXOO ×28</td><td>XOOOOO ×24</td><td>XXXOO ×20</td><td>XOOO ×16, XOO ×12, XO ×8, X ×4</td></tr>
+</table>
+<p>La sección 7 de cada laptop se lee de izquierda a derecha, en el orden en que se toca.</p>
+
+<h2>5. Partes por rol</h2>
+<p>Cada intérprete lee su fila: qué toca en cada sección (ver la sección 4), cuándo empieza y cuándo
+sale. La señal de cambio de sección es siempre el golpe del handpan.</p>
+<table>
+<tr><th>Estación</th><th>Nota</th><th>Ejecuta</th><th>Empieza</th><th>Sale de la obra</th></tr>
+<tr><td>Laptop 1</td><td>B4</td><td>Sección 1</td><td>Da la partida: 10 corcheas con B4</td><td>Al terminar la sección 1</td></tr>
+<tr><td>Laptop 2</td><td>A4</td><td>Secciones 1 y 2</td><td>Golpe del handpan para la sección 2</td><td>Al terminar la sección 2</td></tr>
+<tr><td>Laptop 3</td><td>F4</td><td>Secciones 1 a 3</td><td>Golpe del handpan para cada sección</td><td>Al terminar la sección 3</td></tr>
+<tr><td>Laptop 4</td><td>E4</td><td>Secciones 1 a 4</td><td>Golpe del handpan para cada sección</td><td>Al terminar la sección 4</td></tr>
+<tr><td>Laptop 5</td><td>D4</td><td>Secciones 1 a 5</td><td>Golpe del handpan para cada sección</td><td>Al terminar la sección 5</td></tr>
+<tr><td>Laptop 6</td><td>B3</td><td>Secciones 1 a 6</td><td>Golpe del handpan para cada sección</td><td>Al terminar la sección 6</td></tr>
+<tr><td>Laptop 7</td><td>A3</td><td>Secciones 1 a 6, y el bloque de 4 de la sección 7</td><td>Golpe del handpan para cada sección</td><td>Al terminar su bloque de la sección 7</td></tr>
+<tr><td>Laptop 8</td><td>F3</td><td>Secciones 1 a 6, y los bloques de 4 y 3 de la sección 7</td><td>Golpe del handpan para cada sección</td><td>Al terminar su bloque de la sección 7</td></tr>
+<tr><td>Laptop 9</td><td>E3</td><td>Secciones 1 a 6, y los bloques de 4, 3 y 2 de la sección 7</td><td>Golpe del handpan para cada sección</td><td>Al terminar su bloque de la sección 7</td></tr>
+<tr><td>Laptop 10</td><td>D3</td><td>Secciones 1 a 6, y los bloques de 4, 3, 2 y 1 de la sección 7</td><td>Golpe del handpan para cada sección</td><td>Sale al final de la obra; su salida marca el fin</td></tr>
+<tr><td>Handpan</td><td>Libre, con las notas del conjunto más D5 y F5</td><td>Improvisa con frases tipo mantra hasta la sección 7</td><td>Golpe del handpan para cada sección</td><td>Se suma a la frase rítmica normal en la sección 7 (pendiente)</td></tr>
+</table>
+<p class="pend">Pendiente: redactar las hojas detalladas de cada rol, para que se lean con poca luz.</p>
+
+<!-- ===================== PARTE 2 ===================== -->
+<h1 id="p2" class="parteTitulo">Parte 2 <small>Sistema técnico</small></h1>
+
+<h2>1. Software y carpeta de la obra</h2>
+<p>La obra se ejecuta con un único archivo, <code>yo_tenia_10_laptops.html</code>, que funciona sin
+internet en Chrome o Safari. No usa librerías ni servidores: el sonido se genera en el navegador con la
+Web Audio API.</p>
+<ul>
+<li><b>Dependencias:</b> ninguna. Laptops: onda sinusoidal. Handpan (sonido de referencia): onda
+triangular. Sin samples.</li>
+<li><b>Contenido del archivo:</b> partitura completa de las 7 secciones, reloj de la obra y controles de
+swing y decay por laptop.</li>
+<li><b>Carpeta de la obra:</b> una copia del archivo en cada laptop, junto con esta documentación. La
+carpeta completa se entrega como zip.</li>
+<li><b>Handpan:</b> es un instrumento físico y no usa software.</li>
+<li><span class="pend"><b>Pendiente:</b></span> qué número OLUC corresponde a cada una de las laptops 1
+a 10.</li>
+<li><span class="pend"><b>Resuelto tras este registro:</b></span> cada laptop ya muestra solo su propia
+tarjeta en el concierto — al abrir <code>yo_tenia_10_laptops.html</code> la página pregunta "¿Qué laptop
+eres?" y reduce la interfaz a esa voz; la opción "Todas" conserva las 10 tarjetas para ensayar en un solo
+equipo.</li>
+</ul>
+
+<h2>2. Puesta en marcha y estado inicial</h2>
+<p>Cada estación se prepara en menos de 5 minutos, y todas parten del mismo estado: en silencio, con los
+bits desactivados y el swing en 50 %.</p>
+<ol>
+<li>Encender la laptop y abrir <code>yo_tenia_10_laptops.html</code> en Chrome o Safari.</li>
+<li>Verificar que la tarjeta de la laptop muestra su nota, su frase base y su swing en 50 %.</li>
+<li>Ajustar el volumen del sistema al nivel de referencia de la sección 4 (pendiente de medir).</li>
+<li>Confirmar que no suena nada y que los bits están desactivados.</li>
+<li>Esperar la señal de inicio. Solo entonces se activa el reloj con el botón Empezar.</li>
+</ol>
+<p class="pend">Pendiente: tiempo real de montaje, a medir en el ensayo. Pendiente: cómo se coordina el
+inicio entre laptops (ver sección 4).</p>
+
+<h2>3. Mapeo de control</h2>
+<p>Cada laptop tiene dos controles propios, y los dos afectan solo a su sonido. El handpan no tiene
+controles en pantalla.</p>
+<table>
+<tr><th>Control</th><th>Afecta a</th><th>Rango</th><th>Reinicio</th><th>Efecto sonoro</th></tr>
+<tr><td>Swing</td><td>Cada laptop</td><td>50 % a 75 %</td><td>50 % al cambiar de sección</td><td>Retrasa las corcheas pares de la pulsación. Con 50 % el pulso es recto.</td></tr>
+<tr><td>Decay</td><td>Cada laptop</td><td>0,2 a 1,5 corcheas</td><td>Valor inicial, sin cambio automático</td><td>Duración de cada golpe: corto y seco o largo y sostenido.</td></tr>
+<tr><td>Bits (casillas de la frase)</td><td>Cada laptop</td><td>Activo / inactivo</td><td>Desactivados al inicio</td><td>Activa o silencia cada ataque X de la frase.</td></tr>
+<tr><td>Usar sugerencia</td><td>Cada laptop</td><td>Botón</td><td>No aplica</td><td>Carga la frase sugerida de la sección en curso.</td></tr>
+<tr><td>Empezar / Detener</td><td>Obra completa</td><td>Botón</td><td>No aplica</td><td>Inicia o detiene el reloj de la obra.</td></tr>
+</table>
+<p>Entre cambios de sección se puede mover el swing y el decay libremente.</p>
+<p class="pend">Pendiente: valor inicial de decay para cada laptop.</p>
+
+<h2>4. Nivel, red y sincronía</h2>
+<p>Hoy cada laptop corre su propio reloj. No envía ni recibe mensajes por red, así que la obra no depende
+de la red del ensamble.</p>
+<ul>
+<li><b>Nivel de referencia:</b> pendiente de medir con el ensamble, usando el mismo volumen del sistema
+en todas las laptops.</li>
+<li><b>Red:</b> las laptops se conectan a la red del ensamble, pero la obra funciona igual sin ella.</li>
+<li><b>Sincronía:</b> como cada reloj es independiente, dos laptops que arrancan juntas pueden
+desfasarse con el tiempo.</li>
+</ul>
+<p class="pend"><b>Decisión pendiente:</b> (a) arranque coordinado y marcha independiente, sin mensajes;
+o (b) un pulso de referencia enviado por red. La opción (b) exige agregar una tabla de mensajes OSC a
+esta sección. Mientras no se decida, esta sección queda con la opción (a).</p>
+
+<h2>5. Plan de contingencia</h2>
+<p>Propuesta, por validar en el ensayo. Las secciones terminan con 15 segundos de silencio, así que una
+estación que falle puede volver en el inicio de la siguiente sección.</p>
+<table>
+<tr><th>Falla</th><th>Efecto en la obra</th><th>Respuesta</th></tr>
+<tr><td>Una laptop se congela o se cierra</td><td>Su voz desaparece, el resto sigue</td><td>Silenciarla, reabrir la página y volver a entrar en la siguiente sección con su frase inicial</td></tr>
+<tr><td>Interfaz de audio falla</td><td>Sin sonido en la estación</td><td>Cambiar al cable y la salida de respaldo preparados; si no hay respaldo, la estación queda muda</td></tr>
+<tr><td>Red del ensamble cae</td><td>Ninguno: la obra no usa red</td><td>No se requiere acción</td></tr>
+<tr><td>Handpan sin sonido</td><td>Pierde sus golpes de inicio de sección</td><td>Continuar sin handpan; las entradas de laptops mantienen la forma</td></tr>
+</table>
+<p class="pend">Pendiente: definir la salida de respaldo de cada interfaz y medir cuánto tarda una laptop
+en volver a entrar.</p>
+
+<!-- ===================== PARTE 3 ===================== -->
+<h1 id="p3" class="parteTitulo">Parte 3 <small>Registro de decisiones</small></h1>
+
+<h2>1. Problemas conceptuales</h2>
+<p>Las decisiones de forma, voces y controles quedaron cerradas en una conversación de diseño. Cada
+entrada enuncia el problema, la decisión y la razón.</p>
+<table>
+<tr><th>Problema</th><th>Decisión</th><th>Razón</th></tr>
+<tr><td>Forma: cómo ordenar las salidas de las laptops</td><td>Secciones de largo decreciente, de 10 a 5 corcheas. Cada laptop toca su frase 4 veces por número de laptops de la sección. La sección 7 agrupa el resto.</td><td>Las frases se achican hasta quedar en bloques pequeños; separarlos en secciones no aporta.</td></tr>
+<tr><td>Número de estaciones</td><td>10 laptops, más handpan.</td><td>Mantiene la estructura de salidas en orden. La tarea pide 7 estaciones base, así que las 3 adicionales quedan por declarar.</td></tr>
+<tr><td>Ritmos repetidos en las secciones 1 a 3</td><td>No cambiarlos.</td><td>No es obligatorio que todos los ritmos sean distintos.</td></tr>
+<tr><td>Voz de cada laptop</td><td>Una nota fija por laptop, de B4 (laptop 1) a D3 (laptop 10).</td><td>Las voces se distinguen al oído y el orden de salida se reconoce.</td></tr>
+<tr><td>Partida</td><td>El laptop 1 da 10 corcheas.</td><td>Da una cuenta clara para empezar.</td></tr>
+<tr><td>Cambio de sección</td><td>15 s de silencio y luego la entrada del laptop 1 con k corcheas (10 a 4).</td><td>Los intérpretes tienen tiempo para editar bits hacia la frase sugerida.</td></tr>
+<tr><td>Final</td><td>La obra termina cuando sale el laptop 10.</td><td>Su salida ya marca el final, sin señal adicional.</td></tr>
+<tr><td>Handpan</td><td>Improvisa con frases tipo mantra, solo con las notas del conjunto más D5 y F5.</td><td>La tarea pide márgenes claros para la improvisación.</td></tr>
+<tr><td>Swing y decay</td><td>Swing de 50 % a 75 %, que vuelve a 50 % en cada sección. Decay de 0,2 a 1,5 corcheas.</td><td>Son dos dimensiones de decisión libre con rango definido.</td></tr>
+<tr><td>Frase sugerida</td><td>Es una sugerencia que el intérprete puede cambiar en cada sección.</td><td>Permite ajustar la obra en tiempo real sin perder la referencia.</td></tr>
+</table>
+
+<h2>2. Problemas de interacción</h2>
+<p>Estas decisiones definen cómo se conectan los intérpretes, el software y la sala.</p>
+<table>
+<tr><th>Problema</th><th>Decisión</th><th>Razón</th></tr>
+<tr><td>Software: Strudel no reprodujo la obra (error de sintaxis y luego silencio)</td><td>Escribir la obra como página HTML con Web Audio, que corre en el navegador sin internet ni librerías externas.</td><td>Se puede copiar tal cual a las laptops y no depende de la red.</td></tr>
+<tr><td>Sonido del vibráfono (<code>gm_vibraphone</code>) no suena</td><td>Usar <code>sine</code> para las pruebas. El vibráfono queda pendiente de verificar.</td><td>Se separó la falla de carga del sonido de la falla de la obra.</td></tr>
+<tr><td>Ejecución inicial en un solo computador</td><td>Probar la obra en un computador antes de conectar las laptops.</td><td>Primero se verifica la obra; la red viene después.</td></tr>
+<tr><td>Conexión de las laptops</td><td>Usar la red que ya se usa en otras obras del curso.</td><td>Evita montar una red nueva para esta obra.</td></tr>
+<tr><td>Handpan</td><td>Es un instrumento físico, sin software ni canal propio en las laptops.</td><td>Simplifica el sistema técnico.</td></tr>
+<tr><td>Duración de la obra</td><td>Calcular con las entradas y los silencios: 10 min 20 s.</td><td>El cálculo inicial de 8 min 33 s no incluía los silencios ni las entradas.</td></tr>
+<tr><td>Control de swing y decay</td><td>Un control deslizante por laptop, en la misma pantalla que los bits.</td><td>El intérprete necesita verlos y ajustarlos sin cambiar de ventana.</td></tr>
+</table>
+
+<h2>3. Cambios respecto de la Tarea 1</h2>
+<p class="pend">Pendiente: la propuesta de la Tarea 1 no está en esta conversación. Hay que compararla con
+la versión de concierto y registrar cada cambio con su justificación.</p>
+
+<h2>4. Problemas observados con el ensamble</h2>
+<p class="pend">Pendiente: todavía no hay ensayo con el ensamble. Esta sección se completa después del
+ensayo, con qué no se entendió, qué no funcionó, qué sonó distinto y qué se cambió en consecuencia.</p>
+
+<h2>5. Problemas sin resolver</h2>
+<ul>
+<li><b>Vibráfono:</b> <code>gm_vibraphone</code> no sonaba en las pruebas. Queda con <code>sine</code>
+hasta verificar la carga del sonido, sin afectar la forma de la obra.</li>
+<li><b>Nota del handpan en la sección 7:</b> D4 es provisoria. No cambia la estructura.</li>
+<li><b>Hojas por rol:</b> las hojas detalladas aún no están escritas. No comprometen la ejecución porque
+la partitura ya define cada frase.</li>
+<li><b>Estaciones adicionales:</b> las 3 laptops que exceden las 7 base se deben declarar. Si el profesor
+no lo acepta, habría que reducir la obra.</li>
+</ul>
+
+<!-- ===================== PARTE 4 ===================== -->
+<h1 id="p4" class="parteTitulo">Parte 4 <small>Nota de programa, ficha técnica y declaración de IA</small></h1>
+
+<h2>1. Nota de programa</h2>
+<p><b>Yo tenía 10 laptops (y un handpan)</b></p>
+<p class="dim">Lucas Nervi · 2026 · 10 min 20 s · 11 intérpretes (10 laptops y un handpan)</p>
+<p>La obra toma la canción infantil de los diez perritos que se van uno a uno y la convierte en una
+estructura musical. Cada sección empieza con un grupo de laptops y, al terminar, sale una. Así, el
+conjunto se va reduciendo hasta quedar una sola voz.</p>
+<p>Cada laptop toca una nota fija con una frase de pulsos que cambia en cada sección. Las frases escritas
+son sugerencias: los intérpretes pueden modificar los pulsos durante la obra. Cada laptop tiene dos
+controles: el swing, que desplaza los pulsos del contratiempo, y el decay, que alarga o acorta cada
+sonido.</p>
+<p>El handpan improvisa con frases repetitivas tipo mantra hasta la última sección, donde se suma al
+ritmo de las laptops. Entre secciones hay un silencio en el que los intérpretes ajustan sus frases antes
+de la entrada de la primera laptop.</p>
+<p>Las orquestas de laptops y los ensambles de computadores en red reúnen intérpretes que tocan
+instrumentos digitales conectados entre sí. Esta obra propone que la estructura depende de cuántos
+intérpretes quedan en escena, y que el material se reescribe a medida que salen.</p>
+
+<h2>2. Ficha técnica</h2>
+<table>
+<tr><th>Campo</th><th>Detalle</th></tr>
+<tr><td>Obra</td><td>Yo tenía 10 laptops (y un handpan), Lucas Nervi, 2026</td></tr>
+<tr><td>Duración</td><td>10 min 20 s</td></tr>
+<tr><td>Intérpretes</td><td>11: 10 laptops y 1 handpan</td></tr>
+<tr><td>Estaciones</td><td>10 laptops (7 base y 3 adicionales, por declarar) y 1 handpan físico</td></tr>
+<tr><td>Software por estación</td><td>Página <code>yo_tenia_10_laptops.html</code> abierta en Chrome o Safari. No requiere internet.</td></tr>
+<tr><td>Canales de audio por estación</td><td>1 canal de salida por laptop. Handpan: micrófono a 1 canal, por confirmar.</td></tr>
+<tr><td>Interfaces</td><td>Salida de audio de cada laptop. Interfaz de audio del ensamble, por confirmar. Mouse o trackpad para los controles.</td></tr>
+<tr><td>Red</td><td>Sí. Las laptops se conectan a la red del ensamble. La obra no depende de ella para tocar.</td></tr>
+<tr><td>Proyección visual</td><td>No</td></tr>
+<tr><td>Disposición en escena</td><td class="pend">Pendiente: plano de escena.</td></tr>
+<tr><td>Tiempo de montaje</td><td>Menos de 5 minutos por estación. Pendiente de medir en el ensamble.</td></tr>
+<tr><td>Entrada de la obra</td><td>El laptop 1 da 10 corcheas con B4.</td></tr>
+</table>
+
+<h2>3. Declaración de uso de IA</h2>
+<p><b>Herramienta:</b> Claude (chat de Anthropic).</p>
+<ul>
+<li><b>Cálculos:</b> duración de la obra con corcheas, tempo y silencios.</li>
+<li><b>Redacción:</b> partitura, tablas de frases, hojas de rol, registro de decisiones, nota de
+programa, ficha técnica y esta declaración. El registro de decisiones debe ser reescrito por el
+estudiante, como exige la pauta.</li>
+<li><b>Código:</b> primera versión de la obra en Strudel, que no funcionó, y luego la versión en HTML con
+Web Audio.</li>
+<li><b>Revisión:</b> diagnóstico de errores de Strudel y de la falta de sonido.</li>
+</ul>
+<p><b>Herramienta:</b> Strudel (strudel.cc). Se usó para probar la obra; no reprodujo el resultado
+esperado y se descartó.</p>
+<p><b>Prompts relevantes:</b></p>
+<ol>
+<li>«Dime en simple que tengo que hacer» (con el PDF de la Tarea 3 adjunto).</li>
+<li>«Muy bien, avanzaremos con la partitura por mientras. Quiero que sea una obra conceptual que sea yo
+tenía 10 laptops, haciendo analogía a la canción Yo tenía 10 perritos. La idea es que será un tempo
+aproximadamente de 80 BPM. Partirán 10 laptops sonando por 10 repeticiones de 10 corcheas. Las frases de
+cada laptop serán de un solo sonido pulsado varias veces. Cada laptop tendrá una voz específica. No tiene
+por qué ser todos los laptops distintos, sino que puede alguna voz ser igual a otra. Y serán frases, como
+dije, de 10 corcheas. Cuando se acaben esas 10 corcheas, o sea, esas 10 frases, perdón, pasaremos a la
+sección donde hay 9 laptops, o sea, uno de los laptops sale de la obra. Y habrá 9 laptops que toquen 9
+frases de 9 corcheas cada uno. La frase siempre es la misma durante la sección. Terminan las 9 frases y
+avanzamos a la sección de 8 laptops. Entonces, 8 laptops sale de la obra y quedan 8. El resultado de esto
+es que en un principio van a haber 100 corcheas, después 81, 64, 49, 36 y va a ir bajando hasta que haya
+una. Entonces la duración de la obra será de la suma de los cuadrados del 1 al 10. Calcúlámeme eso en
+minutos.»</li>
+<li>«Muy bien, vamos a hacer un pequeño cambio entonces. La frase se repetirá 4 veces multiplicado por la
+sección. Por ejemplo, si es que es la sección de 10, se repetirán 40 frases. El tempo subirá a 90 BPM y
+la obra en total durará cerca de 8 minutos.»</li>
+<li>«AVANCEMOS CON LA PARTITURA. QUIERO QUE LOS RITMOS SIGAN ESTOS RITMOS. DIME SI LO ENTIENDES BIEN.
+DESPUES DEFINIREMOS LAS NOTAS», seguido de las filas de ritmo de los laptops 1 a 10.</li>
+<li>«Parte 1: Cada laptop tendrá un display que muestre los bits inactivos al principio con la frase
+sugerida como texto al medio de la pantalla. cada interprete debe activar los bits en cada frase. la
+frase del handpan en la seccion 7 es XOOO x16, XOO x12, XO x8, X x4. La version de concierto es la que
+estamos haciendo actualmente. usemos ese calculo para la duración real.»</li>
+<li>«Parte 2: Crea la obra y probemosla con este unico computador. despues nos preocupamos de que esten
+todos conectados por wifi. Vamos a hacer un pequeño cambio. después de cada sección hay un silencio que
+dura 15 segundos. apenas termine, el laptop 1 da la entrada tocando k corcheas, con k = 10, 9, 8, 7, 6, 5
+y 4 respectivamente para cada sección. en esos 15 segundos se da tiempo para que los interpretes editen
+los bits para que queden como la frase sugerida. eso es otro cambio: las frases que defini son
+sugerencias, pero pueden cambiarlas durante cada seccion.»</li>
+<li>«Voy a seguir con las indicaciones: Los laptops deben estar conectados, hay una red por la cual nos
+hemos conectado para otras obras, por lo que no sera un problema adaptarse. El handpan es un instrumento
+fisico.»</li>
+<li>«Parte 3: Escribe el registro de decisiones en base a esta conversacion. Crearemos un registro de
+audio del ensamble con las frases sugeridas.»</li>
+<li>«Parte 4: Crea la nota del programa. completa lo siguiente: Titulo: 'Yo tenia 10 Laptops (y un
+handpan)', Lucas Nervi, 2026, 10 minutos y 20 segundos, 11 interpretes. Crea una ficha tecnica. Crea una
+declaración de IA segun lo que se indique en la pauta de la T3. La carpeta completa de la obra la
+agregaremos como archivo zip una vez que este terminada.»</li>
+</ol>
+
+</main>
+<footer>Orquesta de Laptops UC · IEE2003 · T3 — Lucas Nervi · <a href="index.html">← T3</a></footer>
+</body>
+</html>
