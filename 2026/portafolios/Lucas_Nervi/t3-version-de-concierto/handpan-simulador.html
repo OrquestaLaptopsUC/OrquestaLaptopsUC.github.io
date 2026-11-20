@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simulador de handpan · Yo tenía 10 laptops</title>
+<style>
+  :root{--bg:#141414;--panel:#1f1f1f;--line:#333;--tx:#eee;--dim:#9a9a9a;--acc:#f0b429;--acc2:#3b6ea5}
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:var(--bg);color:var(--tx);
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:18px 14px 40px}
+  header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin-bottom:10px;width:100%;max-width:640px}
+  h1{font-size:17px;margin:0 0 4px;text-align:center}
+  p.dim{color:var(--dim);font-size:13px;text-align:center;max-width:560px;margin:0 0 14px}
+  main{width:100%;max-width:560px;display:flex;flex-direction:column;gap:16px;align-items:center}
+  .aro{position:relative;width:min(88vw,420px);height:min(88vw,420px);border-radius:50%;
+    background:radial-gradient(circle at 50% 42%,#2a2a2a,#161616 70%);border:1px solid var(--line)}
+  .ding{position:absolute;left:50%;top:50%;width:27%;height:27%;transform:translate(-50%,-50%);
+    border-radius:50%;background:#2a2a2a;border:2px solid var(--acc);color:var(--tx);display:flex;
+    flex-direction:column;align-items:center;justify-content:center;cursor:pointer;user-select:none;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;transition:background .08s,transform .08s}
+  .ding.hit{background:var(--acc);color:#1a1204;transform:translate(-50%,-50%) scale(1.07)}
+  .pad{position:absolute;width:21%;height:21%;border-radius:50%;background:var(--panel);
+    border:1px solid var(--line);color:var(--tx);display:flex;flex-direction:column;align-items:center;
+    justify-content:center;cursor:pointer;user-select:none;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;transition:background .08s,transform .08s}
+  .pad.hit{background:var(--acc2);transform:scale(1.1)}
+  .nota{font-size:14px;font-weight:800}
+  .tecla{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+  .ding .tecla,.ding .nota{color:inherit}
+  .vol{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--dim);width:100%;max-width:300px}
+  .vol input{flex:1}
+  .nota-pie{font-size:12.5px;color:var(--dim);text-align:center;max-width:520px}
+  a.volver{font-size:12.5px;color:var(--acc2);text-decoration:none;margin-top:4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Simulador de handpan</h1>
+  <p class="dim">No tengo el handpan a mano: este instrumento de software lo reemplaza para tocar en clase.
+  Notas del conjunto (las de las 10 laptops) más D5 y F5, igual que en el informe. Se toca con el teclado
+  — <b>q w e r t y u i o p</b> para el círculo de notas y <b>´</b> para el golpe extra (<kbd>Shift</kbd>+<b>´</b>
+  para su alterna) — o tocando directo los parches de abajo.</p>
+</header>
+<main>
+  <div class="aro" id="aro">
+    <div class="ding" id="ding" data-nota="D5" data-alt="F5">
+      <span class="nota" id="dingNota">D5</span>
+      <span class="tecla">´</span>
+    </div>
+  </div>
+  <div class="vol">
+    Volumen
+    <input type="range" id="vol" min="0" max="100" value="70">
+  </div>
+  <p class="nota-pie">Sonido de referencia: onda triangular con un brillo metálico breve encima y caída
+  larga, igual que el "sonido de referencia" del handpan descrito en el informe — no pretende sonar
+  idéntico al instrumento físico, solo marcar las alturas para ensayar.</p>
+  <a class="volver" href="index.html">← volver</a>
+</main>
+
+<script>
+// Notas del conjunto (las 10 laptops, informe.html) + D5 y F5 ("Libre, con las notas del
+// conjunto más D5 y F5"). Círculo = las 10 del conjunto; golpe central ("´") = las 2 extra.
+const CIRCULO = [
+  {tecla:'Q', code:'KeyQ', nota:'D3'},
+  {tecla:'W', code:'KeyW', nota:'E3'},
+  {tecla:'E', code:'KeyE', nota:'F3'},
+  {tecla:'R', code:'KeyR', nota:'A3'},
+  {tecla:'T', code:'KeyT', nota:'B3'},
+  {tecla:'Y', code:'KeyY', nota:'D4'},
+  {tecla:'U', code:'KeyU', nota:'E4'},
+  {tecla:'I', code:'KeyI', nota:'F4'},
+  {tecla:'O', code:'KeyO', nota:'A4'},
+  {tecla:'P', code:'KeyP', nota:'B4'},
+];
+const DING_CODE = 'BracketLeft'; // posición física de "´" en teclado latinoamericano
+
+function freqOf(n){
+  const m=/^([A-G])(#|b)?(\d)$/.exec(n);
+  const base={C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1]];
+  const alt=m[2]==='#'?1:(m[2]==='b'?-1:0);
+  const midi=(+m[3]+1)*12+base+alt;
+  return 440*Math.pow(2,(midi-69)/12);
+}
+
+// ---------- Audio ----------
+let ac=null;
+let vol=0.7;
+function asegurarAudio(){
+  if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)();
+  if(ac.state==='suspended') ac.resume();
+}
+function tocar(nota){
+  asegurarAudio();
+  const f=freqOf(nota), t=ac.currentTime;
+  const filtro=ac.createBiquadFilter();
+  filtro.type='lowpass';
+  filtro.frequency.setValueAtTime(6500,t);
+  filtro.frequency.exponentialRampToValueAtTime(500,t+2.4);
+  filtro.connect(ac.destination);
+
+  const fund=ac.createOscillator(), gFund=ac.createGain();
+  fund.type='triangle'; fund.frequency.value=f;
+  gFund.gain.setValueAtTime(0.0001,t);
+  gFund.gain.exponentialRampToValueAtTime(0.55*vol,t+0.006);
+  gFund.gain.exponentialRampToValueAtTime(0.0001,t+2.6);
+  fund.connect(gFund); gFund.connect(filtro);
+  fund.start(t); fund.stop(t+2.7);
+
+  const brillo=ac.createOscillator(), gBrillo=ac.createGain();
+  brillo.type='sine'; brillo.frequency.value=f*3;
+  gBrillo.gain.setValueAtTime(0.0001,t);
+  gBrillo.gain.exponentialRampToValueAtTime(0.14*vol,t+0.004);
+  gBrillo.gain.exponentialRampToValueAtTime(0.0001,t+0.9);
+  brillo.connect(gBrillo); gBrillo.connect(filtro);
+  brillo.start(t); brillo.stop(t+1.0);
+}
+
+// ---------- Parches circulares ----------
+const aro=document.getElementById('aro');
+const N=CIRCULO.length;
+CIRCULO.forEach((p,idx)=>{
+  const ang = -Math.PI/2 + idx*(2*Math.PI/N); // empieza arriba, sentido horario
+  const r=37; // % del radio del aro
+  const cx=50+r*Math.cos(ang), cy=50+r*Math.sin(ang);
+  const el=document.createElement('div');
+  el.className='pad'; el.id='pad-'+p.code;
+  el.style.left=cx+'%'; el.style.top=cy+'%'; el.style.transform='translate(-50%,-50%)';
+  el.innerHTML=`<span class="nota">${p.nota}</span><span class="tecla">${p.tecla}</span>`;
+  el.addEventListener('pointerdown', (e)=>{ e.preventDefault(); golpear(p.code); });
+  aro.appendChild(el);
+});
+
+const ding=document.getElementById('ding');
+const dingNota=document.getElementById('dingNota');
+ding.addEventListener('pointerdown', (e)=>{ e.preventDefault(); golpear(DING_CODE, e.shiftKey); });
+
+function nodoDe(code){ return code===DING_CODE ? ding : document.getElementById('pad-'+code); }
+function notaDe(code, alterna){
+  if(code===DING_CODE) return alterna ? ding.dataset.alt : ding.dataset.nota;
+  return CIRCULO.find(p=>p.code===code).nota;
+}
+function golpear(code, alterna){
+  const nota=notaDe(code, alterna);
+  if(!nota) return;
+  tocar(nota);
+  const el=nodoDe(code);
+  el.classList.add('hit');
+  if(code===DING_CODE) dingNota.textContent=nota;
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>{ el.classList.remove('hit'); if(code===DING_CODE) dingNota.textContent=ding.dataset.nota; }, 160);
+}
+
+const activas=new Set();
+window.addEventListener('keydown', (e)=>{
+  if(e.repeat) return;
+  const code=e.code;
+  if(code===DING_CODE || CIRCULO.some(p=>p.code===code)){
+    e.preventDefault();
+    if(activas.has(code)) return;
+    activas.add(code);
+    golpear(code, e.shiftKey);
+  }
+});
+window.addEventListener('keyup', (e)=>{ activas.delete(e.code); });
+
+document.getElementById('vol').addEventListener('input', (e)=>{ vol=e.target.value/100; });
+
+// Habilitar el audio con el primer toque/clic en cualquier parte (política de autoplay)
+document.addEventListener('pointerdown', asegurarAudio, {once:true});
+document.addEventListener('keydown', asegurarAudio, {once:true});
+</script>
+</body>
+</html>
