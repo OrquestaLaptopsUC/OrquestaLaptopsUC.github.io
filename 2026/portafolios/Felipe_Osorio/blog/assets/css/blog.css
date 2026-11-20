@@ -49,6 +49,12 @@ a:hover { text-decoration: underline; }
 .volver-portafolio { display: flex; align-items: center; gap: 10px; margin: 18px 24px 0 32px; padding: 8px 12px; font-size: .85rem;
   color: var(--sidebar-texto); border: 1px dashed var(--borde); border-radius: 8px; text-decoration: none !important; }
 .volver-portafolio:hover { color: var(--sidebar-activo); border-color: var(--sidebar-texto); }
+/* botones de la obra (Genesis v3): abrirla y descargar la app */
+.boton-obra { display: flex; align-items: center; gap: 10px; margin: 10px 24px 0 32px; padding: 9px 12px; font-size: .88rem; font-weight: 700;
+  color: #fff; background: #ff6b9a; border: 1px solid transparent; border-radius: 8px; text-decoration: none !important; }
+.boton-obra:hover { filter: brightness(1.08); }
+.boton-obra.secundario { margin-top: 6px; font-weight: 600; color: var(--sidebar-texto); background: none; border-color: var(--borde); }
+.boton-obra.secundario:hover { color: var(--sidebar-activo); border-color: var(--sidebar-texto); filter: none; }
 .sidebar-bottom { margin-top: auto; display: flex; gap: 6px; padding: 18px 24px 0 26px; }
 .sidebar-bottom a, .sidebar-bottom button { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%;
   color: var(--sidebar-texto); background: none; border: 0; cursor: pointer; font: inherit; }
