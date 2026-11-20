@@ -35,6 +35,23 @@
   </div>
 
   <div class="card">
+    <h2>Reloj compartido por WiFi (conectar las laptops)</h2>
+    <p>Opcional: en vez de sincronizarse de oído, la laptop 1 puede correr un servidor chico que avisa
+    por WiFi a todas cuándo arrancar. Hay que <b>bajar estos dos archivos a la laptop 1</b> (a una misma
+    carpeta) y abrir <code>Iniciar servidor.command</code> ahí — esto no se hace desde esta página, el
+    servidor corre en tu computador, no en el navegador.</p>
+    <div class="filas">
+      <a class="btn alt" href="servidor.py" download>Bajar servidor.py</a>
+      <a class="btn alt" href="Iniciar%20servidor.command" download>Bajar Iniciar servidor.command</a>
+    </div>
+    <p style="margin-top:12px">Doble clic en <code>Iniciar servidor.command</code> en la laptop 1: se abre una
+    terminal con una dirección tipo <code>http://192.168.0.10:8080/</code>. Las demás laptops, en el mismo
+    WiFi, escriben esa dirección en el navegador y ahí abren <code>yo_tenia_10_laptops.html</code> o
+    <code>handpan.html</code>. Al apretar Empezar en la laptop 1, arrancan todas juntas. Si el servidor no
+    está corriendo, cada archivo sigue funcionando igual que siempre, abierto suelto con doble clic.</p>
+  </div>
+
+  <div class="card">
     <h2>Handpan — panel de tiempo</h2>
     <p>La obra no incluye handpan: el software no toca ni simula su parte. Este panel no suena; es un
     dashboard de solo lectura para que el handpanista sepa en qué momento de la obra está (partida, silencios,
