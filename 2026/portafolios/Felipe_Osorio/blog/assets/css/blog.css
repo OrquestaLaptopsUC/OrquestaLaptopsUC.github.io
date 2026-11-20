@@ -39,6 +39,7 @@ a:hover { text-decoration: underline; }
 .avatar { display: grid; place-items: center; width: 112px; height: 112px; border-radius: 50%; background: var(--avatar-bg);
   color: var(--avatar-texto); font-size: 2.3rem; font-weight: 700; letter-spacing: .02em; text-decoration: none !important;
   box-shadow: 0 0 0 4px var(--fondo), 0 0 0 5px var(--borde); }
+.avatar { background: var(--avatar-bg) url("../img/avatar.png") center / cover no-repeat; color: transparent; font-size: 0; }
 .site-title { display: block; margin-top: 18px; font-size: 1.55rem; font-weight: 800; color: var(--sidebar-activo); line-height: 1.25; }
 .site-subtitle { margin: 6px 0 0; font-size: .92rem; color: var(--sidebar-texto); font-style: italic; line-height: 1.4; }
 #sidebar nav ul { list-style: none; margin: 28px 0 0; padding: 0; }
