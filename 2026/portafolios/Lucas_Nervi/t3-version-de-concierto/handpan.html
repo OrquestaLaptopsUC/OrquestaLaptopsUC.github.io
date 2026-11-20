@@ -38,6 +38,7 @@
 <header>
   <button id="start">Empezar</button>
   <button id="stop" class="alt">Detener</button>
+  <span id="redBadge" style="display:none;font-size:12px;color:#9a9a9a"></span>
 </header>
 <main>
   <div class="pulse" id="pulseDot"></div>
@@ -171,8 +172,38 @@ function start(){
 function stop(){
   running=false;
 }
-document.getElementById('start').addEventListener('click', start);
-document.getElementById('stop').addEventListener('click', stop);
+
+// ---------- Reloj compartido por WiFi (servidor.py, capa estilo "In C") ----------
+// Abierto suelto con doble clic (file://): sigue igual, Empezar a mano junto
+// con la partida de la laptop 1. Servido por servidor.py (http://...): este
+// panel arranca y detiene solo, junto con el reloj común de todas las laptops.
+const conRed = location.protocol!=='file:';
+let redEstadoPrevio='espera';
+async function sondearReloj(){
+  const badge=document.getElementById('redBadge');
+  try{
+    const r=await fetch(location.origin+'/reloj',{cache:'no-store'});
+    const d=await r.json();
+    badge.style.display='';
+    badge.textContent = d.estado==='corriendo' ? 'Red: corriendo' : 'Red: en espera';
+    if(d.estado==='corriendo' && redEstadoPrevio!=='corriendo' && !running) start();
+    if(d.estado!=='corriendo' && redEstadoPrevio==='corriendo' && running) stop();
+    redEstadoPrevio=d.estado;
+  }catch(e){
+    badge.style.display='';
+    badge.textContent='Red: sin conexión';
+  }
+}
+async function avisarReloj(accion){
+  try{
+    await fetch(location.origin+'/reloj',{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({accion})});
+  }catch(e){}
+}
+if(conRed) setInterval(sondearReloj,250);
+
+document.getElementById('start').addEventListener('click', ()=>{ if(conRed) avisarReloj('iniciar'); else start(); });
+document.getElementById('stop').addEventListener('click', ()=>{ if(conRed) avisarReloj('detener'); else stop(); });
 
 setInterval(render, 50);
 render();
