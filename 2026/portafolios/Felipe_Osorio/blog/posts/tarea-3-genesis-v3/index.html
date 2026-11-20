@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tarea 3: Versión de concierto · Genesis v3 | Felipe Osorio</title>
+<meta name="description" content="Parte 1 · Partitura y partes Partitura general: Se encuentra directamente en la aplicación en forma de instrucciones en pantalla, específicamente como notas que caen (en los teclados) o un punto que…">
+<link rel="stylesheet" href="../../assets/css/blog.css">
+<link rel="stylesheet" href="../../assets/css/codigo.css">
+<script>try{var t=localStorage.getItem("modo");if(t)document.documentElement.dataset.mode=t;}catch(e){}</script>
+</head>
+<body>
+<aside id="sidebar">
+  <div class="perfil">
+    <a href="../../index.html" class="avatar" aria-label="Inicio">FO</a>
+    <a href="../../index.html" class="site-title">Felipe Osorio</a>
+    <p class="site-subtitle">Bitacora Orquesta de Laptops UC</p>
+  </div>
+  <nav><ul><li class="nav-item"><a href="../../index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h13V9.5"/></svg><span>Inicio</span></a></li><li class="nav-item"><a href="../../categories/index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Categorías</span></a></li><li class="nav-item"><a href="../../tags/index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.5" cy="8.5" r="1.3"/></svg><span>Etiquetas</span></a></li><li class="nav-item"><a href="../../archives/index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18v4H3zM5 9v10h14V9M10 13h4"/></svg><span>Archivo</span></a></li><li class="nav-item"><a href="../../about/index.html"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg><span>Acerca de</span></a></li></ul></nav>
+  <a class="volver-portafolio" href="../../../index.html" target="_top"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h6l2 2h10v11H3z"/></svg><span>Portafolio en la orquesta</span></a>
+  <a class="boton-obra" href="../../../Genesis_OLUC/index.html" target="_top" title="Abre la obra (versión de concierto)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l5.5-3.5z"/></svg><span>Tocar Genesis</span></a>
+  <a class="boton-obra secundario" href="../../../Genesis_OLUC/descargas/index.html" target="_top" title="App de escritorio para Mac y Windows"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14"/></svg><span>Descargar la app</span></a>
+  <div class="sidebar-bottom">
+    <button id="modo" type="button" title="Cambiar modo claro/oscuro"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></button>
+    <a href="https://github.com/eepyysspp" target="_blank" rel="noopener" title="GitHub (necesita internet)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-4 1.3-4-2-6-2.5M15 21v-3.5a3 3 0 0 0-.9-2.4c3-.3 6-1.5 6-6.6a5.2 5.2 0 0 0-1.4-3.6 4.8 4.8 0 0 0-.1-3.6s-1.1-.3-3.7 1.4a12.7 12.7 0 0 0-6.6 0C5.7 1 4.6 1.3 4.6 1.3a4.8 4.8 0 0 0-.1 3.6A5.2 5.2 0 0 0 3 8.5c0 5.1 3 6.3 6 6.6a3 3 0 0 0-.9 2.4V21"/></svg></a>
+    <a href="mailto:felipeosorio@uc.cl" title="Correo"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="m3 7 9 6 9-6"/></svg></a>
+  </div>
+</aside>
+<div id="main-wrapper">
+  <header id="topbar">
+    <button id="abrir-menu" type="button" aria-label="Menú"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <nav class="migas"><a href="../../index.html">Inicio</a> <span class='sep'>›</span> <span>Tarea 3: Versión de concierto · Genesis v3</span></nav>
+    <div class="buscador"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input id="buscar" type="search" placeholder="Buscar…" autocomplete="off" aria-label="Buscar"></div>
+  </header>
+  <div id="resultados" hidden></div>
+  <div id="contenido">
+    <main><article class="post">
+<header class="post-header">
+  <h1>Tarea 3: Versión de concierto · Genesis v3</h1>
+  <div class="post-meta">
+    <span>Por <strong>Felipe Osorio</strong></span>
+    <time datetime="2026-11-20T05:30:00-03:00">20 de noviembre de 2026</time>
+    <span>13 min de lectura</span>
+    <span class="post-cats"><a href="../../categories/tareas/index.html">Tareas</a></span>
+  </div>
+</header>
+
+<div class="contenido-post">
+<h2 id="parte-1-partitura-y-partes">Parte 1 · Partitura y partes</h2>
+<p><strong>Partitura general:</strong> Se encuentra directamente en la aplicación en forma de instrucciones en pantalla, específicamente como notas que caen (en los teclados) o un punto que seguir (en los ambientes)</p>
+<figure class="img shadow">
+<a href="../../assets/img/t3-genesis-v3/teclado-lider.webp" class="img-link"><img src="../../assets/img/t3-genesis-v3/teclado-lider.webp" alt="Pantalla del Teclado líder: las notas caen hacia el piano" loading="lazy"></a>
+<figcaption>
+Teclado: las notas de la parte caen hacia el piano.
+</figcaption>
+</figure>
+<figure class="img shadow">
+<a href="../../assets/img/t3-genesis-v3/ambiente.webp" class="img-link"><img src="../../assets/img/t3-genesis-v3/ambiente.webp" alt="Pantalla del Ambiente: un punto que seguir en el pad X/Y" loading="lazy"></a>
+<figcaption>
+Ambiente: el punto que seguir en el pad X/Y.
+</figcaption>
+</figure>
+<p><strong>Partes por rol, número de estaciones decisiones del interprete:</strong> La obra contempla como mínimo 7 interpretes (5 teclados distintos (dos en un registro más agudo, dos en uno más grave y un líder que hace la melodía anteriormente de la guitarra) y 2 ambiente (uno el cual es el laptop maestro)). En el caso de haber más interpretes existe la posibilidad de que haya múltiples teclados bajos (del 3 y 4).</p>
+<p>La obra posee un segmento de improvisación en el cual cada parte es libre de tocar como quieran, con un solo limite que sería mantener el ritmo de la obra y no solo presionar teclas como loco, a su vez en el resto de los segmentos se incentiva que los interpretes agreguen un par de notas y jueguen con sus partituras, la obra esta programada para que las teclas disponibles no presenten una gran disonancia. Mas específicamente las instrucciones serian:</p>
+<ul>
+<li><strong>Teclados:</strong> Jueguen con las notas cercanas y prueben añadirles arreglos a sus partes, pero tanto para el segmento de improvisación como en el resto, no rompan el ritmo de la canción.</li>
+<li><strong>Ambientes:</strong> Son libres de moverse conforme lo sientan necesario, si prefieren dar mas espacio a teclados o quieren añadir más textura, recomiendo no irse a los extremos del pad.</li>
+</ul>
+<h3 id="forma-cerrada">Forma cerrada</h3>
+<div class="table-wrapper"><table>
+
+<thead>
+<tr class="header">
+<th>Bloque</th>
+<th>Tiempo</th>
+<th>Secciones</th>
+<th>Qué pasa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Intro</td>
+<td>0:00–1:02</td>
+<td>Distorsión ambiente · Drone en Re♭ · Melodía y teclados · Distorsión · Pedal F</td>
+<td>La obra abre lentamente, marcando su sonido ambiente hasta la aparición de los teclados que muestran las melodías principales de la obra.</td>
+</tr>
+<tr class="even">
+<td>Desarrollo</td>
+<td>1:02–2:01</td>
+<td>Notas largas · Crece · Limpio · Bisagra en Sol♭ · Muro · Teclados altos</td>
+<td>La melodía principal empieza a salir y entrar en repetidas ocasiones, con distintos acompañamientos generando una acumulación de texturas distintas o un muro de sonido.</td>
+</tr>
+<tr class="odd">
+<td>Fake outro</td>
+<td>2:01–2:31</td>
+<td>Medios · Dos líneas</td>
+<td>El muro de sonido empieza a disminuir lentamente en lo que seria el final de la obra antes de ser modificada.</td>
+</tr>
+<tr class="even">
+<td>Espejo: Outro 2 y Desarrollo 2</td>
+<td>2:31–4:00</td>
+<td>Dos líneas 2 · Medios 2 · Teclados altos · Muro · Bisagra · Limpio · Decrece · Notas largas</td>
+<td>Antes de resolver en la Fake outro, la obra vuelve a subir ahora en una progresión espejo (del flujo de efectos más que de las notas que uno toca como tal)</td>
+</tr>
+<tr class="odd">
+<td>Improvisación</td>
+<td>4:00–4:59</td>
+<td>32 compases · B♭m7 ↔︎ G♭maj7</td>
+<td>Posterior al espejo y antes de llegar a lo que sería la intro espejo un segmento de improvisación para todos los intérpretes.</td>
+</tr>
+<tr class="even">
+<td>Intro 2</td>
+<td>4:59–5:43</td>
+<td>Pedal F · Distorsión · Melodía y teclados</td>
+<td>Posterior a la improvisación, la obra vuelve a su estructura inicial, en la que poco a poco van cayendo los teclados.</td>
+</tr>
+<tr class="odd">
+<td>Desenlace</td>
+<td>5:43–6:18</td>
+<td>Suave · Resolución en Re♭</td>
+<td>El resto de los teclados vuelve para dar una pequeña resolución y concluir la obra</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Duración total verificada:</strong> 6:18 min</p>
+<h3 id="comienzo-transiciones-y-final">Comienzo, transiciones y final</h3>
+<p><strong>Partida:</strong> El inicio tiene dos formas de darse dependiendo del formato que se utilice, al usar la pagina web, el comienzo será dado por Felipe Osorio con una cuenta regresiva, mientras que, si se utiliza el formato local conectado por red, los temporizadores empezaran a la vez.</p>
+<p><strong>Cambios de sección y final:</strong> Dados automáticamente por la aplicación, por lo tanto, no hay que coordinar nada.</p>
+<h2 id="parte-2-sistema-tecnico-red">Parte 2 · Sistema técnico Red</h2>
+<p><strong>Laptops de la orquesta y sin internet:</strong> Hay dos versiones de la obra, uno en web y el otro como aplicación local, ambos funcionan sin conexión a internet, aunque el local si requiere red si es que se desea tener la opción de empezar todos a la vez.</p>
+<h3 id="montaje-estado-inicial">Montaje, estado inicial</h3>
+<p>El montaje de la pagina web es sumamente rápido, requiere entrar a la pagina con el archivo de la obra, seleccionar el instrumento correspondiente y empezar a tocar. (Como mucho un ajuste de volumen puede llegar a ser necesario dependiendo del lugar donde se monte la obra).</p>
+<p>Mientras que el montaje de la aplicación local requiere un paso extra y es que todos los laptops deben estar conectados a la red “oluc”, para posteriormente dentro de la misma aplicación conectarse al pc maestro, el cual iniciará la obra y controlará el ambiente (y de fondo los colores proyectados, por lo que debe conectarse a un proyector (en caso de que no haya simplemente no se mostrará))</p>
+<h3 id="mapeo-de-control-y-nivel">Mapeo de control y nivel</h3>
+<div class="table-wrapper"><table>
+
+<thead>
+<tr class="header">
+<th>Rol</th>
+<th>Control</th>
+<th>Rango y efecto sonoro</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Teclados</td>
+<td>A S D F G H J K L Ñ / click / teclado MIDI u teclado externo</td>
+<td>Con las teclas de un teclado o controlador externo uno controla que nota toca.</td>
+</tr>
+<tr class="even">
+<td>Teclados</td>
+<td>← → · Esc</td>
+<td>Las flechas del teclado controlan la octava y la tecla esc sirve para detener todo el sonido. Ninguna de estas dos opciones es utilizada en la obra</td>
+</tr>
+<tr class="odd">
+<td>Teclados</td>
+<td>Distorsión · Brillo · Reverb · Volumen · Efectos automáticos</td>
+<td>Estos parámetros uno los puede ajustar manualmente en la sección bajo el teclado en pantalla. Los efectos cambian automáticamente con el progreso de la obra por lo que no es necesario cambiarlos a mano.</td>
+</tr>
+<tr class="even">
+<td>Teclados</td>
+<td>Cambio de acorde · Notas que caen</td>
+<td>El cambio de acorde corresponde a una opción que controla la caída de las notas tocadas en el progreso de la obra, viene con un valor default el cual no es necesario ajustar. La opción nota que caen permite activar o desactivar estas instrucciones.</td>
+</tr>
+<tr class="odd">
+<td>Ambientes y líder</td>
+<td>Pad X/Y (X, Y) · Encender · Guía automática</td>
+<td>Los ambientes se mueven con el mouse en un eje X que controla distorsión e Y que controla el volumen del sonido. Tienen un botón de encender para iniciar el sonido del pad continuamente y la guía automática.</td>
+</tr>
+<tr class="even">
+<td>Maestro/líder</td>
+<td>▶ Iniciar / ⏸ · Ir a sección · 👥 Sala · ventana de luces</td>
+<td>El laptop maestro de la obra tiene la capacidad de crear una sala a la cual se conecte el resto para iniciar la obra a la vez. También puede abrir una ventana con la que proyectar color que se ve afectado conforme avanza la obra.</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="plan-de-contingencia">Plan de contingencia</h3>
+<div class="table-wrapper"><table>
+
+<thead>
+<tr class="header">
+<th>Falla</th>
+<th>Qué se hace</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Se cuelga una estación o falla una interfaz</td>
+<td>En el caso de que uno de los teclados o ambiente fallen, tienen la opción de volver a abrir la pagina o aplicación y entrar cuando coincida en el caso de la página, ya que en el caso de la aplicación si uno vuelve a conectarse a la sala, empieza exactamente donde va el resto de la orquesta.</td>
+</tr>
+<tr class="even">
+<td>Falla el laptop maestro</td>
+<td>Seria ideal que no fallara, pero es posible diseñar una conexión doble, por lo cual, si el maestro falla el resto de la orquesta, siga tocando y el maestro pueda conectarse al progreso de estos.</td>
+</tr>
+<tr class="odd">
+<td>Se cae la red</td>
+<td>El programa funciona perfectamente sin la opción de conexión a red, he incluso si se cae la red una vez comenzada la obra, esta sigue sin problema.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="parte-3-registro-de-decisiones">Parte 3 · Registro de decisiones</h2>
+<div class="table-wrapper"><table>
+
+<thead>
+<tr class="header">
+<th>Problema</th>
+<th>Decisión</th>
+<th>Razón</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Tarea 1: falta de coordinación</td>
+<td>Ajustar la “libertad” de cada instrumento, eliminar las partes que no me convencieron (guitarra y batería) y añadir conexión por red.</td>
+<td>Tras el feedback de la primera practica de la obra decidí ir de cabeza por la opción de la libertad de tocar (no tener que tocar perfectamente algo), por lo cual tome esta decisión para camuflar cualquier disonancia que sea producto de esto. También la conexión por red elimina la necesidad de una cuenta regresiva para poder empezar a la vez</td>
+</tr>
+<tr class="even">
+<td>Tarea 1: Notación y dirección abiertas: cronómetro, partitura visual, acordes generados como en “In C”, posible director.</td>
+<td>Se añadió un temporizador en pantalla, agregó las notas cayendo y se rechazó la idea de acordes pre-hechos como en “In C” y de un posible director</td>
+<td>Se decidió mantener lo justo y necesario en pantalla para que los intérpretes pudieran concentrarse en lo que están tocando y el resto de la orquesta, a su vez se rechazó la idea de casi que automatizar todo, porque tampoco es muy entretenido cuando no es en un contexto similar al de “In C” y el director no es necesario, las instrucciones son bastante intuitivas y claras</td>
+</tr>
+<tr class="odd">
+<td>Tarea 1: Instrumentación e interfaces: guitarra, batería, Gametrak o teclados externos.</td>
+<td>Se eliminaron completamente la opción de guitarra o batería, o de algún hardware que permitiera controlar la obra, aparte de un teclado externo.</td>
+<td>Esto más que nada a favor del tiempo, en una futura interpretación me encantaría añadir algo así.</td>
+</tr>
+<tr class="even">
+<td>Guitarra → Teclado líder; sin batería; Square Woof en todos los teclados.</td>
+<td>Se eliminó la opción de guitarra, batería y estableció como default el sonido sintetizado con ayuda de FL Studios</td>
+<td>Los sonidos de batería y guitarra no me terminaron de convencer nunca, en mi opinión no sonaban bien, a esto se le agrega el feedback recibido en el ensayo que oriento la obra a un Angulo más ambiental, que no requiere de estos instrumentos. Y por el mismo feedback y decisión propia se estableció este sonido como el default.</td>
+</tr>
+<tr class="odd">
+<td>Duración de la obra ≈ 2:55 min</td>
+<td>Se extendió la obra a 6:18 min</td>
+<td>Debido a la necesidad de tocar un poco más para la puesta en escena se decidió extender la obra sin perjudicar el discurso de esta (que sigue siendo el “génesis” de algo, el cual no es tan lineal, que da un par de pasos hacia adelante y a veces pareciera que retrocede, pero finalmente igual llega a su destino).</td>
+</tr>
+<tr class="even">
+<td>Inicio en red local con maestro y cuenta regresiva.</td>
+<td>Se añadió el sistema de red.</td>
+<td>Esto es producto del ensayo, ya que tuvimos que coordinar con una cuenta regresiva. Pensando en una puesta en escena con los nervios y posible ruido de fondo, esto puede complicarse, por lo cual decidí añadir la conexión para que todos los laptops empiecen a la vez.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="parte-4-nota-de-programa-ficha-tecnica-y-documentacion">Parte 4 · Nota de programa, ficha técnica y documentación</h2>
+<p><strong>Genesis OLUC · Felipe Osorio, sobre «genesis» de Robin Callaway · 2026 · 6:18 · 7-9 interpretes</strong></p>
+<p>Esta obra es una reinterpretación de “genesis” del artista Robin Callaway, la cual normalmente se cataloga bajo los géneros “Noise rock” y “Shoegaze”. De por si esta canción es una obra más experimental que una canción de “Pop”, por lo cual me pareció perfecta para establecer un puente entre una obra interpretativa electroacústica (comúnmente asociadas con las orquestas de laptops) y una canción de una estructura más “popular”. Por ello es que la obra se plantea como una especie de respuesta a la imagen abstracta y erudita comúnmente asociada con estos espacios, que busca demostrar que una orquesta de laptop no es solo eso, un espacio cerrado al público general. Esto sin perder el mensaje/simbolismo que originalmente tiene la canción ni la capacidad de expresarlo (como una obra de orquesta de laptops). El origen de algo nuevo, un proceso que no es tan lineal como uno podría pensar y que a ratos desorienta, pero que con el paso del tiempo se desdobla para poder observarlo en su totalidad.</p>
+<h3 id="ficha-tecnica">Ficha técnica</h3>
+<div class="table-wrapper"><table>
+
+<thead>
+<tr class="header">
+<th>Campo</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Estaciones y roles</td>
+<td>7 – 9 estaciones, todos intérpretes, cada uno con sus respectivos laptops y equipos de sonido.<br>Maestro – Ambiente<br>Teclados 1, 2, 3, 4 y lider (Con extra 3 y 4 si son 9)<br>Ambiente brillo</td>
+</tr>
+<tr class="even">
+<td>Software por estación</td>
+<td>Genesis V3 app, para Mac. O alternativamente un navegador para abrir la versión web de la app</td>
+</tr>
+<tr class="odd">
+<td>Canales de audio por estación</td>
+<td>Todos los laptops tienen una salida de audio a estéreo que conecta a sus parlantes</td>
+</tr>
+<tr class="even">
+<td>Interfaces</td>
+<td>Teclados del laptop y trackpad.<br>Opcionales: Teclado externo (Teclados) y Mouse (Ambientes)</td>
+</tr>
+<tr class="odd">
+<td>Red · proyección visual</td>
+<td>Router propio de la orquesta al cual se conectan los laptops y conexión visual a un proyector para el laptop maestro.</td>
+</tr>
+<tr class="even">
+<td>Disposición en escena (plano)</td>
+<td>El laptop maestro (ambiente) al fondo, con los teclados graves a su lado (3 - 4, o 34 - 34), seguido de los teclados 1 y 2 con el teclado líder al centro y finalmente el ambiente brillo delante. (formando una especie de circulo con un punto en el centro)</td>
+</tr>
+<tr class="odd">
+<td>Montaje · duración</td>
+<td>El montaje estimado es de menos de 5 min si ya están listos los laptops en sus estaciones. Y la obra dura 6:18 min.</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="carpeta-de-la-obra-descarga">Carpeta de la obra (descarga)</h3>
+<ul>
+<li><strong>App de escritorio Genesis v3 (Mac y Windows):</strong> <a href="https://github.com/eepyysspp/Cover_Genesis/releases/tag/v3.0.0" target="_blank" rel="noopener">release v3.0.0 en GitHub</a></li>
+<li><strong>Carpeta completa de la obra (versión web, sonidos, código de la app), lista para copiar a las laptops OLUC:</strong> <a href="https://github.com/OrquestaLaptopsUC/OrquestaLaptopsUC.github.io/tree/main/2026/portafolios/Felipe_Osorio/Genesis_OLUC" target="_blank" rel="noopener">Genesis_OLUC en el repositorio de la orquesta</a></li>
+</ul>
+<h3 id="declaracion-de-uso-de-ia">Declaración de uso de IA</h3>
+<p><strong>Herramienta:</strong> Claude (Anthropic, Claude Opus 5.5), en la app de Claude con acceso a mi repositorio, a GitHub Desktop en mi computador y al navegador integrado (para publicar las descargas). La responsabilidad sobre lo entregado es mía.</p>
+<div class="table-wrapper" style="overflow-wrap:anywhere"><table>
+
+<thead>
+<tr class="header">
+<th>Propósito</th>
+<th>Prompt relevante (textual)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Programar la versión 2: orquesta, piano en el teclado y notas que caen.</td>
+<td><em>«Nececito que el piano completo pueda ser tocado en las teclas del teclado […] quiero que se vea como caen las notas y apenas toquen el teclado haya que tocar, como en osu!mania»</em></td>
+</tr>
+<tr class="even">
+<td>Arreglo y partes: reparto del arpegio y teclado líder.</td>
+<td><em>«Distribuye las notas de teclado 1 con el teclado 2, (el 1 tiene demasiado que hacer y el 2 no tanto) […] usa solo la fila de la “a”»</em></td>
+</tr>
+<tr class="odd">
+<td>Forma: alargar la obra, espejo, improvisación y transiciones de efectos.</td>
+<td><em>«quiero que dupliques los presets de efectos a la inversa y empujes el desenlace “real” al final […] dejes un segmento de 1 min de improvisación»</em></td>
+</tr>
+<tr class="even">
+<td>Versión 3 y app de escritorio en red local; hub de versiones.</td>
+<td><em>«Quiero que tal cual como ésta Genesis v2, hagamos una versión 3 […] quiero que cuando el pc maestro […] le de a iniciar a la obra, todos empiecen a la vez.»</em></td>
+</tr>
+<tr class="odd">
+<td>Interfaz de la v3: ajustes plegables, sin elementos de juego ni menciones a instrumentos que se sacaron.</td>
+<td><em>«Quiero que los apartados de 1) sonido 2)tocar 3)efectos, queden por debajo de los instrumentos y que por default esten ocultos en una ventana expandible»</em></td>
+</tr>
+<tr class="even">
+<td>Luces: el maestro toca el Ambiente y proyecta una ventana de luces.</td>
+<td><em>«El pc maestro será atado al ambiente y tiene que tener la capacidad de proyectar en una ventana aparte los cambios de luz de la obra.»</em></td>
+</tr>
+<tr class="odd">
+<td>Armar y publicar las apps (release v3.0.0).</td>
+<td><em>«Te doy acceso a mi buscador publica las apps»</em></td>
+</tr>
+<tr class="even">
+<td>Documentación: estructura de este documento y esta declaración.</td>
+<td><em>«Quiero que en base a la info en el documento de la T3, y esta pauta me generes una estructura con tablas que yo llenar de información y en la cual escribir»</em><br><em>«Actualiza una declaración de uso de IA para el documento»</em></td>
+</tr>
+<tr class="odd">
+<td>Publicar este documento como entrada de mi blog (en mi blog y en mi carpeta del repositorio de la orquesta), con los enlaces de descarga.</td>
+<td><em>«En base a este documento crea un post en mi blog (en el repo de la orquesta y en el mio). Añade en el segmento “carpeta de la obra (descarga)”, un enlace al release para descargar la app de genesis y un enlace a https://github.com/OrquestaLaptopsUC/OrquestaLaptopsUC.github.io/tree/main/2026/portafolios/Felipe_Osorio/Genesis_OLUC Y en la declaracion de uso de ia incluye esta accion.»</em></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Sin IA:</strong> Todo texto a excepción de la creación de las tablas y la declaración de uso de IA (le pedí que extrajera directamente del chat la información.</p>
+
+</div>
+<footer class="post-tail">
+  <div class="post-tags"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8L3 12z"/><circle cx="7.5" cy="8.5" r="1.3"/></svg><a class="chip" href="../../tags/genesis/index.html">genesis</a><a class="chip" href="../../tags/obra/index.html">obra</a><a class="chip" href="../../tags/web-audio/index.html">web audio</a><a class="chip" href="../../tags/luces/index.html">luces</a></div>
+  <nav class="post-navigation"><a class="anterior" href="../../posts/tarea-2-metodos-de-sintesis/index.html"><small>Anterior</small>Tarea 2: Métodos de síntesis</a><span></span></nav>
+</footer>
+</article></main>
+    <aside id="panel"><section class="panel-bloque toc"><h2>Contenido</h2><ul><li class="toc-h2"><a href="#parte-1-partitura-y-partes">Parte 1 · Partitura y partes</a></li><li class="toc-h3"><a href="#forma-cerrada">Forma cerrada</a></li><li class="toc-h3"><a href="#comienzo-transiciones-y-final">Comienzo, transiciones y final</a></li><li class="toc-h2"><a href="#parte-2-sistema-tecnico-red">Parte 2 · Sistema técnico Red</a></li><li class="toc-h3"><a href="#montaje-estado-inicial">Montaje, estado inicial</a></li><li class="toc-h3"><a href="#mapeo-de-control-y-nivel">Mapeo de control y nivel</a></li><li class="toc-h3"><a href="#plan-de-contingencia">Plan de contingencia</a></li><li class="toc-h2"><a href="#parte-3-registro-de-decisiones">Parte 3 · Registro de decisiones</a></li><li class="toc-h2"><a href="#parte-4-nota-de-programa-ficha-tecnica-y-documentacion">Parte 4 · Nota de programa, ficha técnica y documentación</a></li><li class="toc-h3"><a href="#ficha-tecnica">Ficha técnica</a></li><li class="toc-h3"><a href="#carpeta-de-la-obra-descarga">Carpeta de la obra (descarga)</a></li><li class="toc-h3"><a href="#declaracion-de-uso-de-ia">Declaración de uso de IA</a></li></ul></section></aside>
+  </div>
+  <footer>
+    <p>© 2026 Felipe Osorio. Copia sin conexión del blog para la Orquesta de Laptops UC.</p>
+    <p>Hecho originalmente con <a href="https://github.com/cotes2020/jekyll-theme-chirpy" target="_blank" rel="noopener">Chirpy</a> y Jekyll.</p>
+  </footer>
+</div>
+<div id="mascara"></div>
+<script>window.RAIZ = "../../";</script>
+<script src="../../assets/js/busqueda.js"></script>
+<script src="../../assets/js/blog.js"></script>
+</body>
+</html>
