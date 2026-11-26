@@ -28,18 +28,22 @@
   <div class="card">
     <h2>Yo tenía 10 laptops</h2>
     <p>Un único archivo HTML, sin internet, para las 10 laptops del ensamble. Al abrirlo pregunta
-    "¿Qué laptop eres?": cada intérprete elige su número (1 a 10) y la interfaz se reduce a su propia voz;
-    la opción "Todas" sirve para ensayar la obra completa en un solo equipo. La laptop 1 es la única que da
-    la partida y las entradas de cada sección. Funciona en Chrome o Safari.</p>
+    "¿Qué laptop eres?": cada intérprete elige su número (1 a 10) y ve solo su propia voz, con un carril al
+    estilo Guitar Hero donde su frase baja como una serie de golpes fijos — hay que tocarlos justo cuando
+    llegan a la línea, no se eligen libremente. La opción "Todas" sirve para ensayar la obra completa (sin
+    interacción) en un solo equipo. La laptop 1 es la única que da la partida y las entradas de cada sección.
+    Funciona en Chrome o Safari.</p>
     <a class="btn" href="yo_tenia_10_laptops.html">Abrir la obra →</a>
   </div>
 
   <div class="card">
     <h2>Reloj compartido por WiFi (conectar las laptops)</h2>
-    <p>Opcional: en vez de sincronizarse de oído, la laptop 1 puede correr un servidor chico que avisa
-    por WiFi a todas cuándo arrancar. Hay que <b>bajar estos dos archivos a la laptop 1</b> (a una misma
-    carpeta) y abrir <code>Iniciar servidor.command</code> ahí — esto no se hace desde esta página, el
-    servidor corre en tu computador, no en el navegador.</p>
+    <p>Opcional: en vez de sincronizarse de oído, la laptop 1 puede correr un servidor chico que difunde
+    por WiFi un pulso continuo (no solo el aviso de arranque): cada laptop estima el desfase con ese reloj
+    y lo sigue en todo momento, para que el carril de notas de las 10 no se desalinee con el tiempo. Hay que
+    <b>bajar estos dos archivos a la laptop 1</b> (a una misma carpeta) y abrir
+    <code>Iniciar servidor.command</code> ahí — esto no se hace desde esta página, el servidor corre en tu
+    computador, no en el navegador.</p>
     <div class="filas">
       <a class="btn alt" href="servidor.py" download>Bajar servidor.py</a>
       <a class="btn alt" href="Iniciar%20servidor.command" download>Bajar Iniciar servidor.command</a>

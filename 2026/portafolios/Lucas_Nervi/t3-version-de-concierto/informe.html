@@ -96,7 +96,8 @@ laptops 7 a 10, luego el de 3 para los laptops 8 a 10, después el de 2 para los
 sección 1.</li>
 <li><b>Cambios de sección:</b> cada cambio se marca con un golpe del handpan. Antes de cada sección hay
 un silencio de 15 s y después el laptop 1 da la entrada con k corcheas: 9 para la sección 2, luego 8, 7,
-6, 5 y 4 para la sección 7. En ese silencio los intérpretes ajustan sus bits a la frase sugerida.</li>
+6, 5 y 4 para la sección 7. Ese silencio es el único respiro antes de que el carril de la nueva frase
+empiece a bajar.</li>
 <li><b>Final:</b> la obra termina cuando sale el laptop 10. No hay señal adicional.</li>
 </ul>
 
@@ -111,11 +112,17 @@ F5.</li>
 ×12, XO ×8 y X ×4. <span class="pend">Nota por definir.</span></li>
 </ul>
 <h3>Decisiones de los laptops</h3>
+<p>La frase de cada sección (sección 4) dejó de ser una sugerencia editable: es la partitura fija de esa
+voz. Lo que decide el intérprete ya no es qué pulsos suenan, sino <b>ejecutarlos en el momento exacto</b>:
+cada laptop muestra su frase como una serie de golpes que bajan por un carril, al estilo de un videojuego
+de ritmo (Guitar Hero), y hay que presionar justo cuando cada uno llega a la línea de golpe. Si no se
+presiona a tiempo, ese pulso queda en silencio. Esto reemplaza al editor de casillas ("bits") y al swing de
+la versión anterior — el swing ya no tiene sentido como control aparte porque el timing pasa a ser el
+propio gesto del intérprete, con su variación humana. <span class="pend">Inspirado en la tocabilidad de
+"Genesis OLUC" (Felipe Osorio, mismo curso): ver registro de decisiones, Parte 3.</span></p>
 <table>
 <tr><th>Dimensión</th><th>Rango</th><th>Actúa sobre</th><th>Criterio</th></tr>
-<tr><td>Swing</td><td>De 50 % a 75 %</td><td>El propio laptop</td><td>Al cambiar de sección vuelve a
-50 %. Entre cambios se puede manipular libremente.</td></tr>
-<tr><td>Decay</td><td>De 0,2 a 1,5 corcheas</td><td>El propio laptop</td><td>Libre</td></tr>
+<tr><td>Decay</td><td>De 0,1 a 3 corcheas</td><td>El propio laptop</td><td>Libre, en cualquier momento.</td></tr>
 </table>
 
 <h2>4. Partitura de las 10 laptops</h2>
@@ -166,14 +173,20 @@ Web Audio API.</p>
 <ul>
 <li><b>Dependencias:</b> ninguna. Laptops: onda sinusoidal. Handpan (sonido de referencia): onda
 triangular. Sin samples.</li>
-<li><b>Contenido del archivo:</b> partitura completa de las 7 secciones, reloj de la obra, pantalla de
-entrada para elegir laptop y controles de swing y decay por voz.</li>
+<li><b>Contenido del archivo:</b> partitura completa de las 7 secciones, reloj de la obra (con pulso
+compartido por WiFi, ver sección 4), pantalla de entrada para elegir laptop, un carril de ejecución en
+vivo tipo Guitar Hero por voz y el control de decay.</li>
 <li><b>Selección de laptop:</b> al abrir <code>yo_tenia_10_laptops.html</code>, antes de mostrar
 cualquier control, la página pregunta "¿Qué laptop eres?" con un botón por laptop (1 a 10) y una opción
 "Todas" para ensayar la obra completa en un solo equipo. Al elegir, la interfaz se reduce a esa sola
 voz — sin parámetros de URL ni configuración previa. Un botón "Cambiar laptop" en la cabecera detiene la
 obra y vuelve a mostrar esa pantalla, por si alguien se equivocó de número o hay que reasignar un
 equipo.</li>
+<li><b>Ejecución en vivo:</b> cada golpe de la frase fija de la sección baja por un carril vertical hacia
+una línea de golpe; el intérprete presiona la barra espaciadora (o toca el botón "Golpear" en pantalla)
+justo cuando el golpe llega a la línea. Dentro de ±0,15 s suena (con matiz "perfecto", "bien" u "ok" según
+la precisión); fuera de esa ventana, ese pulso queda en silencio. El modo "Todas" no tiene esta mecánica:
+reproduce las 10 voces solas, de referencia, para ensayar la mezcla en un equipo.</li>
 <li><b>Panel del handpan:</b> <code>handpan.html</code> es un archivo aparte, sin audio, pensado para el
 handpanista: muestra en qué momento de la obra está (partida, silencios, entradas y las 7 secciones con
 cuenta regresiva y barra de progreso). No toca ni simula el instrumento, solo ubica en el tiempo; se
@@ -187,50 +200,56 @@ a 10.</li>
 </ul>
 
 <h2>2. Puesta en marcha y estado inicial</h2>
-<p>Cada estación se prepara en menos de 5 minutos, y todas parten del mismo estado: en silencio, con los
-bits desactivados y el swing en 50 %.</p>
+<p>Cada estación se prepara en menos de 5 minutos, y todas parten del mismo estado: en silencio, con el
+reloj detenido y nada en el carril de golpe.</p>
 <ol>
 <li>Encender la laptop y abrir <code>yo_tenia_10_laptops.html</code> en Chrome o Safari.</li>
 <li>En la pantalla de entrada, elegir el número de la laptop (o "Todas" solo para ensayar en un
 equipo).</li>
-<li>Verificar que la tarjeta muestra la nota correcta, la frase base y el swing en 50 %.</li>
+<li>Verificar que la pantalla muestra la nota correcta y que el carril está vacío.</li>
 <li>Ajustar el volumen del sistema al nivel de referencia de la sección 4 (pendiente de medir).</li>
-<li>Confirmar que no suena nada y que los bits están desactivados.</li>
+<li>Confirmar que no suena nada y que el reloj marca "Esperando".</li>
 <li>Esperar la señal de inicio. Solo entonces se activa el reloj con el botón Empezar.</li>
 </ol>
 <p class="pend">Pendiente: tiempo real de montaje, a medir en el ensayo. Pendiente: cómo se coordina el
 inicio entre laptops (ver sección 4).</p>
 
 <h2>3. Mapeo de control</h2>
-<p>Cada laptop tiene dos controles propios, y los dos afectan solo a su sonido. El handpan no tiene
-controles de sonido en pantalla; su panel (<code>handpan.html</code>) solo tiene Empezar y Detener,
-igual que las laptops pero sin producir audio.</p>
+<p>Cada laptop tiene un control propio de sonido (decay) y un único gesto de ejecución (el golpe). El
+handpan no tiene controles de sonido en pantalla; su panel (<code>handpan.html</code>) solo tiene Empezar y
+Detener, igual que las laptops pero sin producir audio.</p>
 <table>
 <tr><th>Control</th><th>Afecta a</th><th>Rango</th><th>Reinicio</th><th>Efecto sonoro</th></tr>
-<tr><td>Swing</td><td>Cada laptop</td><td>50 % a 75 %</td><td>50 % al cambiar de sección</td><td>Retrasa las corcheas pares de la pulsación. Con 50 % el pulso es recto.</td></tr>
 <tr><td>Decay</td><td>Cada laptop</td><td>0,1 a 3 corcheas</td><td>Valor inicial, sin cambio automático</td><td>Duración de cada golpe: corto y seco o largo y sostenido.</td></tr>
-<tr><td>Bits (casillas de la frase)</td><td>Cada laptop</td><td>Activo / inactivo</td><td>Desactivados al inicio</td><td>Activa o silencia cada ataque X de la frase.</td></tr>
-<tr><td>Usar sugerencia</td><td>Cada laptop</td><td>Botón</td><td>No aplica</td><td>Carga la frase sugerida de la sección en curso.</td></tr>
+<tr><td>Golpe (barra espaciadora o botón "Golpear")</td><td>Cada laptop</td><td>±0,15 s alrededor de cada pulso de la partitura</td><td>No aplica</td><td>Dispara el sonido del pulso si cae dentro de la ventana; fuera de ella, ese pulso no suena.</td></tr>
 <tr><td>Empezar / Detener</td><td>Obra completa (laptop) o reloj de tiempo (handpan)</td><td>Botón</td><td>No aplica</td><td>Inicia o detiene el reloj de la obra.</td></tr>
 <tr><td>Cambiar laptop</td><td>La propia laptop</td><td>Botón</td><td>No aplica</td><td>Detiene la obra en esa laptop y vuelve a la pantalla de selección.</td></tr>
 </table>
-<p>Entre cambios de sección se puede mover el swing y el decay libremente. El rango de decay se amplió de
-0,2–1,5 a 0,1–3 corcheas, para poder llegar a golpes más secos y a golpes más sostenidos que antes.</p>
-<p class="pend">Pendiente: valor inicial de decay para cada laptop.</p>
+<p>El decay se puede mover libremente en cualquier momento. La frase (qué pulsos van) ya no se edita: es
+fija por sección (ver Parte 1, sección 4); lo único variable en el tiempo es qué tan preciso cae cada
+golpe del intérprete.</p>
 
 <h2>4. Nivel, red y sincronía</h2>
-<p>Hoy cada laptop corre su propio reloj. No envía ni recibe mensajes por red, así que la obra no depende
-de la red del ensamble.</p>
+<p>La obra puede correr sin red (cada laptop con su propio reloj, abierta suelta con doble clic) o con un
+servidor opcional (<code>servidor.py</code>) corrido por la laptop 1 en la misma red WiFi del ensamble.
+Con servidor, las laptops no solo reciben el aviso de arranque: siguen en continuo un pulso de referencia
+compartido, para que el carril de ejecución de las 10 no se desalinee con el tiempo. Sin servidor, la obra
+suena exactamente igual, solo que sincronizada de oído.</p>
 <ul>
 <li><b>Nivel de referencia:</b> pendiente de medir con el ensamble, usando el mismo volumen del sistema
 en todas las laptops.</li>
-<li><b>Red:</b> las laptops se conectan a la red del ensamble, pero la obra funciona igual sin ella.</li>
-<li><b>Sincronía:</b> como cada reloj es independiente, dos laptops que arrancan juntas pueden
-desfasarse con el tiempo.</li>
+<li><b>Red:</b> las laptops se conectan a la red del ensamble. La obra funciona igual sin ella (modo
+local); con ella, gana sincronía fina.</li>
+<li><b>Sincronía:</b> cada laptop estima el desfase entre su reloj y el del servidor con cada sondeo HTTP
+(cada 300 ms), compensando la latencia de ida y vuelta, y promedia esa estimación en el tiempo para que no
+salte de golpe. Con esto, la hora de la obra que ve cada laptop es la misma hora de referencia, no un
+reloj local que arrancó por separado y puede irse corriendo.</li>
 </ul>
-<p class="pend"><b>Decisión pendiente:</b> (a) arranque coordinado y marcha independiente, sin mensajes;
-o (b) un pulso de referencia enviado por red. La opción (b) exige agregar una tabla de mensajes OSC a
-esta sección. Mientras no se decida, esta sección queda con la opción (a).</p>
+<p><b>Decisión tomada:</b> opción (b) de la versión anterior — un pulso de referencia enviado por red, no
+solo arranque coordinado. No usa mensajes OSC: el transporte es HTTP simple (sondeo GET a
+<code>/reloj</code> cada 300 ms, con POST para iniciar o detener), consistente con que
+<code>servidor.py</code> ya servía los archivos por HTTP. Inspirado en la conectividad por WiFi de
+"Genesis OLUC" (Felipe Osorio, mismo curso): ver registro de decisiones, Parte 3.</p>
 
 <h2>5. Plan de contingencia</h2>
 <p>Propuesta, por validar en el ensayo. Las secciones terminan con 15 segundos de silencio, así que una
@@ -258,11 +277,13 @@ entrada enuncia el problema, la decisión y la razón.</p>
 <tr><td>Ritmos repetidos en las secciones 1 a 3</td><td>No cambiarlos.</td><td>No es obligatorio que todos los ritmos sean distintos.</td></tr>
 <tr><td>Voz de cada laptop</td><td>Una nota fija por laptop, de B4 (laptop 1) a D3 (laptop 10).</td><td>Las voces se distinguen al oído y el orden de salida se reconoce.</td></tr>
 <tr><td>Partida</td><td>El laptop 1 da 10 corcheas.</td><td>Da una cuenta clara para empezar.</td></tr>
-<tr><td>Cambio de sección</td><td>15 s de silencio y luego la entrada del laptop 1 con k corcheas (10 a 4).</td><td>Los intérpretes tienen tiempo para editar bits hacia la frase sugerida.</td></tr>
+<tr><td>Cambio de sección</td><td>15 s de silencio y luego la entrada del laptop 1 con k corcheas (10 a 4).</td><td>Los intérpretes tienen tiempo para prepararse antes de que empiece a bajar la frase de la siguiente sección.</td></tr>
 <tr><td>Final</td><td>La obra termina cuando sale el laptop 10.</td><td>Su salida ya marca el final, sin señal adicional.</td></tr>
 <tr><td>Handpan</td><td>Improvisa con frases tipo mantra, solo con las notas del conjunto más D5 y F5.</td><td>La tarea pide márgenes claros para la improvisación.</td></tr>
-<tr><td>Swing y decay</td><td>Swing de 50 % a 75 %, que vuelve a 50 % en cada sección. Decay de 0,2 a 1,5 corcheas.</td><td>Son dos dimensiones de decisión libre con rango definido.</td></tr>
-<tr><td>Frase sugerida</td><td>Es una sugerencia que el intérprete puede cambiar en cada sección.</td><td>Permite ajustar la obra en tiempo real sin perder la referencia.</td></tr>
+<tr><td>Swing y decay <span class="pend">(revisado, ver fila "Swing" más abajo)</span></td><td>Swing de 50 % a 75 %, que vuelve a 50 % en cada sección. Decay de 0,2 a 1,5 corcheas.</td><td>Son dos dimensiones de decisión libre con rango definido.</td></tr>
+<tr><td>Frase de cada sección</td><td>Deja de ser una sugerencia editable: es la partitura fija de esa voz. El intérprete la ejecuta golpeando en el momento justo, no eligiendo qué pulsos suenan.</td><td>La tarea pedía revisar la tocabilidad de la obra; dejar el ritmo a elección libre de cada intérprete, sección a sección, se alejaba de una ejecución en conjunto. Inspirado en la interfaz de "Genesis OLUC" (Felipe Osorio, mismo curso), que también resuelve "qué toco" como algo que la pantalla le dice al intérprete, no algo que el intérprete decide de antemano.</td></tr>
+<tr><td>Swing</td><td>Se elimina como control aparte.</td><td>Al pasar el timing a ser un gesto en vivo (golpear en el momento justo), el swing ya estaba implícito en la precisión humana del intérprete; mantenerlo como control aparte era redundante.</td></tr>
+<tr><td>Sincronía entre laptops</td><td>El servidor difunde un pulso de referencia continuo (su hora y el instante exacto de partida), no solo el aviso de arranque/parada. Cada laptop estima su propio desfase y lo sigue en todo momento.</td><td>Con la ejecución en vivo, un desfase de reloj entre laptops se nota de inmediato (cada una golpearía su carril en un instante distinto). Inspirado en la conectividad por WiFi de "Genesis OLUC" (Felipe Osorio, mismo curso).</td></tr>
 </table>
 
 <h2>2. Problemas de interacción</h2>
@@ -275,7 +296,8 @@ entrada enuncia el problema, la decisión y la razón.</p>
 <tr><td>Conexión de las laptops</td><td>Usar la red que ya se usa en otras obras del curso.</td><td>Evita montar una red nueva para esta obra.</td></tr>
 <tr><td>Handpan</td><td>Es un instrumento físico, sin software ni canal propio en las laptops.</td><td>Simplifica el sistema técnico.</td></tr>
 <tr><td>Duración de la obra</td><td>Calcular con las entradas y los silencios: 10 min 20 s.</td><td>El cálculo inicial de 8 min 33 s no incluía los silencios ni las entradas.</td></tr>
-<tr><td>Control de swing y decay</td><td>Un control deslizante por laptop, en la misma pantalla que los bits.</td><td>El intérprete necesita verlos y ajustarlos sin cambiar de ventana.</td></tr>
+<tr><td>Control de swing y decay <span class="pend">(swing revisado, ver Parte 3 §1)</span></td><td>Un control deslizante por laptop, en la misma pantalla que los bits.</td><td>El intérprete necesita verlos y ajustarlos sin cambiar de ventana.</td></tr>
+<tr><td>Tocabilidad: el intérprete elegía su ritmo editando casillas antes de que sonaran solas</td><td>Reemplazar el editor de casillas por un carril de ejecución en vivo: la frase fija baja por pantalla y hay que golpearla en el momento justo (sin sonar si no se golpea a tiempo).</td><td>Pedido explícito de revisar la tocabilidad de la obra, inspirado en la interfaz de "Genesis OLUC" (Felipe Osorio, mismo curso). Ver Parte 3 §1.</td></tr>
 </table>
 
 <h2>3. Cambios respecto de la Tarea 1</h2>
@@ -306,10 +328,10 @@ no lo acepta, habría que reducir la obra.</li>
 <p>La obra toma la canción infantil de los diez perritos que se van uno a uno y la convierte en una
 estructura musical. Cada sección empieza con un grupo de laptops y, al terminar, sale una. Así, el
 conjunto se va reduciendo hasta quedar una sola voz.</p>
-<p>Cada laptop toca una nota fija con una frase de pulsos que cambia en cada sección. Las frases escritas
-son sugerencias: los intérpretes pueden modificar los pulsos durante la obra. Cada laptop tiene dos
-controles: el swing, que desplaza los pulsos del contratiempo, y el decay, que alarga o acorta cada
-sonido.</p>
+<p>Cada laptop toca una nota fija con una frase de pulsos que cambia en cada sección. La frase está escrita:
+el intérprete no elige su ritmo, lo ejecuta, golpeando justo cuando cada pulso de su carril llega a destino
+— si llega tarde o no llega, ese pulso queda en silencio. El único control libre de cada laptop es el
+decay, que alarga o acorta cada sonido.</p>
 <p>El handpan improvisa con frases repetitivas tipo mantra hasta la última sección, donde se suma al
 ritmo de las laptops. Entre secciones hay un silencio en el que los intérpretes ajustan sus frases antes
 de la entrada de la primera laptop.</p>
@@ -326,7 +348,7 @@ intérpretes quedan en escena, y que el material se reescribe a medida que salen
 <tr><td>Estaciones</td><td>10 laptops (7 base y 3 adicionales, por declarar) y 1 handpan físico</td></tr>
 <tr><td>Software por estación</td><td>Página <code>yo_tenia_10_laptops.html</code> abierta en Chrome o Safari. No requiere internet.</td></tr>
 <tr><td>Canales de audio por estación</td><td>1 canal de salida por laptop. Handpan: micrófono a 1 canal, por confirmar.</td></tr>
-<tr><td>Interfaces</td><td>Salida de audio de cada laptop. Interfaz de audio del ensamble, por confirmar. Mouse o trackpad para los controles.</td></tr>
+<tr><td>Interfaces</td><td>Salida de audio de cada laptop. Interfaz de audio del ensamble, por confirmar. Teclado (barra espaciadora) para golpear en el carril; mouse o trackpad como alternativa y para el control de decay.</td></tr>
 <tr><td>Red</td><td>Sí. Las laptops se conectan a la red del ensamble. La obra no depende de ella para tocar.</td></tr>
 <tr><td>Proyección visual</td><td>No</td></tr>
 <tr><td>Disposición en escena</td><td class="pend">Pendiente: plano de escena.</td></tr>
@@ -341,8 +363,10 @@ intérpretes quedan en escena, y que el material se reescribe a medida que salen
 <li><b>Redacción:</b> partitura, tablas de frases, hojas de rol, registro de decisiones, nota de
 programa, ficha técnica y esta declaración. El registro de decisiones debe ser reescrito por el
 estudiante, como exige la pauta.</li>
-<li><b>Código:</b> primera versión de la obra en Strudel, que no funcionó, y luego la versión en HTML con
-Web Audio.</li>
+<li><b>Código:</b> primera versión de la obra en Strudel, que no funcionó, luego la versión en HTML con
+Web Audio y, en una sesión posterior, la reescritura de <code>yo_tenia_10_laptops.html</code> con
+ejecución en vivo (carril tipo Guitar Hero) y de <code>servidor.py</code> con pulso de red continuo,
+revisando también <code>handpan.html</code> para que siga el mismo pulso.</li>
 <li><b>Revisión:</b> diagnóstico de errores de Strudel y de la falta de sonido.</li>
 </ul>
 <p><b>Herramienta:</b> Strudel (strudel.cc). Se usó para probar la obra; no reprodujo el resultado
@@ -386,6 +410,12 @@ audio del ensamble con las frases sugeridas.»</li>
 handpan)', Lucas Nervi, 2026, 10 minutos y 20 segundos, 11 interpretes. Crea una ficha tecnica. Crea una
 declaración de IA segun lo que se indique en la pauta de la T3. La carpeta completa de la obra la
 agregaremos como archivo zip una vez que este terminada.»</li>
+<li>Sesión posterior, revisando el portafolio de un compañero (Felipe Osorio, "Genesis OLUC",
+orquestalaptopsuc.github.io/2026/portafolios/Felipe_Osorio): «quiero que me ayudes a pulir unos detalles
+de mi T3 [...] quiero que te inspires en dos cosas para llevar a mi obra T3. primero, la conectividad via
+wifi y segundo la [imagen de un carril de notas estilo videojuego de ritmo] Tocabilidad o UX, quiero que
+sea como el guitar hero, no que cada uno elija su ritmo libremente.» A partir de esto se tomaron las dos
+decisiones de la fila "Frase de cada sección" y "Sincronía entre laptops" de esta Parte 3.</li>
 </ol>
 
 </main>

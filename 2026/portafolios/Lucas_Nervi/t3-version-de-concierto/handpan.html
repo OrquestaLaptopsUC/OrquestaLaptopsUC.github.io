@@ -91,7 +91,14 @@ buildPlan();
 
 // ---------- Reloj (sin Web Audio: el handpan no suena desde el software) ----------
 let running=false, startPerf=0;
-function elapsedSec(){ return running ? (performance.now()-startPerf)/1000 : -1; }
+// Pulso de red continuo (ver más abajo): si hay servidor, el tiempo de la obra
+// se calcula en todo momento a partir del desfase estimado con su reloj, no
+// solo al detectar que pasó a "corriendo".
+let offsetMs=0, primeraMuestra=true, inicioServidorMs=null;
+function elapsedSec(){
+  if(conRed && running && inicioServidorMs!=null) return (Date.now()+offsetMs-inicioServidorMs)/1000;
+  return running ? (performance.now()-startPerf)/1000 : -1;
+}
 
 function fmt(sec){
   sec=Math.max(0,Math.round(sec));
@@ -173,19 +180,28 @@ function stop(){
   running=false;
 }
 
-// ---------- Reloj compartido por WiFi (servidor.py, capa estilo "In C") ----------
+// ---------- Reloj compartido por WiFi (servidor.py, pulso continuo) ----------
 // Abierto suelto con doble clic (file://): sigue igual, Empezar a mano junto
 // con la partida de la laptop 1. Servido por servidor.py (http://...): este
-// panel arranca y detiene solo, junto con el reloj común de todas las laptops.
+// panel arranca y detiene solo, y además sigue en continuo la hora que
+// difunde el servidor (no solo el cambio espera/corriendo), para quedar
+// alineado con el resto de las laptops aunque los relojes internos difieran.
 const conRed = location.protocol!=='file:';
 let redEstadoPrevio='espera';
 async function sondearReloj(){
   const badge=document.getElementById('redBadge');
+  const t0=Date.now();
   try{
     const r=await fetch(location.origin+'/reloj',{cache:'no-store'});
     const d=await r.json();
+    const t1=Date.now();
+    const rtt=t1-t0;
+    const muestra=(d.t+rtt/2)-((t0+t1)/2);
+    offsetMs = primeraMuestra ? muestra : offsetMs*0.8+muestra*0.2;
+    primeraMuestra=false;
+    inicioServidorMs = d.estado==='corriendo' ? d.inicio_ms : null;
     badge.style.display='';
-    badge.textContent = d.estado==='corriendo' ? 'Red: corriendo' : 'Red: en espera';
+    badge.textContent = d.estado==='corriendo' ? 'Red: pulso compartido' : 'Red: en espera';
     if(d.estado==='corriendo' && redEstadoPrevio!=='corriendo' && !running) start();
     if(d.estado!=='corriendo' && redEstadoPrevio==='corriendo' && running) stop();
     redEstadoPrevio=d.estado;
