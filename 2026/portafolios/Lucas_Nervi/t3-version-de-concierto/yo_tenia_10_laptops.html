@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Yo tenía 10 laptops</title>
+<title>Yo tenía 10 corcheas</title>
 <style>
   :root{--bg:#141414;--panel:#1f1f1f;--line:#333;--tx:#eee;--dim:#9a9a9a;--acc:#f0b429;--acc2:#3b6ea5}
   *{box-sizing:border-box}
@@ -29,7 +29,7 @@
   .highway{position:relative;width:120px;height:300px;margin:4px auto 0;background:linear-gradient(180deg,#191919,#121212);
     border:1px solid var(--line);border-radius:10px;overflow:hidden}
   .hitline{position:absolute;left:0;right:0;top:250px;height:3px;background:var(--acc2)}
-  .nota{position:absolute;left:50%;width:70px;height:32px;margin-left:-35px;border-radius:8px;background:var(--acc);
+  .nota{position:absolute;left:50%;width:70px;height:16px;margin-left:-35px;border-radius:5px;background:var(--acc);
     transition:background .1s}
   .nota.golpeada{background:#6fcf6f}
   .nota.perdida{background:#d9534f;opacity:.55}
@@ -102,44 +102,38 @@
 
 <script>
 // ---------- Parámetros ----------
-const T = 60 / 90 / 2;          // una corchea a 90 BPM (negra = pulso) = 1/3 s
+const T = 60 / 40 / 2;          // una corchea a 40 BPM (negra = pulso) = 0,75 s; obra completa ≈ 6:08
 const LOOK = 0.15;              // anticipación de programación de audio (s)
 const SILENCE = 15;             // silencio entre secciones (s)
 const NOTE_OF = {1:"B4",2:"A4",3:"F4",4:"E4",5:"D4",6:"B3",7:"A3",8:"F3",9:"E3",10:"D3"};
 
 // Partitura fija por laptop y sección (ya no es una sugerencia editable: es lo
-// que hay que tocar). X = ataque, O = silencio. SUG[laptop][sección 0..5].
+// que hay que tocar). X = ataque, O = silencio. SUG[laptop][sección 0..6].
+// Los 10 laptops tocan las 7 secciones completas — nadie sale de la obra: lo
+// que se acorta es la frase (10, 9, 8... 4 corcheas), no el número de voces.
 const SUG = {
-  1:{0:"XOOXOOXOXO"},
-  2:{0:"XXXOOOOOOO",1:"XOOOXOOOO"},
-  3:{0:"OOOXXXOOOO",1:"XOXOXOOOO",2:"XOOOXOOO"},
-  4:{0:"XOXOXOXOXO",1:"XOXXOOOOO",2:"XOOXOOXO",3:"XOOOXOO"},
-  5:{0:"XOOXOOXOXO",1:"OOOOXXXXX",2:"XOXOXOXO",3:"XOOXXOO",4:"XOOOXO"},
-  6:{0:"XOOXOOOOOO",1:"OOXXOOXXO",2:"XOXXXOXX",3:"XXXOOOO",4:"XOOXOO",5:"XOOOO"},
-  7:{0:"OXOOXOXOXO",1:"XOOXXOOXO",2:"XOXXOXXO",3:"XOXOXOO",4:"XOXOXO",5:"XOOXO"},
-  8:{0:"OOXOOXXOXO",1:"OOXOOXOOX",2:"OXOOXOOX",3:"XXOXXXO",4:"XXXXOO",5:"XOOOX"},
-  9:{0:"XOOOOOXOXO",1:"XOOOXOOXO",2:"XOXXOXXX",3:"XXOXOXX",4:"XOXXOO",5:"XOXOX"},
-  10:{0:"XOOOOXXOXO",1:"XOOOXOOOO",2:"XOXXXOXX",3:"XXXXXOO",4:"XOOOOO",5:"XXXOO"}
-};
-// Sección 7 (índice 6): bloques en orden para cada laptop
-const S7 = {
-  7:[["XOOO",16]],
-  8:[["XOOO",16],["XOO",12]],
-  9:[["XOOO",16],["XOO",12],["XO",8]],
-  10:[["XOOO",16],["XOO",12],["XO",8],["X",4]]
+  1:{0:"XOOXOOXOXO",1:"XOXOOXOXO",2:"XOXOOXOO",3:"XOOXOXO",4:"XOXOOX",5:"XOXOO",6:"XOXO"},
+  2:{0:"XXXOOOOOOO",1:"XOOOXOOOO",2:"OOXOXOXO",3:"OXOXOXO",4:"OXOXOX",5:"OXOXO",6:"XXOO"},
+  3:{0:"OOOXXXOOOO",1:"XOXOXOOOO",2:"XOOOXOOO",3:"XOXOOXO",4:"XOOXXO",5:"XOOXX",6:"OXOX"},
+  4:{0:"XOXOXOXOXO",1:"XOXXOOOOO",2:"XOOXOOXO",3:"XOOOXOO",4:"XXOOXO",5:"XXOXO",6:"XOOX"},
+  5:{0:"XOOXOOXOXO",1:"OOOOXXXXX",2:"XOXOXOXO",3:"XOOXXOO",4:"XOOOXO",5:"OOXOX",6:"OXXO"},
+  6:{0:"XOOXOOOOOO",1:"OOXXOOXXO",2:"XOXXXOXX",3:"XXXOOOO",4:"XOOXOO",5:"XOOOO",6:"XXXO"},
+  7:{0:"OXOOXOXOXO",1:"XOOXXOOXO",2:"XOXXOXXO",3:"XOXOXOO",4:"XOXOXO",5:"XOOXO",6:"XOXX"},
+  8:{0:"OOXOOXXOXO",1:"OOXOOXOOX",2:"OXOOXOOX",3:"XXOXXXO",4:"XXXXOO",5:"XOOOX",6:"XXOX"},
+  9:{0:"XOOOOOXOXO",1:"XOOOXOOXO",2:"XOXXOXXX",3:"XXOXOXX",4:"XOXXOO",5:"XOXOX",6:"OXXX"},
+  10:{0:"XOOOOXXOXO",1:"XOOOXOOOO",2:"XOXXXOXX",3:"XXXXXOO",4:"XOOOOO",5:"XXXOO",6:"XXXX"}
 };
 
-const TRAVEL = 2.2;        // s que tarda una nota en cruzar el carril
-const TOL_PERFECTO = 0.05; // s
-const TOL_BIEN = 0.10;     // s
-const TOL_OK = 0.15;       // ventana máxima de acierto; fuera de esto, perdida
+const TRAVEL = 2.2;         // s que tarda una nota en cruzar el carril
+const ALTURA_NOTA = 16;     // px, alto del bloque (ver renderHighway)
+// Ventanas de acierto como fracción de la corchea (T), no en segundos fijos:
+// así quedan correctas automáticamente si el tempo vuelve a cambiar.
+const TOL_PERFECTO = 0.15 * T;
+const TOL_BIEN = 0.30 * T;
+const TOL_OK = 0.45 * T;    // ventana máxima de acierto; fuera de esto, perdida
 
-function present(j,s){ return s<6 ? SUG[j][s]!==undefined : S7[j]!==undefined; }
-function blocksFor(j,s){
-  if(s<6) return [{sugg:SUG[j][s], reps:4*(10-s)}];
-  return S7[j].map(([sugg,reps])=>({sugg,reps}));
-}
-function secLen(s){ return s<6 ? 4*(10-s)*(10-s) : 120; } // corcheas
+function blocksFor(j,s){ return [{sugg:SUG[j][s], reps:10-s}]; }
+function secLen(s){ return (10-s)*(10-s); } // corcheas: largo × repeticiones, sin multiplicar por 4
 
 // Laptop activa: 0 = todas (ensayo en un equipo); 1..10 = modo concierto, solo esa voz
 let LAP = 0;
@@ -211,21 +205,49 @@ function freqOf(n){
   const midi=(+m[3]+1)*12+base+alt;
   return 440*Math.pow(2,(midi-69)/12);
 }
-function playPulse(f,t,dur,wave='sine',level=0.08){
-  const o=ac.createOscillator(), g=ac.createGain();
-  o.type=wave; o.frequency.value=f;
-  const d=Math.max(dur,0.03);
-  g.gain.setValueAtTime(0.0001,t);
-  g.gain.exponentialRampToValueAtTime(level,t+0.004);
-  g.gain.exponentialRampToValueAtTime(0.0001,t+d);
-  o.connect(g); g.connect(ac.destination);
-  o.start(t); o.stop(t+d+0.05);
+// Vibráfono: fundamental + un parcial inarmónico (~3,93× la fundamental, el
+// "metal" de la barra) + trémolo de ~5 Hz (el motor rotativo del instrumento).
+// Todo sintetizado, sin samples, igual que el resto de la obra.
+function playPulse(f,t,dur,level=0.08){
+  const d=Math.max(dur,0.05);
+
+  const filtro=ac.createBiquadFilter();
+  filtro.type='lowpass';
+  filtro.frequency.setValueAtTime(5200,t);
+  filtro.frequency.exponentialRampToValueAtTime(900,t+d);
+  filtro.connect(ac.destination);
+
+  const salida=ac.createGain();
+  salida.gain.setValueAtTime(1,t);
+  salida.connect(filtro);
+
+  const tremOsc=ac.createOscillator(), tremDepth=ac.createGain();
+  tremOsc.type='sine'; tremOsc.frequency.value=5;
+  tremDepth.gain.value=0.3;
+  tremOsc.connect(tremDepth); tremDepth.connect(salida.gain);
+  tremOsc.start(t); tremOsc.stop(t+d+0.05);
+
+  const fund=ac.createOscillator(), gFund=ac.createGain();
+  fund.type='sine'; fund.frequency.value=f;
+  gFund.gain.setValueAtTime(0.0001,t);
+  gFund.gain.exponentialRampToValueAtTime(level,t+0.008);
+  gFund.gain.exponentialRampToValueAtTime(0.0001,t+d);
+  fund.connect(gFund); gFund.connect(salida);
+  fund.start(t); fund.stop(t+d+0.05);
+
+  const parcial=ac.createOscillator(), gParcial=ac.createGain();
+  parcial.type='sine'; parcial.frequency.value=f*3.93;
+  const dCorto=d*0.55;
+  gParcial.gain.setValueAtTime(0.0001,t);
+  gParcial.gain.exponentialRampToValueAtTime(level*0.25,t+0.005);
+  gParcial.gain.exponentialRampToValueAtTime(0.0001,t+dCorto);
+  parcial.connect(gParcial); gParcial.connect(salida);
+  parcial.start(t); parcial.stop(t+dCorto+0.05);
 }
 
 // ---------- Partitura: notas fijas de una voz en una sección ----------
 function notasDeSeccion(j, s, inicio){
   const out=[];
-  if(!present(j,s)) return out;
   let n=0;
   for(const blk of blocksFor(j,s)){
     for(let r=0;r<blk.reps;r++){
@@ -246,19 +268,11 @@ function notasDeSeccion(j, s, inicio){
 // viene corriendo (ver acT0/obraT0 en start()).
 function buildPlan(){
   plan=[]; secEnd=[]; notas=[]; estadoNota=[]; autoEventos=[];
-  const marcaEntradas = !solo() || LAP===1;
   let now=0;
-  plan.push({type:'entrada', s:0, k:10, start:now, end:now+10*T});
-  if(marcaEntradas) for(let q=0;q<10;q++) autoEventos.push({time:now+q*T, freq:freqOf(NOTE_OF[1]), dur:0.25, level:0.08});
-  now+=10*T;
   for(let s=0;s<7;s++){
     if(s>0){
       plan.push({type:'silencio', s, start:now, end:now+SILENCE});
       now+=SILENCE;
-      const k=10-s;
-      plan.push({type:'entrada', s, k, start:now, end:now+k*T});
-      if(marcaEntradas) for(let q=0;q<k;q++) autoEventos.push({time:now+q*T, freq:freqOf(NOTE_OF[1]), dur:0.25, level:0.08});
-      now+=k*T;
     }
     const L=secLen(s);
     plan.push({type:'seccion', s, start:now, end:now+L*T});
@@ -312,7 +326,7 @@ function tick(){
   while(cursorAuto<autoEventos.length && autoEventos[cursorAuto].time<=horizonte){
     const ev=autoEventos[cursorAuto];
     const tAc=acT0+(ev.time-obraT0);
-    if(tAc>=ac.currentTime-0.03) playPulse(ev.freq, Math.max(tAc, ac.currentTime), ev.dur, 'sine', ev.level);
+    if(tAc>=ac.currentTime-0.03) playPulse(ev.freq, Math.max(tAc, ac.currentTime), ev.dur, ev.level);
     cursorAuto++;
   }
   if(t>endAll+0.5){ running=false; clearInterval(timerAudio); }
@@ -342,7 +356,7 @@ function intentarGolpe(){
   const dt=Math.abs(t-notas[cursorNota]);
   if(dt<=TOL_OK){
     const calidad = dt<=TOL_PERFECTO?'perfecto':dt<=TOL_BIEN?'bien':'ok';
-    playPulse(freqOf(NOTE_OF[LAP]), ac.currentTime, decayActivo*T, 'sine', 0.08*volActivo);
+    playPulse(freqOf(NOTE_OF[LAP]), ac.currentTime, decayActivo*T, 0.08*volActivo);
     estadoNota[cursorNota]='golpeada';
     mostrarFeedback(calidad==='perfecto'?'¡Perfecto!':calidad==='bien'?'Bien':'A tiempo', calidad);
     cursorNota++;
@@ -354,11 +368,15 @@ function renderHighway(t){
   const cont=document.getElementById('notas');
   cont.innerHTML='';
   const HITLINE=250;
+  const V=HITLINE/TRAVEL; // velocidad del carril, px/s
   for(let idx=cursorNota; idx<notas.length; idx++){
     const dt=notas[idx]-t;
     if(dt>TRAVEL) break;
     if(dt<-0.4) continue;
-    const y = dt>=0 ? HITLINE*(1-dt/TRAVEL) : HITLINE+(-dt)*(HITLINE/TRAVEL);
+    // El golpe se cuenta en el instante en que el BORDE DE ABAJO (el primero
+    // en llegar) toca la línea, no cuando termina de cruzarla el de arriba:
+    // por eso el ancla es HITLINE - ALTURA_NOTA, no HITLINE.
+    const y = HITLINE - ALTURA_NOTA - V*dt;
     const div=document.createElement('div');
     div.className='nota '+(estadoNota[idx]||'pendiente');
     div.style.top=Math.round(y)+'px';
@@ -372,9 +390,6 @@ function fmt(sec){
   const m=Math.floor(sec/60), s=sec%60;
   return `${m}:${String(s).padStart(2,'0')}`;
 }
-let maxSeccion={};
-for(let j=1;j<=10;j++){ for(let s=6;s>=0;s--){ if(present(j,s)){ maxSeccion[j]=s; break; } } }
-
 function actualizarEstado(t){
   const faseEl=document.getElementById('faseTxt');
   const statusEl=document.getElementById('status');
@@ -390,21 +405,12 @@ function actualizarEstado(t){
   }
   const it=plan.find(p=>t>=p.start && t<p.end) || plan[0];
   const rem=(it.end-t).toFixed(1);
-  if(it.type==='entrada'){
-    const idx=Math.min(it.k, Math.floor((t-it.start)/T)+1);
-    faseEl.textContent = it.s===0
-      ? `Partida: corchea ${idx} de ${it.k}`
-      : `Entrada sección ${it.s+1}: corchea ${idx} de ${it.k}`;
-    statusEl.textContent='Prepárate.';
-  } else if(it.type==='silencio'){
+  if(it.type==='silencio'){
     faseEl.textContent=`Silencio · sección ${it.s+1} de 7 en ${rem}s`;
     statusEl.textContent='Descansa.';
   } else {
     faseEl.textContent=`Sección ${it.s+1} de 7 · quedan ${rem}s`;
-    if(!solo()) statusEl.textContent='Ensayo: sonando las 10 voces.';
-    else if(present(LAP,it.s)) statusEl.textContent='¡A tocar!';
-    else if(maxSeccion[LAP]!==undefined && it.s>maxSeccion[LAP]) statusEl.textContent='Ya terminaste tu parte.';
-    else statusEl.textContent='No participas en esta sección.';
+    statusEl.textContent = solo() ? '¡A tocar!' : 'Ensayo: sonando las 10 voces.';
   }
 }
 function seccionActual(t){
@@ -414,17 +420,12 @@ function seccionActual(t){
 }
 function renderCardTodas(j, s){
   const el=document.getElementById('card'+j);
-  if(!present(j,s)){
-    el.className='card off';
-    el.innerHTML=`<div class="title">Laptop ${j} · ${NOTE_OF[j]}</div><div class="lbl">No participa en esta sección</div>`;
-    return;
-  }
   el.className='card';
-  const suggTxt=blocksFor(j,s).map(b=>`${b.sugg} ×${b.reps}`).join('  →  ');
+  const blk=blocksFor(j,s)[0];
   el.innerHTML=`
     <div class="title">Laptop ${j} · ${NOTE_OF[j]}</div>
-    <div class="sugg">${suggTxt}</div>
-    <div class="lbl">partitura fija</div>
+    <div class="sugg">${blk.sugg}</div>
+    <div class="lbl">partitura fija × ${blk.reps}</div>
     <label>Decay: <span>${decayTodas[j].toFixed(1)}</span>
       <input type="range" min="0.1" max="3" step="0.1" value="${decayTodas[j]}" data-j="${j}" data-decay="1"></label>
     <label>Volumen: <span>${Math.round(volTodas[j]*100)}</span> %
@@ -457,9 +458,10 @@ function bucle(){
 }
 requestAnimationFrame(bucle);
 
-// Duración prevista (fija, no depende del modo)
-let totalSec=10*T;
-for(let s=0;s<7;s++){ totalSec+=secLen(s)*T; if(s>0) totalSec+=SILENCE+(10-s)*T; }
+// Duración prevista (fija, no depende del modo): sin partida ni entradas,
+// solo las 7 secciones (todas con las 10 voces) y los silencios entre ellas.
+let totalSec=0;
+for(let s=0;s<7;s++){ totalSec+=secLen(s)*T; if(s>0) totalSec+=SILENCE; }
 document.getElementById('total').textContent=`Duración prevista: ${fmt(totalSec)}`;
 
 // ---------- Controles ----------
