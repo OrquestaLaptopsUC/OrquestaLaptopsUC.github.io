@@ -3,33 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Yo tenía 10 laptops</title>
+<title>Yo tenía 10 corcheas</title>
 <style>
-  body{font-family:system-ui,-apple-system,sans-serif;margin:14px;background:#141414;color:#eee}
-  header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
-  button{padding:8px 14px;font-size:15px;border:0;border-radius:6px;background:#3b6ea5;color:#fff;cursor:pointer}
+  :root{--bg:#141414;--panel:#1f1f1f;--line:#333;--tx:#eee;--dim:#9a9a9a;--acc:#f0b429;--acc2:#3b6ea5}
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,sans-serif;margin:14px;background:var(--bg);color:var(--tx)}
+  header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+  button{padding:8px 14px;font-size:15px;border:0;border-radius:6px;background:var(--acc2);color:#fff;cursor:pointer}
   button.alt{background:#4a4a4a}
-  select{font-size:15px;padding:6px}
   #status{font-size:16px;font-weight:600}
-  #total{font-size:13px;color:#aaa}
-  #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
-  .card{background:#1f1f1f;border:1px solid #333;border-radius:8px;padding:10px}
-  .card.off{opacity:.3}
-  .card.hidden{display:none}
-  .title{font-weight:700}
-  .bits{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0;min-height:26px}
-  .bit{width:24px;height:24px;border-radius:4px;border:1px solid #555;background:#2a2a2a;cursor:pointer;padding:0}
-  .bit.on{background:#f0b429;border-color:#f0b429}
-  .sugg{font-family:monospace;font-size:22px;letter-spacing:3px;text-align:center;margin:6px 0}
-  .lbl{font-size:12px;color:#aaa;text-align:center}
-  label{display:block;font-size:13px;margin-top:8px}
-  input[type=range]{width:100%}
+  #total{font-size:13px;color:var(--dim)}
   #splash{position:fixed;inset:0;background:rgba(10,10,10,.97);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
-  #splash .box{max-width:480px;width:100%;background:#1f1f1f;border:1px solid #333;border-radius:10px;padding:22px 24px}
+  #splash .box{max-width:480px;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px 24px}
   #splash h1{margin:0 0 6px;font-size:20px}
-  #splash p{margin:0 0 16px;color:#aaa;font-size:13px}
+  #splash p{margin:0 0 16px;color:var(--dim);font-size:13px}
   #splashGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
   #splashGrid button{width:100%}
+
+  main{max-width:640px;margin:0 auto}
+
+  /* ---------- Vista en vivo (modo concierto: una sola voz) ---------- */
+  .vivo{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:360px;margin:0 auto}
+  .rol{font-size:17px;font-weight:700;text-align:center}
+  .fase{font-size:14px;color:var(--dim);text-align:center;min-height:20px}
+  .highway{position:relative;width:120px;height:300px;margin:4px auto 0;background:linear-gradient(180deg,#191919,#121212);
+    border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .hitline{position:absolute;left:0;right:0;top:250px;height:3px;background:var(--acc2)}
+  .nota{position:absolute;left:50%;width:70px;height:16px;margin-left:-35px;border-radius:5px;background:var(--acc);
+    transition:background .1s}
+  .nota.golpeada{background:#6fcf6f}
+  .nota.perdida{background:#d9534f;opacity:.55}
+  .pad{width:150px;height:60px;font-size:16px;border-radius:10px;letter-spacing:.04em}
+  .pad:active{transform:scale(.97)}
+  .feedback{min-height:20px;font-size:14px;font-weight:700;text-align:center}
+  .feedback.perfecto{color:#6fcf6f}
+  .feedback.bien{color:#f0d429}
+  .feedback.ok{color:var(--acc2)}
+  .feedback.falla,.feedback.perdida{color:#d9534f}
+  .controles{display:flex;flex-direction:column;gap:6px;width:100%;max-width:280px;font-size:13px;color:var(--dim)}
+  .controles input{width:100%}
+  .nota-pie{font-size:12.5px;color:var(--dim);text-align:center;max-width:340px}
+
+  /* ---------- Vista de ensayo (modo "Todas", un solo equipo) ---------- */
+  #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px}
+  .card.off{opacity:.35}
+  .title{font-weight:700}
+  .sugg{font-family:monospace;font-size:15px;letter-spacing:1px;text-align:center;margin:8px 0;word-break:break-all}
+  .lbl{font-size:12px;color:var(--dim);text-align:center}
+  label{display:block;font-size:13px;margin-top:8px}
+  input[type=range]{width:100%}
 </style>
 </head>
 <body>
@@ -44,204 +67,104 @@
   <button id="btnCambiar" class="alt">Cambiar laptop</button>
   <button id="start">Empezar</button>
   <button id="stop" class="alt">Detener</button>
-  <label style="margin:0;display:inline">Sección a mostrar
-    <select id="secSel">
-      <option value="auto">Automática</option>
-      <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-      <option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option>
-    </select>
-  </label>
   <span id="status">Listo.</span>
   <span id="total"></span>
-  <span id="redBadge" style="display:none;font-size:12px;color:#aaa"></span>
+  <span id="redBadge" style="display:none;font-size:12px;color:var(--dim)"></span>
 </header>
-<div id="grid"></div>
+
+<main>
+  <!-- Modo concierto: una sola voz, ejecución en vivo -->
+  <section id="vivo" class="vivo">
+    <div class="rol" id="rolTitulo"></div>
+    <div class="fase" id="faseTxt"></div>
+    <div class="highway" id="highway">
+      <div class="hitline"></div>
+      <div id="notas"></div>
+    </div>
+    <button id="pad" class="pad">␣ Golpear</button>
+    <div class="feedback" id="feedback"></div>
+    <p class="nota-pie">La partitura ya no se edita: cada X que baja por el carril es un golpe fijo de tu
+    frase. Presiona <b>espacio</b> (o toca el botón) justo cuando llegue a la línea. Si no llegas a tiempo,
+    ese golpe queda en silencio — el ritmo no se elige libremente, se ejecuta.</p>
+    <div class="controles">
+      <label>Decay: <span id="decayVal">0.5</span> corcheas
+        <input type="range" id="decay" min="0.1" max="3" step="0.1" value="0.5"></label>
+      <label>Volumen: <span id="volVal">100</span> %
+        <input type="range" id="vol" min="0" max="100" step="1" value="100"></label>
+    </div>
+  </section>
+
+  <!-- Modo ensayo: las 10 voces en un solo equipo, solo lectura -->
+  <section id="todas" style="display:none">
+    <div id="grid"></div>
+  </section>
+</main>
 
 <script>
 // ---------- Parámetros ----------
-const T = 60 / 90 / 2;          // una corchea a 90 BPM (negra = pulso) = 1/3 s
-const LOOK = 0.15;              // anticipación de programación (s)
+const T = 60 / 40 / 2;          // una corchea a 40 BPM (negra = pulso) = 0,75 s; obra completa ≈ 6:08
+const LOOK = 0.15;              // anticipación de programación de audio (s)
 const SILENCE = 15;             // silencio entre secciones (s)
 const NOTE_OF = {1:"B4",2:"A4",3:"F4",4:"E4",5:"D4",6:"B3",7:"A3",8:"F3",9:"E3",10:"D3"};
 
-// Frases sugeridas: SUG[laptop][sección 0..5]. X = ataque, O = silencio.
+// Partitura fija por laptop y sección (ya no es una sugerencia editable: es lo
+// que hay que tocar). X = ataque, O = silencio. SUG[laptop][sección 0..6].
+// Los 10 laptops tocan las 7 secciones completas — nadie sale de la obra: lo
+// que se acorta es la frase (10, 9, 8... 4 corcheas), no el número de voces.
 const SUG = {
-  1:{0:"XOOXOOXOXO"},
-  2:{0:"XXXOOOOOOO",1:"XOOOXOOOO"},
-  3:{0:"OOOXXXOOOO",1:"XOXOXOOOO",2:"XOOOXOOO"},
-  4:{0:"XOXOXOXOXO",1:"XOXXOOOOO",2:"XOOXOOXO",3:"XOOOXOO"},
-  5:{0:"XOOXOOXOXO",1:"OOOOXXXXX",2:"XOXOXOXO",3:"XOOXXOO",4:"XOOOXO"},
-  6:{0:"XOOXOOOOOO",1:"OOXXOOXXO",2:"XOXXXOXX",3:"XXXOOOO",4:"XOOXOO",5:"XOOOO"},
-  7:{0:"OXOOXOXOXO",1:"XOOXXOOXO",2:"XOXXOXXO",3:"XOXOXOO",4:"XOXOXO",5:"XOOXO"},
-  8:{0:"OOXOOXXOXO",1:"OOXOOXOOX",2:"OXOOXOOX",3:"XXOXXXO",4:"XXXXOO",5:"XOOOX"},
-  9:{0:"XOOOOOXOXO",1:"XOOOXOOXO",2:"XOXXOXXX",3:"XXOXOXX",4:"XOXXOO",5:"XOXOX"},
-  10:{0:"XOOOOXXOXO",1:"XOOOXOOOO",2:"XOXXXOXX",3:"XXXXXOO",4:"XOOOOO",5:"XXXOO"}
-};
-// Sección 7 (índice 6): bloques en orden para cada laptop
-const S7 = {
-  7:[["XOOO",16]],
-  8:[["XOOO",16],["XOO",12]],
-  9:[["XOOO",16],["XOO",12],["XO",8]],
-  10:[["XOOO",16],["XOO",12],["XO",8],["X",4]]
+  1:{0:"XOOXOOXOXO",1:"XOXOOXOXO",2:"XOXOOXOO",3:"XOOXOXO",4:"XOXOOX",5:"XOXOO",6:"XOXO"},
+  2:{0:"XXXOOOOOOO",1:"XOOOXOOOO",2:"OOXOXOXO",3:"OXOXOXO",4:"OXOXOX",5:"OXOXO",6:"XXOO"},
+  3:{0:"OOOXXXOOOO",1:"XOXOXOOOO",2:"XOOOXOOO",3:"XOXOOXO",4:"XOOXXO",5:"XOOXX",6:"OXOX"},
+  4:{0:"XOXOXOXOXO",1:"XOXXOOOOO",2:"XOOXOOXO",3:"XOOOXOO",4:"XXOOXO",5:"XXOXO",6:"XOOX"},
+  5:{0:"XOOXOOXOXO",1:"OOOOXXXXX",2:"XOXOXOXO",3:"XOOXXOO",4:"XOOOXO",5:"OOXOX",6:"OXXO"},
+  6:{0:"XOOXOOOOOO",1:"OOXXOOXXO",2:"XOXXXOXX",3:"XXXOOOO",4:"XOOXOO",5:"XOOOO",6:"XXXO"},
+  7:{0:"OXOOXOXOXO",1:"XOOXXOOXO",2:"XOXXOXXO",3:"XOXOXOO",4:"XOXOXO",5:"XOOXO",6:"XOXX"},
+  8:{0:"OOXOOXXOXO",1:"OOXOOXOOX",2:"OXOOXOOX",3:"XXOXXXO",4:"XXXXOO",5:"XOOOX",6:"XXOX"},
+  9:{0:"XOOOOOXOXO",1:"XOOOXOOXO",2:"XOXXOXXX",3:"XXOXOXX",4:"XOXXOO",5:"XOXOX",6:"OXXX"},
+  10:{0:"XOOOOXXOXO",1:"XOOOXOOOO",2:"XOXXXOXX",3:"XXXXXOO",4:"XOOOOO",5:"XXXOO",6:"XXXX"}
 };
 
+const TRAVEL = 2.2;         // s que tarda una nota en cruzar el carril
+const ALTURA_NOTA = 16;     // px, alto del bloque (ver renderHighway)
+// Ventanas de acierto como fracción de la corchea (T), no en segundos fijos:
+// así quedan correctas automáticamente si el tempo vuelve a cambiar.
+const TOL_PERFECTO = 0.15 * T;
+const TOL_BIEN = 0.30 * T;
+const TOL_OK = 0.45 * T;    // ventana máxima de acierto; fuera de esto, perdida
+
+function blocksFor(j,s){ return [{sugg:SUG[j][s], reps:10-s}]; }
+function secLen(s){ return (10-s)*(10-s); } // corcheas: largo × repeticiones, sin multiplicar por 4
+
 // Laptop activa: 0 = todas (ensayo en un equipo); 1..10 = modo concierto, solo esa voz
-// Se elige en la pantalla de entrada (#splash); no hay valor por defecto hasta que el usuario escoge.
 let LAP = 0;
 const solo = () => LAP !== 0;
 
-// ---------- Estado ----------
-function present(j,s){ return s<6 ? SUG[j][s]!==undefined : S7[j]!==undefined; }
-function blocksFor(j,s){
-  if(s<6) return [{sugg:SUG[j][s], reps:4*(10-s)}];
-  return S7[j].map(([sugg,reps])=>({sugg,reps}));
-}
-function secLen(s){ return s<6 ? 4*(10-s)*(10-s) : 120; } // corcheas
-function makeState(j,s){
-  const blocks=blocksFor(j,s);
-  return {j, s, blocks,
-    bits: blocks.map(b=>Array(b.sugg.length).fill(false)),
-    swing:0.5, b:0, i:0, r:0, n:0, t0:0, done:true};
-}
-const states={};
-const decay={};
-const vol={};                   // volumen por laptop (0 a 1)
-for(let j=1;j<=10;j++){
-  states[j]={}; decay[j]=0.5; vol[j]=1;
-  for(let s=0;s<7;s++) if(present(j,s)) states[j][s]=makeState(j,s);
-}
-
-let ac=null, running=false, timer=null, plan=[], secEnd=[], endAll=0;
-let s1Start=0, active=[];
-let curSec=0; const lastKey={};
-
-// ---------- Audio ----------
-function freqOf(n){
-  const m=/^([A-G])(#|b)?(\d)$/.exec(n);
-  const base={C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1]];
-  const alt=m[2]==='#'?1:(m[2]==='b'?-1:0);
-  const midi=(+m[3]+1)*12+base+alt;
-  return 440*Math.pow(2,(midi-69)/12);
-}
-function playPulse(f,t,dur,wave='sine',level=0.08){
-  const o=ac.createOscillator(), g=ac.createGain();
-  o.type=wave; o.frequency.value=f;
-  const d=Math.max(dur,0.03);
-  g.gain.setValueAtTime(0.0001,t);
-  g.gain.exponentialRampToValueAtTime(level,t+0.004);
-  g.gain.exponentialRampToValueAtTime(0.0001,t+d);
-  o.connect(g); g.connect(ac.destination);
-  o.start(t); o.stop(t+d+0.05);
-}
-
-// ---------- Planificación ----------
-// En modo concierto (LAP != 0) la laptop 1 también toca partida y entradas.
-// La obra no incluye handpan: el software no toca ni simula su parte.
-function presentLaptops(s){
-  const out=[];
-  for(let j=1;j<=10;j++) if(states[j][s]) out.push(j);
-  return out;
-}
-function resetStates(){
-  for(const k of Object.keys(states)) for(const st of Object.values(states[k])){
-    st.b=0; st.i=0; st.r=0; st.n=0; st.done=true; st.t0=0;
-  }
-  active=[];
-}
-function buildPlan(t0){
-  plan=[]; active=[]; secEnd=[];
-  const playsCues = !solo() || LAP===1;
-  let now=t0;
-  // Partida: laptop 1 da 10 corcheas
-  plan.push({type:'entrada', s:0, k:10, start:now, end:now+10*T});
-  if(playsCues) for(let q=0;q<10;q++) playPulse(freqOf(NOTE_OF[1]), now+q*T, 0.25, 'sine', 0.08*vol[1]);
-  now+=10*T;
-  for(let s=0;s<7;s++){
-    if(s>0){
-      plan.push({type:'silencio', s, start:now, end:now+SILENCE});
-      now+=SILENCE;
-      const k=10-s;
-      plan.push({type:'entrada', s, k, start:now, end:now+k*T});
-      if(playsCues) for(let q=0;q<k;q++) playPulse(freqOf(NOTE_OF[1]), now+q*T, 0.25, 'sine', 0.08*vol[1]);
-      now+=k*T;
-    }
-    const L=secLen(s);
-    plan.push({type:'seccion', s, start:now, end:now+L*T});
-    secEnd[s]=now+L*T;
-    if(s===0) s1Start=now;
-    for(const j of presentLaptops(s)){
-      if(solo() && j!==LAP) continue;
-      const st=states[j][s];
-      Object.assign(st,{t0:now, n:0, b:0, i:0, r:0, done:false, swing:0.5});
-      active.push(st);
-    }
-    now+=L*T;
-  }
-  endAll=now;
-}
-
-// ---------- Scheduler ----------
-function stepTime(st){
-  return st.t0 + Math.floor(st.n/2)*2*T + (st.n%2)*2*T*st.swing;
-}
-function advance(st){
-  st.i++; st.n++;
-  if(st.i>=st.blocks[st.b].sugg.length){
-    st.i=0; st.r++;
-    if(st.r>=st.blocks[st.b].reps){ st.b++; st.r=0; }
-  }
-  if(st.b>=st.blocks.length) st.done=true;
-}
-function tick(){
-  if(!running) return;
-  const horizon=ac.currentTime+LOOK;
-  for(const st of active){
-    while(!st.done){
-      const tt=stepTime(st);
-      if(tt>=horizon) break;
-      if(st.bits[st.b][st.i]){
-        const f=st.freq ?? freqOf(NOTE_OF[st.j]);
-        const dur=(st.fixedDecay ?? decay[st.j])*T;
-        const v = vol[st.j];
-        playPulse(f, tt, dur, st.wave ?? 'sine', 0.08*v);
-      }
-      advance(st);
-    }
-  }
-  if(ac.currentTime>endAll+0.5){ running=false; clearInterval(timer); }
-}
-async function start(){
-  if(running) return;
-  if(ac) ac.close();
-  ac=new (window.AudioContext||window.webkitAudioContext)();
-  await ac.resume();
-  resetStates();
-  buildPlan(ac.currentTime+0.3);
-  running=true;
-  timer=setInterval(tick,25);
-}
-function stop(){
-  running=false; clearInterval(timer);
-  if(ac){ ac.close(); ac=null; }
-  resetStates();
-}
-
-// ---------- Reloj compartido por WiFi (servidor.py, capa estilo "In C") ----------
-// Si esta página se abrió suelta con doble clic (file://), no hay servidor y
-// todo sigue exactamente igual que antes: cada laptop con su botón Empezar.
-// Si la sirvió servidor.py (http://...), Empezar y Detener avisan al servidor
-// y TODAS las laptops (incluida la servidora) arrancan solas cuando el reloj
-// común pasa a "corriendo". El sonido no depende del servidor: si se cae,
-// la obra que ya está sonando sigue igual, solo se pierde el reloj común.
-const conRed = location.protocol!=='file:';
-let redEstadoPrevio='espera';
+// ---------- Reloj compartido por WiFi: pulso continuo (servidor.py) ----------
+// A diferencia de la versión anterior (que solo avisaba cuándo partir y cada
+// laptop corría después su propio reloj local), acá el servidor difunde su
+// hora y el instante exacto de partida; cada laptop estima el desfase con su
+// propio reloj en cada sondeo y lo usa para calcular en todo momento "cuántos
+// segundos lleva la obra", no solo al arrancar. Así el carril de notas de las
+// 10 laptops queda referido al mismo pulso aunque sus relojes internos
+// difieran un poco entre sí. Sin servidor (file://), todo sigue igual que
+// antes: reloj local, Empezar a mano.
+// Inspirado en la conectividad por red de "Genesis OLUC" (Felipe Osorio).
+const conRed = location.protocol !== 'file:';
+let offsetMs=0, primeraMuestra=true, inicioServidorMs=null, redEstadoPrevio='espera';
 async function sondearReloj(){
   const badge=document.getElementById('redBadge');
+  const t0=Date.now();
   try{
     const r=await fetch(location.origin+'/reloj',{cache:'no-store'});
     const d=await r.json();
+    const t1=Date.now();
+    const rtt=t1-t0;
+    const muestra=(d.t+rtt/2)-((t0+t1)/2);
+    offsetMs = primeraMuestra ? muestra : offsetMs*0.8+muestra*0.2;
+    primeraMuestra=false;
+    inicioServidorMs = d.estado==='corriendo' ? d.inicio_ms : null;
     badge.style.display='';
-    badge.textContent = d.estado==='corriendo' ? 'Red: corriendo' : 'Red: en espera';
+    badge.textContent = d.estado==='corriendo' ? 'Red: pulso compartido' : 'Red: en espera';
     if(d.estado==='corriendo' && redEstadoPrevio!=='corriendo' && !running) start();
     if(d.estado!=='corriendo' && redEstadoPrevio==='corriendo' && running) stop();
     redEstadoPrevio=d.estado;
@@ -256,110 +179,318 @@ async function avisarReloj(accion){
       headers:{'Content-Type':'application/json'}, body:JSON.stringify({accion})});
   }catch(e){}
 }
-if(conRed) setInterval(sondearReloj,250);
+if(conRed) setInterval(sondearReloj,300);
+
+// Segundos desde que partió la obra, estimados en continuo.
+function tiempoObra(){
+  if(conRed && inicioServidorMs!=null) return (Date.now()+offsetMs-inicioServidorMs)/1000;
+  return (performance.now()-startPerf)/1000 + obraT0;
+}
+
+// ---------- Estado ----------
+let ac=null, running=false, startPerf=0, obraT0=0, acT0=0;
+let timerAudio=null;
+let plan=[], secEnd=[], endAll=0;
+let notas=[], estadoNota=[], cursorNota=0;   // partitura de la voz activa (solo mode)
+let autoEventos=[], cursorAuto=0;            // clics de entrada + (modo Todas) las 10 voces
+let decayActivo=0.5, volActivo=1;            // controles de la voz en vivo
+const decayTodas={}, volTodas={};            // controles por voz, modo "Todas"
+for(let j=1;j<=10;j++){ decayTodas[j]=0.5; volTodas[j]=1; }
+
+// ---------- Audio ----------
+function freqOf(n){
+  const m=/^([A-G])(#|b)?(\d)$/.exec(n);
+  const base={C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1]];
+  const alt=m[2]==='#'?1:(m[2]==='b'?-1:0);
+  const midi=(+m[3]+1)*12+base+alt;
+  return 440*Math.pow(2,(midi-69)/12);
+}
+// Vibráfono: fundamental + un parcial inarmónico (~3,93× la fundamental, el
+// "metal" de la barra) + trémolo de ~5 Hz (el motor rotativo del instrumento).
+// Todo sintetizado, sin samples, igual que el resto de la obra.
+function playPulse(f,t,dur,level=0.08){
+  const d=Math.max(dur,0.05);
+
+  const filtro=ac.createBiquadFilter();
+  filtro.type='lowpass';
+  filtro.frequency.setValueAtTime(5200,t);
+  filtro.frequency.exponentialRampToValueAtTime(900,t+d);
+  filtro.connect(ac.destination);
+
+  const salida=ac.createGain();
+  salida.gain.setValueAtTime(1,t);
+  salida.connect(filtro);
+
+  const tremOsc=ac.createOscillator(), tremDepth=ac.createGain();
+  tremOsc.type='sine'; tremOsc.frequency.value=5;
+  tremDepth.gain.value=0.3;
+  tremOsc.connect(tremDepth); tremDepth.connect(salida.gain);
+  tremOsc.start(t); tremOsc.stop(t+d+0.05);
+
+  const fund=ac.createOscillator(), gFund=ac.createGain();
+  fund.type='sine'; fund.frequency.value=f;
+  gFund.gain.setValueAtTime(0.0001,t);
+  gFund.gain.exponentialRampToValueAtTime(level,t+0.008);
+  gFund.gain.exponentialRampToValueAtTime(0.0001,t+d);
+  fund.connect(gFund); gFund.connect(salida);
+  fund.start(t); fund.stop(t+d+0.05);
+
+  const parcial=ac.createOscillator(), gParcial=ac.createGain();
+  parcial.type='sine'; parcial.frequency.value=f*3.93;
+  const dCorto=d*0.55;
+  gParcial.gain.setValueAtTime(0.0001,t);
+  gParcial.gain.exponentialRampToValueAtTime(level*0.25,t+0.005);
+  gParcial.gain.exponentialRampToValueAtTime(0.0001,t+dCorto);
+  parcial.connect(gParcial); gParcial.connect(salida);
+  parcial.start(t); parcial.stop(t+dCorto+0.05);
+}
+
+// ---------- Partitura: notas fijas de una voz en una sección ----------
+function notasDeSeccion(j, s, inicio){
+  const out=[];
+  let n=0;
+  for(const blk of blocksFor(j,s)){
+    for(let r=0;r<blk.reps;r++){
+      for(let i=0;i<blk.sugg.length;i++){
+        if(blk.sugg[i]==='X') out.push(inicio+n*T);
+        n++;
+      }
+    }
+  }
+  return out;
+}
+
+// ---------- Planificación ----------
+// Siempre se arma desde 0: el 0 es el instante real en que partió la obra
+// (según el reloj común), no el momento en que esta laptop llamó a start().
+// Así, si alguien se reconecta a mitad de la obra, el plan sigue siendo el
+// mismo de siempre; lo único que cambia es desde qué punto tiempoObra() ya
+// viene corriendo (ver acT0/obraT0 en start()).
+function buildPlan(){
+  plan=[]; secEnd=[]; notas=[]; estadoNota=[]; autoEventos=[];
+  let now=0;
+  for(let s=0;s<7;s++){
+    if(s>0){
+      plan.push({type:'silencio', s, start:now, end:now+SILENCE});
+      now+=SILENCE;
+    }
+    const L=secLen(s);
+    plan.push({type:'seccion', s, start:now, end:now+L*T});
+    secEnd[s]=now+L*T;
+    if(solo()){
+      for(const t of notasDeSeccion(LAP,s,now)) notas.push(t);
+    } else {
+      for(let j=1;j<=10;j++){
+        for(const t of notasDeSeccion(j,s,now)){
+          autoEventos.push({time:t, freq:freqOf(NOTE_OF[j]), dur:decayTodas[j]*T, level:0.08*volTodas[j]});
+        }
+      }
+    }
+    now+=L*T;
+  }
+  endAll=now;
+  autoEventos.sort((a,b)=>a.time-b.time);
+  estadoNota=new Array(notas.length).fill('pendiente');
+  cursorNota=0; cursorAuto=0;
+}
+
+// ---------- Transporte ----------
+async function start(){
+  if(running) return;
+  if(ac) ac.close();
+  ac=new (window.AudioContext||window.webkitAudioContext)();
+  await ac.resume();
+  startPerf=performance.now();
+  // obraT0: punto de la obra (en segundos desde su partida real) en el que
+  // queda esta laptop justo ahora. Si la red ya venía corriendo (reconexión
+  // a mitad de obra), es mayor que 0; si todas parten juntas, es ~0.
+  obraT0 = (conRed && inicioServidorMs!=null) ? Math.max(0,(Date.now()+offsetMs-inicioServidorMs)/1000) : 0;
+  acT0=ac.currentTime;
+  buildPlan();
+  // Si nos sumamos a mitad de obra, las notas y clics ya pasados no se
+  // reproducen de golpe: los cursores avanzan hasta el punto actual sin sonar.
+  while(cursorNota<notas.length && notas[cursorNota]<obraT0-TOL_OK) cursorNota++;
+  while(cursorAuto<autoEventos.length && autoEventos[cursorAuto].time<obraT0) cursorAuto++;
+  running=true;
+  timerAudio=setInterval(tick,25);
+}
+function stop(){
+  running=false;
+  clearInterval(timerAudio);
+  if(ac){ ac.close(); ac=null; }
+}
+function tick(){
+  if(!running || !ac) return;
+  const t=tiempoObra();
+  const horizonte=t+LOOK;
+  while(cursorAuto<autoEventos.length && autoEventos[cursorAuto].time<=horizonte){
+    const ev=autoEventos[cursorAuto];
+    const tAc=acT0+(ev.time-obraT0);
+    if(tAc>=ac.currentTime-0.03) playPulse(ev.freq, Math.max(tAc, ac.currentTime), ev.dur, ev.level);
+    cursorAuto++;
+  }
+  if(t>endAll+0.5){ running=false; clearInterval(timerAudio); }
+}
+
+// ---------- Ejecución en vivo (modo concierto): golpear en el momento justo ----------
+function mostrarFeedback(txt, clase){
+  const el=document.getElementById('feedback');
+  el.textContent=txt; el.className='feedback '+clase;
+  clearTimeout(mostrarFeedback._t);
+  mostrarFeedback._t=setTimeout(()=>{ el.textContent=''; el.className='feedback'; }, 500);
+}
+function purgarPerdidas(t){
+  while(cursorNota<notas.length && t-notas[cursorNota]>TOL_OK){
+    if(estadoNota[cursorNota]==='pendiente'){
+      estadoNota[cursorNota]='perdida';
+      mostrarFeedback('Perdida','perdida');
+    }
+    cursorNota++;
+  }
+}
+function intentarGolpe(){
+  if(!running || !solo() || !ac) return;
+  const t=tiempoObra();
+  purgarPerdidas(t);
+  if(cursorNota>=notas.length) return;
+  const dt=Math.abs(t-notas[cursorNota]);
+  if(dt<=TOL_OK){
+    const calidad = dt<=TOL_PERFECTO?'perfecto':dt<=TOL_BIEN?'bien':'ok';
+    playPulse(freqOf(NOTE_OF[LAP]), ac.currentTime, decayActivo*T, 0.08*volActivo);
+    estadoNota[cursorNota]='golpeada';
+    mostrarFeedback(calidad==='perfecto'?'¡Perfecto!':calidad==='bien'?'Bien':'A tiempo', calidad);
+    cursorNota++;
+  } else {
+    mostrarFeedback('Fuera de tiempo','falla');
+  }
+}
+function renderHighway(t){
+  const cont=document.getElementById('notas');
+  cont.innerHTML='';
+  const HITLINE=250;
+  const V=HITLINE/TRAVEL; // velocidad del carril, px/s
+  for(let idx=cursorNota; idx<notas.length; idx++){
+    const dt=notas[idx]-t;
+    if(dt>TRAVEL) break;
+    if(dt<-0.4) continue;
+    // El golpe se cuenta en el instante en que el BORDE DE ABAJO (el primero
+    // en llegar) toca la línea, no cuando termina de cruzarla el de arriba:
+    // por eso el ancla es HITLINE - ALTURA_NOTA, no HITLINE.
+    const y = HITLINE - ALTURA_NOTA - V*dt;
+    const div=document.createElement('div');
+    div.className='nota '+(estadoNota[idx]||'pendiente');
+    div.style.top=Math.round(y)+'px';
+    cont.appendChild(div);
+  }
+}
 
 // ---------- Interfaz ----------
-function displayBlock(j){
-  const st=states[j] && states[j][curSec];
-  if(!st) return 0;
-  if(running && ac && ac.currentTime>=st.t0 && !st.done) return Math.min(st.b, st.blocks.length-1);
-  return 0;
+function fmt(sec){
+  sec=Math.max(0,Math.round(sec));
+  const m=Math.floor(sec/60), s=sec%60;
+  return `${m}:${String(s).padStart(2,'0')}`;
 }
-function renderCard(j){
-  const el=document.getElementById('card'+j);
-  el.classList.toggle('hidden', solo() && j!==LAP);
-  if(solo() && j!==LAP) return;
-  const st=states[j][curSec];
-  if(!st){
-    el.className='card off' + (solo() && j!==LAP ? ' hidden' : '');
-    el.innerHTML=`<div class="title">Laptop ${j} · ${NOTE_OF[j]}</div><div class="lbl">No participa en esta sección</div>`;
+function actualizarEstado(t){
+  const faseEl=document.getElementById('faseTxt');
+  const statusEl=document.getElementById('status');
+  if(t<0){
+    faseEl.textContent='Esperando';
+    statusEl.textContent='Listo. Presiona Empezar.';
     return;
   }
+  if(t>=endAll){
+    faseEl.textContent='Obra terminada';
+    statusEl.textContent='Fin';
+    return;
+  }
+  const it=plan.find(p=>t>=p.start && t<p.end) || plan[0];
+  const rem=(it.end-t).toFixed(1);
+  if(it.type==='silencio'){
+    faseEl.textContent=`Silencio · sección ${it.s+1} de 7 en ${rem}s`;
+    statusEl.textContent='Descansa.';
+  } else {
+    faseEl.textContent=`Sección ${it.s+1} de 7 · quedan ${rem}s`;
+    statusEl.textContent = solo() ? '¡A tocar!' : 'Ensayo: sonando las 10 voces.';
+  }
+}
+function seccionActual(t){
+  if(t<0) return 0;
+  for(let s=0;s<7;s++) if(t<secEnd[s]) return s;
+  return 6;
+}
+function renderCardTodas(j, s){
+  const el=document.getElementById('card'+j);
   el.className='card';
-  const b=displayBlock(j);
-  const blk=st.blocks[b];
-  const bitsHtml=[...blk.sugg].map((c,i)=>
-    `<button class="bit${st.bits[b][i]?' on':''}" data-j="${j}" data-bit="${i}"></button>`).join('');
-  const sw=Math.round(st.swing*100);
+  const blk=blocksFor(j,s)[0];
   el.innerHTML=`
     <div class="title">Laptop ${j} · ${NOTE_OF[j]}</div>
-    <div class="bits">${bitsHtml}</div>
     <div class="sugg">${blk.sugg}</div>
-    <div class="lbl">frase sugerida × ${blk.reps}${st.blocks.length>1?` (bloque ${b+1} de ${st.blocks.length})`:''}</div>
-    <button class="alt" data-j="${j}" data-suggest="1" style="width:100%;margin-top:8px">Usar sugerencia</button>
-    <label>Swing: <span>${sw}</span> %
-      <input type="range" min="50" max="75" step="1" value="${sw}" data-j="${j}" data-swing="1"></label>
-    <label>Decay: <span>${decay[j].toFixed(1)}</span> corcheas
-      <input type="range" min="0.1" max="3" step="0.1" value="${decay[j]}" data-j="${j}" data-decay="1"></label>
-    <label>Volumen: <span>${Math.round(vol[j]*100)}</span> %
-      <input type="range" min="0" max="100" step="1" value="${Math.round(vol[j]*100)}" data-j="${j}" data-vol="1"></label>`;
+    <div class="lbl">partitura fija × ${blk.reps}</div>
+    <label>Decay: <span>${decayTodas[j].toFixed(1)}</span>
+      <input type="range" min="0.1" max="3" step="0.1" value="${decayTodas[j]}" data-j="${j}" data-decay="1"></label>
+    <label>Volumen: <span>${Math.round(volTodas[j]*100)}</span> %
+      <input type="range" min="0" max="100" step="1" value="${Math.round(volTodas[j]*100)}" data-j="${j}" data-vol="1"></label>`;
 }
-function updateUI(){
-  const now=running && ac ? ac.currentTime : -1;
-  let autoSec=0;
-  if(running){
-    autoSec=6;
-    for(let s=0;s<7;s++){ if(now<secEnd[s]){ autoSec=s; break; } }
-  }
-  const sel=document.getElementById('secSel').value;
-  curSec = sel==='auto' ? autoSec : (+sel-1);
+let ultimaSeccionGrid=-1;
+function crearGridTodas(){
+  const grid=document.getElementById('grid');
+  grid.innerHTML='';
   for(let j=1;j<=10;j++){
-    const key=curSec+'|'+displayBlock(j)+'|'+(states[j][curSec]?1:0);
-    if(key!==lastKey[j]){ lastKey[j]=key; renderCard(j); }
+    const d=document.createElement('div');
+    d.className='card'; d.id='card'+j;
+    grid.appendChild(d);
   }
-  let msg='Listo. Activa los bits (o usa "Usar sugerencia") y presiona Empezar.';
-  if(running){
-    msg='Preparando…';
-    const it=plan.find(p=>now>=p.start && now<p.end);
-    if(it){
-      const r=Math.ceil(it.end-now);
-      if(it.type==='entrada') msg=`Entrada: laptop 1 toca ${it.k} corcheas`;
-      else if(it.type==='silencio') msg=`Silencio: ${r} s · ajusten los bits a la sugerencia de la sección ${it.s+1}`;
-      else msg=`Sección ${it.s+1} de 7 · faltan ${r} s`;
-    } else if(now>=endAll) msg='Obra terminada';
-  }
-  document.getElementById('status').textContent=msg;
+  ultimaSeccionGrid=-1;
 }
 
-// Crear tarjetas
-const grid=document.getElementById('grid');
-for(let j=1;j<=10;j++){
-  const d=document.createElement('div');
-  d.className='card'; d.id='card'+j;
-  grid.appendChild(d);
+crearGridTodas(); // el grid existe siempre; solo se muestra en modo "Todas"
+function bucle(){
+  const t = running ? tiempoObra() : -1;
+  actualizarEstado(t);
+  if(solo()){
+    if(running){ purgarPerdidas(t); renderHighway(t); }
+    else document.getElementById('notas').innerHTML='';
+  } else {
+    const s=seccionActual(t);
+    if(s!==ultimaSeccionGrid){ ultimaSeccionGrid=s; for(let j=1;j<=10;j++) renderCardTodas(j,s); }
+  }
+  requestAnimationFrame(bucle);
 }
-grid.addEventListener('click', e=>{
-  const t=e.target;
-  if(t.dataset.bit!==undefined){
-    const j=+t.dataset.j, i=+t.dataset.bit;
-    const st=states[j][curSec], b=displayBlock(j);
-    st.bits[b][i]=!st.bits[b][i];
-    renderCard(j);
-  } else if(t.dataset.suggest!==undefined){
-    const j=+t.dataset.j;
-    const st=states[j][curSec], b=displayBlock(j);
-    st.bits[b]=[...st.blocks[b].sugg].map(c=>c==='X');
-    renderCard(j);
-  }
+requestAnimationFrame(bucle);
+
+// Duración prevista (fija, no depende del modo): sin partida ni entradas,
+// solo las 7 secciones (todas con las 10 voces) y los silencios entre ellas.
+let totalSec=0;
+for(let s=0;s<7;s++){ totalSec+=secLen(s)*T; if(s>0) totalSec+=SILENCE; }
+document.getElementById('total').textContent=`Duración prevista: ${fmt(totalSec)}`;
+
+// ---------- Controles ----------
+document.getElementById('decay').addEventListener('input', e=>{
+  decayActivo=+e.target.value;
+  document.getElementById('decayVal').textContent=decayActivo.toFixed(1);
 });
-grid.addEventListener('input', e=>{
-  const t=e.target;
-  if(t.dataset.swing!==undefined){
-    const j=+t.dataset.j;
-    states[j][curSec].swing=t.value/100;
-    t.parentElement.querySelector('span').textContent=t.value;
-  }
-  if(t.dataset.decay!==undefined){
-    const j=+t.dataset.j;
-    decay[j]=+t.value;
-    t.parentElement.querySelector('span').textContent=(+t.value).toFixed(1);
-  }
-  if(t.dataset.vol!==undefined){
-    const j=+t.dataset.j;
-    vol[j]=t.value/100;
-    t.parentElement.querySelector('span').textContent=t.value;
-  }
+document.getElementById('vol').addEventListener('input', e=>{
+  volActivo=e.target.value/100;
+  document.getElementById('volVal').textContent=e.target.value;
 });
+document.getElementById('grid').addEventListener('input', e=>{
+  const t=e.target; const j=+t.dataset.j;
+  if(!j) return;
+  if(t.dataset.decay!==undefined){ decayTodas[j]=+t.value; t.parentElement.querySelector('span').textContent=(+t.value).toFixed(1); }
+  if(t.dataset.vol!==undefined){ volTodas[j]=t.value/100; t.parentElement.querySelector('span').textContent=t.value; }
+});
+
+window.addEventListener('keydown', e=>{
+  if(e.code==='Space' && !e.repeat){ e.preventDefault(); intentarGolpe(); }
+});
+document.getElementById('pad').addEventListener('pointerdown', e=>{ e.preventDefault(); intentarGolpe(); });
+
+function actualizarVista(){
+  document.getElementById('vivo').style.display = solo() ? '' : 'none';
+  document.getElementById('todas').style.display = solo() ? 'none' : '';
+  document.getElementById('rolTitulo').textContent = solo()
+    ? `Laptop ${LAP} · ${NOTE_OF[LAP]}` : 'Ensayo: las 10 voces en un equipo';
+}
 
 // Pantalla de entrada: elegir laptop (o "Todas") antes de poder tocar
 const splash=document.getElementById('splash');
@@ -381,8 +512,8 @@ splashGrid.addEventListener('click', e=>{
   stop();
   LAP=+e.target.dataset.lap;
   splash.style.display='none';
-  for(const k of Object.keys(lastKey)) delete lastKey[k];
-  updateUI();
+  if(!solo()) crearGridTodas();
+  actualizarVista();
   // Desbloquea el audio con este clic: si más tarde el reloj de red arranca
   // la obra sola (sin que esta laptop reciba un clic propio), el navegador
   // ya tiene permiso para sonar.
@@ -400,15 +531,6 @@ document.getElementById('btnCambiar').addEventListener('click', ()=>{
 
 document.getElementById('start').addEventListener('click', ()=>{ if(conRed) avisarReloj('iniciar'); else start(); });
 document.getElementById('stop').addEventListener('click', ()=>{ if(conRed) avisarReloj('detener'); else stop(); });
-
-// Duración prevista
-let totalSec=10*T;
-for(let s=0;s<7;s++){ totalSec+=secLen(s)*T; if(s>0) totalSec+=SILENCE+(10-s)*T; }
-const tm=Math.floor(totalSec/60), ts=Math.round(totalSec%60);
-document.getElementById('total').textContent=`Duración prevista: ${tm} min ${ts} s`;
-
-setInterval(updateUI, 150);
-updateUI();
 </script>
 </body>
 </html>

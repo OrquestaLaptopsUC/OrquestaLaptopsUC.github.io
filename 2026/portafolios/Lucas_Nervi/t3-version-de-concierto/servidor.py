@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """Reloj compartido por WiFi para "Yo tenía 10 laptops" (Lucas Nervi, OLUC).
 
-Capa puramente informativa, igual que la de "In C" (2026/obras/in-c/ en el
-repositorio del ramo): este servidor solo difunde CUÁNDO empezó la obra.
+A diferencia de la primera versión (que solo avisaba arranque/parada y cada
+laptop corría después su propio reloj local), este servidor difunde además
+su hora y el instante exacto de partida en cada /reloj: cada laptop estima
+el desfase con su propio reloj y lo usa para calcular en todo momento
+"cuántos segundos lleva la obra", no solo al conectarse. Es un pulso de
+referencia continuo, no un simple interruptor — inspirado en la
+conectividad por red de "Genesis OLUC" (Felipe Osorio, mismo curso).
 El sonido sigue corriendo en cada navegador; si el servidor se cierra o la
 red se cae, la música no se detiene, solo se pierde la hora común.
 
@@ -87,7 +92,16 @@ class Manejador(http.server.SimpleHTTPRequestHandler):
         if self.path.split("?")[0] == "/reloj":
             with reloj_lock:
                 estado = reloj["estado"]
-            self._json({"estado": estado, "ms": ms_reloj()})
+                inicio_ms = reloj["inicio"] * 1000 if estado == "corriendo" else None
+            # "t" (hora del servidor) e "inicio_ms" (cuándo partió, en hora del
+            # servidor) son lo que permite a cada laptop seguir el pulso en
+            # continuo, no solo detectar el cambio espera/corriendo.
+            self._json({
+                "estado": estado,
+                "ms": ms_reloj(),
+                "t": ahora() * 1000,
+                "inicio_ms": inicio_ms,
+            })
             return
         super().do_GET()
 
@@ -121,7 +135,13 @@ class Manejador(http.server.SimpleHTTPRequestHandler):
             elif accion == "detener":
                 reloj["estado"] = "espera"
             estado = reloj["estado"]
-        self._json({"estado": estado, "ms": ms_reloj()})
+            inicio_ms = reloj["inicio"] * 1000 if estado == "corriendo" else None
+        self._json({
+            "estado": estado,
+            "ms": ms_reloj(),
+            "t": ahora() * 1000,
+            "inicio_ms": inicio_ms,
+        })
 
 
 class Servidor(socketserver.ThreadingMixIn, http.server.HTTPServer):

@@ -1,0 +1,5 @@
+# Declaración de uso de inteligencia artificial
+
+Utilicé ChatGPT (OpenAI) como apoyo para estructurar la entrega T3 a partir de la pauta y mi T1, preparar borradores de partitura, parte solista, nota de programa, ficha técnica y un texto en primera persona sobre las decisiones que fui comunicando durante el desarrollo. Ese texto es un borrador asistido, no un registro personal de escucha de ensayo. La herramienta también ayudó a revisar la aplicación Cream Lab y organizar la carpeta para su uso local y su publicación. No se inventaron resultados de ensayo ni una grabación.
+
+Prompts relevantes: «necesito que me ayudes a subir la tarea a GitHub, y cumplir todo lo que me piden»; «Será Cream Lab u otra obra»; «no es una obra solo de mi mismo tocando [...] CreamLab mi idea es tocar improvisando [...] como un freestyle»; «no quiero que ponga un tiempo de 5 min ni nada de eso dejame libre». En conversaciones anteriores solicité ayuda para los loops, la mezcla, los diez efectos y el controlador físico. Debo revisar y asumir personalmente el contenido final, los permisos de los audios y la documentación de la ejecución.
