@@ -45,26 +45,15 @@
   function ayudaTeclado() {
     const tecla = (cls, txt = "") => `<span class="mini-tecla ${cls}">${txt}</span>`;
     abrirVentana("🎹 Cómo funciona el teclado", el(`<div class="ayuda-tec">
-      <section><h3>1 · Los colores te dicen qué suena bien</h3>
-        <p>Las marcas cambian solas con cada acorde de la partitura. Puedes tocar <b>cualquier tecla</b>: la disonancia está permitida.</p>
-        <ul class="lista-colores">
-          <li>${tecla("t-acorde")}<span><b>De color:</b> notas del acorde que suena ahora. Siempre encajan.</span></li>
-          <li>${tecla("t-acorde t-raiz")}<span><b>Con un punto:</b> la raíz del acorde, la nota más firme (buena para el bajo).</span></li>
-          <li>${tecla("t-escala")}<span><b>Blanca o negra normal:</b> de la escala de la obra (Re♭ mayor). Suena con tensión: úsala de paso.</span></li>
-          <li>${tecla("t-fuera")}<span><b>Rayada:</b> fuera de la escala. Choca a propósito: disonancia.</span></li>
-          <li>${tecla("t-guia")}<span><b>Borde rosado:</b> lo que toca tu parte en el arreglo grabado. Síguelo si te pierdes.</span></li>
-          <li>${tecla("t-sig")}<span><b>Círculo punteado:</b> nota del acorde que viene (aparece unos segundos antes del cambio).</span></li>
-          <li>${tecla("t-on")}<span><b>Rosado:</b> la tecla que estás tocando.</span></li>
-        </ul></section>
-      <section><h3>2 · Cómo suena</h3>
+      <section><h3>1 · Cómo suena</h3>
         <p>Cada nota suena <b>mientras mantienes apretada</b> su tecla, como un piano, y se apaga al soltar. <b>✋ Soltar todo</b> (o <kbd>Esc</kbd>) apaga todo de una vez.</p></section>
-      <section><h3>3 · Cuando cambia el acorde: glissando</h3>
-        <p>Las notas que siguen sonando en el cambio <b>se deslizan solas</b> y llegan justo con el acorde nuevo. Así no hace falta seguir el tempo al soltar las notas. Las teclas de la nota del acorde que viene se marcan antes del cambio.</p>
+      <section><h3>2 · Cuando cambia el acorde: glissando</h3>
+        <p>Las notas que siguen sonando en el cambio <b>se deslizan solas</b> y llegan justo con el acorde nuevo. Así no hace falta seguir el tempo al soltar las notas.</p>
         <p>Con el botón <b>🎚️ Cambio de acorde</b> (en <b>⚙️ Sonido · Tocar · Efectos</b>, debajo del piano) eliges si van a la nota del acorde más cercana, si se mueven todas juntas (conservan la disonancia) o si se quedan quietas, y cuánto dura el deslizamiento.</p></section>
-      <section><h3>4 · Efectos</h3>
+      <section><h3>3 · Efectos</h3>
         <p>Con <b>🎛️ Efectos automáticos</b> encendido, la distorsión, el brillo, la reverb y el volumen cambian solos en cada parte de la obra. Si mueves un control a mano, el modo automático se apaga hasta que lo vuelvas a encender.</p></section>
-      <section><h3>5 · Notas que caen</h3>
-        <p>Sobre el piano caen las notas de <b>tu parte del arreglo</b>. Cuando una nota <b>toca el piano</b>, tócala; su largo es cuánto mantenerla. Las líneas horizontales marcan los cambios de acorde.</p>
+      <section><h3>4 · Notas que caen</h3>
+        <p>Sobre el piano caen las notas de <b>tu parte del arreglo</b>. Cuando una nota <b>toca el piano</b>, tócala; su largo es cuánto mantenerla. Las líneas con nombre marcan los cambios de acorde; las finas sin texto, el pulso (130 BPM), más marcadas al empezar cada compás: síguelas para no perder el ritmo, también al improvisar.</p>
         <p>La nota que está sonando se pone amarilla. Puedes apagarlas o cambiar su velocidad en <b>⚙️ Sonido · Tocar · Efectos</b>, debajo del piano. Es una guía, no una obligación: improvisar sigue valiendo.</p></section>
       <section><h3>Tocar con el teclado de la computadora</h3>
         <div class="atajos">
@@ -75,6 +64,16 @@
           <p class="muted small">¿Tienes un teclado MIDI USB? Conéctalo y toca: cada nota suena tal cual (arriba aparece «🎹 MIDI» con su nombre).</p>
         </div></section>
     </div>`), { clase: "ancha" });
+  }
+
+  /* ============================== soltar notas ============================== */
+  // Al soltar una tecla la nota se apaga en ~1 s (curva suave), en vez de cortarse de golpe
+  const SUELTA = 1.0;
+  function soltarSuave(g, t, rel, fuentes) {
+    const p = g.gain;
+    if (p.cancelAndHoldAtTime) p.cancelAndHoldAtTime(t); else { p.cancelScheduledValues(t); p.setValueAtTime(Math.max(p.value, 0.0001), t); }
+    p.setTargetAtTime(0.0001, t, rel / 3.2);
+    fuentes.forEach(f => { try { f.stop(t + rel * 2); } catch (e) { /* ya parada */ } });
   }
 
   /* ============================== roles ============================== */
@@ -207,6 +206,8 @@
       <div class="seccion"><span data-r="sec">—</span><span class="tiempo" data-r="tiempo">0:00</span></div>
       <div class="acordes"><div class="acorde" data-r="ac">—</div><div class="sig"><small>luego</small><span data-r="sig">—</span></div></div>
       <div class="barra"><i data-r="barra"></i></div>
+      <div class="aviso-impro" data-r="impro" hidden><b>🎧 No te vuelvas loco: escucha al resto.</b>
+        <span>Improvisa sin salirte de lo que ya vienes tocando: tus notas, tu registro y tu forma de la melodía. Deja espacio; menos es más.</span></div>
     </section>`);
     const r = k => $(`[data-r=${k}]`, caja);
     let previo = "";
@@ -227,6 +228,7 @@
         r("estado").textContent = fin ? "■ FIN" : perfil.tipo === "director" ? (R.estado.corriendo ? "▶ EN MARCHA" : "⏸ DETENIDO") : tocaYa ? "▶ TOCAS" : "⏸ SILENCIO";
         caja.classList.toggle("silencio", !tocaYa && !fin); caja.classList.toggle("toca", tocaYa && !fin);
         r("sec").textContent = sec.nombre;
+        r("impro").hidden = !(sec.libre && !fin && perfil.tipo !== "director");
         r("ac").textContent = bonito(ac.nombre);
         r("sig").textContent = ac.siguiente ? bonito(ac.siguiente) : "fin";
       },
@@ -241,6 +243,7 @@
       <select data-r="ir" aria-label="Ir a sección"></select>
       <span class="red" data-r="red"></span>
       <button class="chip" data-r="sala" hidden title="Quiénes están conectados a tu sala">👥 Sala</button>
+      <button class="chip" data-r="volsala" hidden title="Pone el volumen de la app de toda la orquesta (esta laptop incluida) en el nivel de la sala y enciende el sonido de las que lo tenían apagado. Todas con el volumen del computador al 100 %. El nivel se cambia en 👥 Sala.">🔊 Igualar volumen</button>
       <button class="chip" data-r="solo" hidden title="Deja de seguir al cronómetro en red y usa uno propio">Practicar solo</button>
     </div>`);
     const r = k => $(`[data-r=${k}]`, caja);
@@ -252,9 +255,10 @@
     sel.onchange = () => { if (sel.value !== "") R.ir(+sel.value); sel.value = ""; };
     r("solo").onclick = () => R.practicarSolo(!R.estado.practica);
     r("sala").onclick = () => ventanaSala();
+    r("volsala").onclick = () => igualarVolumen(r("volsala"));
     const pintarSala = () => {
       const st = R.estado, n = st.sala.length;
-      r("sala").hidden = !(st.maestro && st.modo === "red");
+      r("sala").hidden = r("volsala").hidden = !(st.maestro && st.modo === "red");
       r("sala").textContent = `👥 ${n} ${n === 1 ? "laptop" : "laptops"}`;
     };
     const relojSala = setInterval(() => { if (!caja.isConnected) return clearInterval(relojSala); pintarSala(); }, 1000);
@@ -279,6 +283,13 @@
   // Secciones libres (partitura → libre: true): ahí no caen notas, cada uno improvisa
   const LIBRES = SECCIONES.filter(s => s.libre).map(s => [s.ini, s.fin]);
   const enLibre = t => LIBRES.some(([a, b]) => t >= a && t < b);
+  // La próxima nota (o acorde) que pide tu parte, si llega dentro de 4 s
+  function siguientes(notas, tc) {
+    const i = lb(notas, tc + 0.04, n => n.t); if (i >= notas.length) return [];
+    const t1 = notas[i].t; if (t1 - tc > 4 || enLibre(t1)) return [];
+    const out = []; for (let j = i; j < notas.length && notas[j].t - t1 < 0.04; j++) out.push(notas[j]);
+    return out;
+  }
   const VELOCIDADES = [[4, "Lenta"], [2.6, "Normal"], [1.7, "Rápida"]];
   function crearCascada(pista, piano, mapear) {
     const caja = el(`<div class="cascada"><div class="cascada-lienzo"><canvas></canvas></div></div>`);
@@ -316,6 +327,20 @@
     // sin juego: no hay puntaje, racha ni avisos; las notas solo muestran qué tocar y cuándo
     function reiniciar() {}
     function golpe() {}
+    // el color de la sección, pero con un mínimo de luz: las secciones oscuras (intro, azul casi negro) no se verían
+    const claros = new Map();
+    function claro(hex) {
+      if (claros.has(hex)) return claros.get(hex);
+      const n = parseInt(String(hex).replace("#", ""), 16); let out = hex;
+      if (!isNaN(n)) {
+        let r = (n >> 16 & 255) / 255, gg = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+        const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b), l = (mx + mn) / 2, d = mx - mn;
+        let h = 0, s = d ? d / (1 - Math.abs(2 * l - 1)) : 0;
+        if (d) h = mx === r ? ((gg - b) / d) % 6 : mx === gg ? (b - r) / d + 2 : (r - gg) / d + 4;
+        out = `hsl(${Math.round((h * 60 + 360) % 360)}, ${Math.round(Math.max(s, 0.55) * 100)}%, ${Math.round(Math.max(l, 0.62) * 100)}%)`;
+      }
+      claros.set(hex, out); return out;
+    }
     function rect(x, y, w, h, rad) { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, rad); else g.rect(x, y, w, h); g.fill(); }
     function dibujar(tc, corriendo) {
       if (!activo) return;
@@ -325,6 +350,14 @@
       // carriles: un fondo más oscuro bajo las teclas negras
       cols.forEach(c => { if (c.negra) { g.fillStyle = "rgba(0,0,0,.28)"; g.fillRect(c.x, 0, c.w, H); } });
       cols.forEach((c, m) => { if (!c.negra && m % 12 === 0) { g.fillStyle = "rgba(255,255,255,.07)"; g.fillRect(c.x, 0, 1, H); } });
+      // el pulso de la obra (130 BPM, 4/4): una línea por tiempo, sin texto, del color de la sección; el primer tiempo
+      // de cada compás un poco más marcado. Sirve para no perder el ritmo, sobre todo al improvisar
+      const tiempo = 60 / (P.bpm || 130), porCompas = P.compas || 4;
+      for (let k = Math.max(0, Math.ceil(tc / tiempo - 1e-6)); k * tiempo <= tc + mirar; k++) {
+        const tb = k * tiempo, y = H - (tb - tc) * porSeg, uno = k % porCompas === 0;
+        g.fillStyle = claro(acordeEn(tObra(tb)).color || "#7c9cff"); g.globalAlpha = uno ? 0.7 : 0.38;
+        g.fillRect(0, Math.round(y) - (uno ? 1 : 0.5), W, uno ? 2.5 : 1.5); g.globalAlpha = 1;
+      }
       // cambios de acorde que vienen: una línea con el nombre
       let x = tc;
       g.font = "600 12px system-ui, sans-serif"; g.textBaseline = "bottom";
@@ -332,7 +365,7 @@
         const a = acordeEn(tObra(x)); if (!a.siguiente || a.falta == null) break;
         const tCambio = x + a.falta; if (tCambio > tc + mirar) break;
         const y = H - (tCambio - tc) * porSeg, sig = acordeEn(tObra(tCambio + 0.01));
-        g.fillStyle = sig.color || "#7c9cff"; g.globalAlpha = 0.55; g.fillRect(0, y, W, 1.5); g.globalAlpha = 1;
+        g.fillStyle = claro(sig.color || "#7c9cff"); g.globalAlpha = 0.95; g.fillRect(0, y - 1.5, W, 3); g.globalAlpha = 1;
         g.fillStyle = "rgba(242,239,248,.85)"; g.fillText(bonito(a.siguiente), 6, y - 2);
         x = tCambio + 0.02;
       }
@@ -426,9 +459,6 @@
     </div>`);
     const estado = el(`<div class="estado-tec" aria-live="polite"></div>`);
     const piano = el(`<div class="piano" role="group" aria-label="Teclado"></div>`);
-    const leyenda = el(`<div class="leyenda"><span class="l-acorde">nota del acorde: suena segura</span><span class="l-raiz">raíz del acorde</span>
-      <span class="l-escala">de la escala: tensión</span><span class="l-fuera">fuera de la escala: disonancia</span>
-      <span class="l-guia">lo que toca tu parte en el arreglo</span><span class="l-sig">nota del acorde que viene</span></div>`);
     // "Cuando cambia el acorde" vive en una ventana que se abre con su botón
     const glis = el(`<div class="glis-ventana">
       <div class="fila"><label class="campo">Las notas que siguen sonando
@@ -451,7 +481,7 @@
     const pasoCascada = cascada ? el(`<div class="paso"><div class="paso-cab"><span class="n">3</span><b>Notas que caen</b></div></div>`) : null;
     if (cascada) { pasoCascada.appendChild(cascada.controles); $(".n", pasoFx).textContent = "4"; }
     $(".ajustes-cuerpo", ajustes).append(opciones, toques, ...(pasoCascada ? [pasoCascada] : []), pasoFx);
-    caja.append(...(cascada ? [cascada.caja] : []), piano, leyenda, ajustes);   // (la línea "Acorde ahora / Suenan" ya no se muestra)
+    caja.append(...(cascada ? [cascada.caja] : []), piano, ajustes);   // (la línea "Acorde ahora / Suenan" ya no se muestra)
     const r = (x, raiz = caja) => $(`[data-r="${x}"]`, raiz);
 
     // sonido
@@ -481,7 +511,7 @@
       g.connect(k.filtro); s.connect(g);
       g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vel * ajusteVol, t + 0.008);
       s.start(t);
-      return { g, fuentes: [s], rel: 0.45 };
+      return { g, fuentes: [s], rel: SUELTA };
     }
     function on(m, fija = false, vel = 0.85) {
       if (voces.has(m)) return;
@@ -490,7 +520,7 @@
     }
     function off(m) {
       const x = voces.get(m); if (!x) return;
-      Motor.soltar(x.v.g, Motor.t, x.v.rel, x.v.fuentes); voces.delete(m); pintarTeclas();
+      soltarSuave(x.v.g, Motor.t, Math.max(SUELTA, x.v.rel || 0), x.v.fuentes); voces.delete(m); pintarTeclas();
     }
     function soltarTodo() { [...voces.keys()].forEach(off); pintarOpciones(); }
     // Glissando: se mueve el "detune" de cada fuente (en centésimas) desde donde está hasta la nota nueva
@@ -540,7 +570,7 @@
       for (const m of notas) {
         const negra = !carriles && esNegra(m);
         const libre = carriles && !esRequerida(m);
-        const t = el(`<button class="tecla ${negra ? "negra" : "blanca"}${carriles ? " carril" + (esNegra(m) ? " alterada" : "") + (libre ? " libre" : "") : ""}" data-m="${m}" tabindex="-1"${libre ? ' title="Nota libre de la escala: para improvisar"' : ""}><span class="nom"></span><i class="pc"></i></button>`);
+        const t = el(`<button class="tecla ${negra ? "negra" : "blanca"}${carriles ? " carril" + (esNegra(m) ? " alterada" : "") + (libre ? " libre" : "") : ""}" data-m="${m}" tabindex="-1"><span class="nom"></span><i class="pc"></i></button>`);
         if (negra) { const iz = blancas.indexOf(m - 1); t.style.left = `calc(${(iz + 1) * ancho}% - ${ancho * 0.31}%)`; t.style.width = ancho * 0.62 + "%"; }
         else t.style.width = ancho + "%";
         // blanca n → fila A–Ñ; negra entre la blanca n y la n+1 → la tecla de arriba en ese hueco (Q, W, E…)
@@ -563,18 +593,17 @@
       if (cascada && nueva) cascada.golpe(m, tObra(R.ahora()));
     }
     function soltarTecla(m) { if (!mantener) { const x = voces.get(m); if (x && !x.fija) off(m); } }
-    let ultimoPintado = "", guia = [], sigTonos = [];
+    let ultimoPintado = "", guia = [], sigTonos = [], proxima = [];
     function pintarTeclas() {
       const ac = acordeEn(tObra(R.ahora())), a = parseAcorde(ac.nombre), tn = tonosDe(ac.nombre);
       const suenan = new Set([...voces.values()].map(x => x.actual)), apretadas = new Set(voces.keys());
-      const clave = [ac.nombre, [...suenan].join(","), [...apretadas].join(","), guia.join(","), sigTonos.join(",")].join("|");
+      const clave = [ac.nombre, [...suenan].join(","), [...apretadas].join(","), guia.join(","), sigTonos.join(","), proxima.join(",")].join("|");
       if (clave === ultimoPintado) return; ultimoPintado = clave;
       teclas.forEach(t => {
         const m = +t.dataset.m, pc = m % 12;
-        t.classList.toggle("acorde", tn.includes(pc)); t.classList.toggle("raiz", !!a && pc === a.raiz);
-        t.classList.toggle("escala", !tn.includes(pc) && ESCALA.has(pc)); t.classList.toggle("fuera", !ESCALA.has(pc));
+        t.classList.toggle("prox", proxima.includes(m));
         t.classList.toggle("on", apretadas.has(m)); t.classList.toggle("suena", suenan.has(m) && !apretadas.has(m));
-        t.classList.toggle("guia", guia.includes(m)); t.classList.toggle("sig", sigTonos.includes(pc) && !tn.includes(pc));
+        t.classList.toggle("guia", guia.includes(m));
         $(".nom", t).textContent = t.classList.contains("carril") ? nombreNota(m) : tn.includes(pc) || pc === 0 ? PC[pc] + (pc === 0 ? Math.floor(m / 12) - 1 : "") : "";
       });
       caja.style.setProperty("--color", ac.color || "#7c9cff");
@@ -603,7 +632,7 @@
       const lista = [...voces.values()].sort((a, b) => a.actual - b.actual);
       let html;
       if (!lista.length) {
-        html = `Acorde ahora: <b class="ac">${esc(bonito(ac.nombre))}</b> · toca una tecla de color: son sus notas (el punto marca la raíz).`;
+        html = `Acorde ahora: <b class="ac">${esc(bonito(ac.nombre))}</b>`;
       } else {
         html = `Suenan: <b>${lista.map(x => nombreNota(x.actual)).join(" · ")}</b>`;
         if (ac.siguiente && ac.falta < Math.max(2.5, deslizT + 0.6)) {
@@ -669,6 +698,7 @@
         if (ac.nombre === acordeActual && agendado != null && agendado / 20 < tc - 0.5) agendado = null;
         // guía: notas de tu pista MIDI que suenan ahora, llevadas a la octava visible
         guia = pista && !enLibre(tc) ? window.MIDI.sonando(pista, tc).map(n => mapear(n.m)) : [];
+        proxima = pista && !enLibre(tc) ? siguientes(pista.notas, tc).map(n => mapear(n.m)) : [];
         if (cascada) cascada.dibujar(tc, corriendo && t >= 0 && t < DURACION);
         sigTonos = ac.falta < 2.2 && ac.siguiente ? tonosDe(ac.siguiente) : [];
         pintarTeclas(); pintarEstado(ac);
@@ -884,7 +914,7 @@
     f.connect(g); g.connect(k.filtro);
     g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vel, t + 0.008);
     f.start(t);
-    Motor.liberar(g, t + Math.max(0.04, dur), 0.5, [f]);
+    Motor.liberar(g, t + Math.max(0.04, dur), SUELTA, [f]);
   }
   const MAPA_TEC = { dist: "dist", filtro: "filtro", reverb: "reverb", vol: "vol" };
   // el teclado líder sigue la fila "guitarra" de la tabla de efectos: fuzz → distorsión, tono → brillo
@@ -901,7 +931,9 @@
     if (son === "sint" && def.tipo === "ambiente") {
       inst = new Ambiente("drone"); alNota = (n, at) => inst.nota(n.m, n.v, at, n.d); mapa = {};
     } else if (son === "sint") {
-      inst = new Teclado(def.tipo === "guitarra" ? "lead" : perfil.preset); alNota = (n, at) => inst.nota(n.m, n.v * volNota(def.id, n.m), at, n.d);
+      inst = new Teclado(def.tipo === "guitarra" ? "lead" : perfil.preset);
+      // misma caída suave (~1 s) que al tocar a mano, en vez de la liberación corta del sintetizador
+      alNota = (n, at) => { const v = inst.crearVoz(n.m, n.v * volNota(def.id, n.m), at); Motor.liberar(v.g, at + Math.max(0.04, n.d), Math.max(SUELTA, v.rel || 0), v.fuentes); };
     } else {
       // un sample de FL: se toca con la cadena de efectos de un teclado
       const mu0 = MUESTRAS.find(m => m.id === son) || MUESTRAS[0], med = mediana(pista.notas);
@@ -932,9 +964,12 @@
     return parte;
   }
 
+  // Tope del volumen de la orquesta de ensayo: con todas las partes sumadas en UNA laptop, más arriba el limitador
+  // tendría que bajar 2–4 dB (se oye "respirar"). Medido: a 0,85 queda limpio en las partes más fuertes.
+  const ORQ_VOL_MAX = 0.85;
   function crearOrquesta() {
     const guardado = leer("v3:orq", {}) || {};
-    const conf = { vol: guardado.vol != null ? guardado.vol : 0.6, on: Object.assign({}, guardado.on), son: Object.assign({}, guardado.son) };
+    const conf = { vol: guardado.vol != null ? Math.min(ORQ_VOL_MAX, guardado.vol) : 0.6, on: Object.assign({}, guardado.on), son: Object.assign({}, guardado.son) };
     const partes = new Map();   // id → parte creada (o { cargando })
     const oyentes = [];
     let activa = false, propio = null, propioSuena = false, version = 0;
@@ -987,7 +1022,7 @@
     const caja = el(`<div class="orq">
       <p class="muted small">Para ensayar: esta laptop toca las partes del arreglo siguiendo el cronómetro. Elige cuáles suenan y con qué sample. Tu propio rol viene apagado porque lo tocas tú.</p>
       <div class="fila orq-master"><button class="btn grande" data-r="on"></button>
-        <label class="desliz"><span>Volumen</span><input type="range" min="0" max="1.2" step="0.01" data-r="vol"><b data-r="volv"></b></label></div>
+        <label class="desliz"><span>Volumen</span><input type="range" min="0" max="${ORQ_VOL_MAX}" step="0.01" data-r="vol"><b data-r="volv"></b></label></div>
       <div class="fila orq-atajos"><span class="muted small">Elegir:</span>
         <button class="chip" data-r="todos">Todos</button><button class="chip" data-r="ninguno">Ninguno</button>
         <button class="chip" data-r="base" title="Teclado 3 (el bajo) y Ambiente">Solo la base</button>
@@ -1054,16 +1089,24 @@
   }
 
   /* ============================== versión 3: limitador, MIDI, cuenta regresiva, sala ============================== */
-  // Limitador al final de la mezcla: compresor rápido + saturación suave, así la suma de muchas notas no se corta (clipping)
+  /* Final de la mezcla, pensado para tocar con el volumen del computador al 100 % sin que se sature:
+     · antes había una saturación (tanh) que subía ~4 dB todo y aplastaba cada pico: eso era la distorsión constante;
+     · ahora: filtro subsónico (el grave que el parlante de una laptop no da y solo lo hace vibrar) → limitador
+       transparente (no deja pasar de −1 dB) → protección final que es lineal hasta 0,9 y solo redondea lo que la supere. */
   function limitador() {
     if (!Motor.ctx || Motor.limitador) return;
-    const ctx = Motor.ctx, lim = ctx.createDynamicsCompressor(), sat = ctx.createWaveShaper(), post = ctx.createGain();
-    lim.threshold.value = -3; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.001; lim.release.value = 0.15;
-    const n = 4096, curva = new Float32Array(n);
-    for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; curva[i] = Math.tanh(1.5 * x) / Math.tanh(1.5); }
-    sat.curve = curva; sat.oversample = "2x"; post.gain.value = 0.94;
+    const ctx = Motor.ctx, sub = ctx.createBiquadFilter(), lim = ctx.createDynamicsCompressor(), tope = ctx.createWaveShaper();
+    sub.type = "highpass"; sub.frequency.value = 38; sub.Q.value = 0.6;
+    lim.threshold.value = -4; lim.knee.value = 2; lim.ratio.value = 20; lim.attack.value = 0.0015; lim.release.value = 0.12;
+    const n = 8192, curva = new Float32Array(n), K = 0.9;
+    for (let i = 0; i < n; i++) {
+      const x = (i / (n - 1)) * 3 - 1.5, a = Math.abs(x);   // la curva cubre ±1,5 para que un pico raro no se corte en seco
+      curva[i] = Math.sign(x) * (a <= K ? a : K + (1 - K) * Math.tanh((a - K) / (1 - K)));
+    }
+    tope.curve = curva; tope.oversample = "4x";
+    const pre = ctx.createGain(); pre.gain.value = 1 / 1.5;   // la curva recibe ±1,5 como ±1 y ya entrega la señal final
     Motor.comp.disconnect();
-    Motor.comp.connect(lim); lim.connect(sat); sat.connect(post); post.connect(ctx.destination);
+    Motor.comp.connect(sub); sub.connect(lim); lim.connect(pre); pre.connect(tope); tope.connect(ctx.destination);
     if (Motor.analizador) Motor.comp.connect(Motor.analizador);
     Motor.limitador = lim;
     Motor.master.gain.value = 0;   // al abrir, en silencio: el sonido se activa con 🔊
@@ -1074,7 +1117,8 @@
   // Volumen general: cada laptop abre en SILENCIO y con el mismo volumen; el botón 🔊 activa el sonido
   let sonidoOn = false, volGeneral = P.volumenGeneral != null ? P.volumenGeneral : 0.8;
   function aplicarVolGeneral() {
-    if (Motor.ctx && Motor.limitador) Motor.master.gain.setTargetAtTime(sonidoOn ? 0.9 * volGeneral : 0, Motor.t, 0.04);
+    if (Motor.ctx && Motor.limitador) Motor.master.gain.setTargetAtTime(sonidoOn ? 1.1 * volGeneral : 0, Motor.t, 0.04);
+    R.informarVolumen(volGeneral, sonidoOn);
     const b = $("#btnSonido"), r = $("#volGeneral");
     if (b) { b.textContent = sonidoOn ? "🔊 Sonido activo" : "🔇 Activar sonido"; b.classList.toggle("on", sonidoOn); b.classList.toggle("apagado", !sonidoOn); }
     if (r) { r.value = volGeneral; r.disabled = !sonidoOn; $("#volGeneralV").textContent = Math.round(volGeneral * 100) + " %"; }
@@ -1083,6 +1127,33 @@
   $("#btnSonido").onclick = () => { Motor.init(); limitador(); sonidoOn = !sonidoOn; aplicarVolGeneral(); };
   $("#volGeneral").oninput = e => { volGeneral = +e.target.value; aplicarVolGeneral(); };
   aplicarVolGeneral();
+  /* Volumen de la sala (app): el maestro, con un clic, deja el volumen de la app de toda la orquesta (él incluido) en el
+     mismo nivel y enciende el sonido de las que lo tenían apagado. Cuenta con que cada laptop tenga el volumen del computador al 100 %: así todas suenan parejo y, con el final
+     de la mezcla sin saturar, a ese volumen no se distorsiona. Cada músico puede moverlo después si hace falta. */
+  const VOL_SALA_DEF = P.volumenGeneral != null ? P.volumenGeneral : 0.8;
+  let volSala = (() => { const v = +leer("v3:volSala", VOL_SALA_DEF); return v >= 0 && v <= 1 ? v : VOL_SALA_DEF; })();
+  const avisoVol = el(`<div class="aviso-vol" hidden></div>`); document.body.appendChild(avisoVol);
+  let avisoVolT = 0;
+  function mostrarAvisoVol(txt) { avisoVol.textContent = txt; avisoVol.hidden = false; clearTimeout(avisoVolT); avisoVolT = setTimeout(() => { avisoVol.hidden = true; }, 3500); }
+  R.alVolumenSala(v => {
+    // vale para TODA la orquesta, también la laptop maestro; y si el sonido estaba apagado, lo enciende
+    // (la app permite sonar sin un toque: autoplay-policy en app/main.js)
+    const estabaApagado = !sonidoOn;
+    Motor.init(); limitador();
+    volGeneral = v; sonidoOn = true; aplicarVolGeneral();
+    $("#volGeneral").title = "Volumen general de esta laptop · lo fijó el maestro";
+    mostrarAvisoVol((R.estado.maestro ? `🔊 Volumen de toda la orquesta: ${Math.round(v * 100)} %.` : `🔊 El maestro fijó el volumen en ${Math.round(v * 100)} %.`)
+      + (estabaApagado ? " Se encendió el sonido." : "") + " Deja el volumen del computador al 100 %.");
+  });
+  async function igualarVolumen(boton) {
+    const ok = await R.fijarVolumenSala(volSala);
+    const n = R.estado.sala.length;
+    if (boton) {
+      const txt = boton.textContent; boton.textContent = ok ? `✓ ${Math.round(volSala * 100)} % a ${n + 1} laptops (contigo)` : "⚠ No se pudo enviar";
+      setTimeout(() => { boton.textContent = txt; }, 2200);
+    }
+    return ok;
+  }
   // Teclado MIDI USB: las notas van al instrumento de la pantalla (los teclados)
   let midiListo = false;
   async function iniciarMidi() {
@@ -1114,11 +1185,22 @@
   }
   // La sala del maestro: quiénes están conectados, con qué rol y cuánto tarda su wifi
   function ventanaSala() {
-    const cuerpo = el(`<div class="sala"><p class="muted small">Las laptops aparecen al abrir la app → <b>Unirme a una sala</b>. Retardo = ida y vuelta por el wifi (lo que importa es que sea estable; el inicio ya lo compensa).</p><ul class="sala-lista"></ul></div>`);
+    const cuerpo = el(`<div class="sala"><p class="muted small">Las laptops aparecen al abrir la app → <b>Unirme a una sala</b>. Retardo = ida y vuelta por el wifi (lo que importa es que sea estable; el inicio ya lo compensa).</p>
+      <div class="vol-sala"><b>🔊 Volumen de la sala</b>
+        <p class="muted small">Que cada laptop tenga el volumen del <b>computador al 100 %</b>; con un clic, la app de toda la orquesta (esta incluida) queda en este nivel y se enciende el sonido de las que lo tenían apagado.</p>
+        <div class="fila"><label class="desliz"><span>Nivel</span><input type="range" min="0.3" max="1" step="0.05" data-r="nivel"><b data-r="nivelv"></b></label>
+          <button class="btn" data-r="aplicar">📢 Aplicar a todas</button></div></div>
+      <ul class="sala-lista"></ul></div>`);
     const lista = $(".sala-lista", cuerpo), nombreRol = id => { const r = ROLES.find(x => x.id === id); return r ? r.icono + " " + r.titulo : "eligiendo rol…"; };
+    const nivel = $("[data-r=nivel]", cuerpo), nivelv = $("[data-r=nivelv]", cuerpo);
+    const pintarNivel = () => { nivel.value = volSala; nivelv.textContent = Math.round(volSala * 100) + " %"; };
+    nivel.oninput = () => { volSala = +nivel.value; guardar("v3:volSala", volSala); pintarNivel(); };
+    $("[data-r=aplicar]", cuerpo).onclick = e => igualarVolumen(e.currentTarget);
+    pintarNivel();
+    const volDe = c => (c.vol == null ? "—" : (c.son ? "🔊 " : "🔇 ") + Math.round(c.vol * 100) + " %");
     const pintar = () => {
       const s = R.estado.sala;
-      lista.innerHTML = s.length ? s.map(c => `<li><b>${esc(c.nombre || "laptop")}</b><span>${esc(nombreRol(c.rol))}</span><small>${c.rtt != null ? Math.round(c.rtt) + " ms" : "—"}</small></li>`).join("")
+      lista.innerHTML = s.length ? s.map(c => `<li${c.son ? "" : ' class="sin-son"'}><b>${esc(c.nombre || "laptop")}</b><span>${esc(nombreRol(c.rol))}</span><small title="${c.son ? "Volumen de la app" : "Sonido apagado en esa laptop"}">${volDe(c)}</small><small>${c.rtt != null ? Math.round(c.rtt) + " ms" : "—"}</small></li>`).join("")
         : `<li class="muted">Nadie más todavía.</li>`;
     };
     pintar(); const iv = setInterval(pintar, 1000);

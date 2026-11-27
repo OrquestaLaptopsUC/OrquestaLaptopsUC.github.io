@@ -5,6 +5,7 @@
    No hace falta internet: solo que todas estén en el mismo router. */
 const { app, BrowserWindow, ipcMain, powerSaveBlocker, session, Menu, shell, dialog, screen } = require("electron");
 const http = require("http");
+const dgram = require("dgram");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
@@ -15,6 +16,7 @@ const WEB = app.isPackaged ? path.join(process.resourcesPath, "web") : path.join
 const UI = path.join(__dirname, "ui");
 const PUERTO_PREFERIDO = 47800;
 const CUENTA_MAX = 10;
+const PUERTO_FARO = 47801;   // aviso UDP de la sala (respaldo de Bonjour)
 
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 
@@ -32,8 +34,9 @@ function ips() {
 
 /* ---------------- reloj de la obra (solo cuenta cuando esta app es el maestro) ---------------- */
 // t0: hora (ms) en que la obra estaría en 0:00 · pos: segundo de la obra detenida (o donde parte) · empieza: fin de la cuenta regresiva
-const estado = { corriendo: false, t0: 0, pos: 0, version: 0, empieza: null };
-const sala = new Map();   // id → { nombre, rol, rtt, visto }
+const estado = { corriendo: false, t0: 0, pos: 0, version: 0, empieza: null,
+  volSala: null, volVersion: 0 };   // volumen que el maestro fija para las demás laptops (0–1; null = cada una el suyo)
+const sala = new Map();   // id → { nombre, rol, rtt, vol, son, maestro, visto }  (la página del propio maestro no cuenta)
 let modo = null;          // "maestro" | "musico" | "solo" | null (pantalla de inicio)
 const ahoraMs = () => Date.now();
 function foto() {
@@ -41,7 +44,7 @@ function foto() {
   for (const [id, c] of sala) if (n - c.visto > 10000) sala.delete(id);
   return Object.assign({}, estado, {
     ms: n, servidor: "genesis", nombre: EQUIPO,
-    sala: [...sala.values()].filter(c => n - c.visto < 3000).map(({ nombre, rol, rtt }) => ({ nombre, rol, rtt })),
+    sala: [...sala.values()].filter(c => n - c.visto < 3000 && !c.maestro).map(({ nombre, rol, rtt, vol, son }) => ({ nombre, rol, rtt, vol, son })),
   });
 }
 function aplicar(accion, t, cuenta) {
@@ -59,7 +62,7 @@ function aplicar(accion, t, cuenta) {
   } else if (accion === "detener") Object.assign(estado, { corriendo: false, pos: 0, empieza: null });
   estado.version++;
 }
-function reiniciarReloj() { Object.assign(estado, { corriendo: false, t0: 0, pos: 0, empieza: null }); estado.version++; sala.clear(); }
+function reiniciarReloj() { Object.assign(estado, { corriendo: false, t0: 0, pos: 0, empieza: null, volSala: null }); estado.version++; estado.volVersion++; sala.clear(); }
 
 /* ---------------- servidor: la página v3 (web/), la pantalla de inicio (ui/) y el reloj (api/) ---------------- */
 const TIPOS = { ".html": "text/html; charset=utf-8", ".js": "application/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
@@ -92,7 +95,8 @@ function manejar(req, res) {
     if (ruta === "/api/info") return responder(res, { ips: ips(), puerto: puerto, nombre: EQUIPO });
     if (ruta === "/api/reloj" && req.method === "GET") {
       const id = u.searchParams.get("id");
-      if (id) sala.set(id, { nombre: u.searchParams.get("nombre") || "", rol: u.searchParams.get("rol") || "", rtt: u.searchParams.get("rtt") ? +u.searchParams.get("rtt") : null, visto: ahoraMs() });
+      const num = k => (u.searchParams.get(k) ? +u.searchParams.get(k) : null);
+      if (id) sala.set(id, { nombre: u.searchParams.get("nombre") || "", rol: u.searchParams.get("rol") || "", rtt: num("rtt"), vol: num("vol"), son: u.searchParams.get("son") === "1", maestro: u.searchParams.get("yo") === "maestro", visto: ahoraMs() });
       return responder(res, foto());
     }
     if (ruta === "/api/reloj" && req.method === "POST") {
@@ -101,6 +105,12 @@ function manejar(req, res) {
       req.on("end", () => {
         try {
           const d = JSON.parse(cuerpo || "{}");
+          if (d.accion === "volumen") {   // el maestro fija el volumen de todas las demás laptops (no toca el reloj)
+            const v = +d.t;
+            if (!(v >= 0 && v <= 1)) return responder(res, { error: "volumen entre 0 y 1" }, 400);
+            estado.volSala = v; estado.volVersion++;
+            return responder(res, foto());
+          }
           if (!["iniciar", "pausar", "ir", "detener"].includes(d.accion)) return responder(res, { error: "acción desconocida" }, 400);
           aplicar(d.accion, d.t == null ? null : +d.t, d.cuenta);
           responder(res, foto());
@@ -114,7 +124,8 @@ function manejar(req, res) {
   return archivo(res, WEB, ruta === "/" ? "v3.html" : ruta);
 }
 let puerto = PUERTO_PREFERIDO;
-const servidor = http.createServer(manejar);
+const servidor = http.createServer({ keepAliveTimeout: 15000 }, manejar);
+servidor.headersTimeout = 20000;
 function escuchar() {
   return new Promise(ok => {
     servidor.once("error", () => { servidor.listen(0, "0.0.0.0", () => { puerto = servidor.address().port; ok(); }); });   // ocupado: otro puerto
@@ -122,29 +133,105 @@ function escuchar() {
   });
 }
 
-/* ---------------- Bonjour: anunciar la sala / encontrar salas ---------------- */
-let bonjour = null, anuncio = null, buscador = null;
-const salas = new Map();   // clave → { nombre, ip, puerto }
-function avisarSalas() { if (ventana && !ventana.isDestroyed()) ventana.webContents.send("salas", [...salas.values()]); }
+/* ---------------- encontrar la sala: Bonjour + faro UDP + barrido de la red ----------------
+   Con muchas laptops en el mismo wifi, los avisos de Bonjour (multicast) se pierden seguido y las que abren la app
+   después no veían la sala. Ahora la sala se encuentra por tres caminos a la vez y la lista se mantiene sola:
+   · Bonjour, preguntando de nuevo cada 3 s;
+   · un "faro": el maestro avisa por UDP (broadcast) cada segundo;
+   · un barrido: cada músico pregunta directamente (HTTP) a cada IP de su red si tiene la sala abierta.
+   Una sala sale de la lista si nadie la ve por 20 s. */
+let bonjour = null, anuncio = null, buscador = null, refrescoBonjour = null;
+const salas = new Map();   // "ip:puerto" → { nombre, ip, puerto, visto }
+function avisarSalas() {
+  const n = Date.now();
+  for (const [k, v] of salas) if (n - v.visto > 20000) salas.delete(k);
+  if (ventana && !ventana.isDestroyed()) ventana.webContents.send("salas", [...salas.values()].map(({ nombre, ip, puerto }) => ({ nombre, ip, puerto })));
+}
+function verSala(ip, puerto, nombre) {
+  if (!ip) return;
+  const k = ip + ":" + puerto, nueva = !salas.has(k);
+  salas.set(k, { nombre: nombre || ip, ip, puerto: +puerto || PUERTO_PREFERIDO, visto: Date.now() });
+  if (nueva) avisarSalas();
+}
+// direcciones de broadcast de cada red de esta laptop (p. ej. 192.168.0.255)
+function redes() {
+  const out = [];
+  for (const lista of Object.values(os.networkInterfaces())) for (const i of lista || []) {
+    if (i.family !== "IPv4" || i.internal || !i.netmask) continue;
+    const a = i.address.split(".").map(Number), m = i.netmask.split(".").map(Number);
+    out.push({ ip: i.address, broadcast: a.map((x, k) => (x & m[k]) | (~m[k] & 255)).join("."), base: a.slice(0, 3).join(".") });
+  }
+  return out;
+}
+let faro = null, faroIv = null, oido = null, barridoIv = null, barriendo = false;
+function encenderFaro() {
+  if (faro) return;
+  faro = dgram.createSocket({ type: "udp4", reuseAddr: true });
+  faro.on("error", () => { try { faro.close(); } catch (e) { /* nada */ } faro = null; });
+  faro.bind(() => {
+    try { faro.setBroadcast(true); } catch (e) { /* nada */ }
+    const enviar = () => {
+      const msg = Buffer.from(JSON.stringify({ g: "genesis", v: 3, nombre: EQUIPO, puerto }));
+      for (const r of redes()) faro && faro.send(msg, PUERTO_FARO, r.broadcast, () => {});
+      faro && faro.send(msg, PUERTO_FARO, "255.255.255.255", () => {});
+    };
+    enviar(); faroIv = setInterval(enviar, 1000);
+  });
+}
+function apagarFaro() { clearInterval(faroIv); faroIv = null; if (faro) { try { faro.close(); } catch (e) { /* nada */ } faro = null; } }
+function escucharFaros() {
+  if (oido) return;
+  oido = dgram.createSocket({ type: "udp4", reuseAddr: true });
+  oido.on("error", () => { try { oido.close(); } catch (e) { /* nada */ } oido = null; });
+  oido.on("message", (buf, info) => { try { const d = JSON.parse(buf); if (d.g === "genesis") verSala(info.address, d.puerto, d.nombre); } catch (e) { /* otro programa */ } });
+  oido.bind(PUERTO_FARO);
+}
+// Barrido: pregunta a las 254 direcciones de cada red (de a 48 a la vez) si tienen la sala abierta
+function preguntar(ip, p, ms = 900) {
+  return new Promise(fin => {
+    const r = http.get({ host: ip, port: p, path: "/api/info", timeout: ms }, res => {
+      let d = ""; res.on("data", c => (d += c));
+      res.on("end", () => { try { const j = JSON.parse(d); fin(res.statusCode === 200 && j.nombre ? j : null); } catch (e) { fin(null); } });
+    });
+    r.on("error", () => fin(null)); r.on("timeout", () => { r.destroy(); fin(null); });
+  });
+}
+async function barrer() {
+  if (barriendo) return; barriendo = true;
+  try {
+    const propias = ips(), objetivos = [];
+    for (const r of redes()) for (let h = 1; h < 255; h++) { const ip = r.base + "." + h; if (!propias.includes(ip)) objetivos.push(ip); }
+    let i = 0;
+    const trabajador = async () => { while (i < objetivos.length && barridoIv) { const ip = objetivos[i++]; const j = await preguntar(ip, PUERTO_PREFERIDO); if (j) verSala(ip, j.puerto || PUERTO_PREFERIDO, j.nombre); } };
+    await Promise.all(Array.from({ length: 48 }, trabajador));
+  } finally { barriendo = false; avisarSalas(); }
+}
 function buscarSalas() {
   if (!bonjour) bonjour = new Bonjour();
-  if (buscador) return;
-  buscador = bonjour.find({ type: "genesis" });
-  buscador.on("up", s => {
-    const ip = (s.addresses || []).find(a => /^\d+\.\d+\.\d+\.\d+$/.test(a)) || s.referer && s.referer.address;
-    if (!ip) return;
-    salas.set(s.fqdn || s.name, { nombre: (s.txt && s.txt.nombre) || s.name, ip, puerto: s.port });
-    avisarSalas();
-  });
-  buscador.on("down", s => { salas.delete(s.fqdn || s.name); avisarSalas(); });
+  if (!buscador) {
+    buscador = bonjour.find({ type: "genesis" });
+    buscador.on("up", s => {
+      const ip = (s.addresses || []).find(a => /^\d+\.\d+\.\d+\.\d+$/.test(a)) || s.referer && s.referer.address;
+      verSala(ip, s.port, (s.txt && s.txt.nombre) || s.name);
+    });
+    refrescoBonjour = setInterval(() => { try { buscador && buscador.update(); } catch (e) { /* nada */ } avisarSalas(); }, 3000);
+  }
+  escucharFaros();
+  if (!barridoIv) { barridoIv = setInterval(barrer, 8000); barrer(); }
 }
-function dejarDeBuscar() { if (buscador) { buscador.stop(); buscador = null; } salas.clear(); }
+function dejarDeBuscar() {
+  if (buscador) { try { buscador.stop(); } catch (e) { /* nada */ } buscador = null; }
+  clearInterval(refrescoBonjour); refrescoBonjour = null;
+  clearInterval(barridoIv); barridoIv = null;
+  if (oido) { try { oido.close(); } catch (e) { /* nada */ } oido = null; }
+  salas.clear();
+}
 function anunciar() {
   if (!bonjour) bonjour = new Bonjour();
-  if (anuncio) return;
-  anuncio = bonjour.publish({ name: "Genesis " + EQUIPO + " " + process.pid, type: "genesis", port: puerto, txt: { nombre: EQUIPO, v: "3" } });
+  if (!anuncio) anuncio = bonjour.publish({ name: "Genesis " + EQUIPO + " " + process.pid, type: "genesis", port: puerto, txt: { nombre: EQUIPO, v: "3" } });
+  encenderFaro();
 }
-function dejarDeAnunciar() { if (anuncio) { try { anuncio.stop(); } catch (e) { /* nada */ } anuncio = null; } }
+function dejarDeAnunciar() { if (anuncio) { try { anuncio.stop(); } catch (e) { /* nada */ } anuncio = null; } apagarFaro(); }
 
 /* ---------------- ventana ---------------- */
 let ventana = null, bloqueo = null;
@@ -156,7 +243,7 @@ function irAlInicio() {
   ventana.loadURL(`http://127.0.0.1:${puerto}/_app/inicio.html`);
 }
 function entrar(nuevo, q) {
-  modo = nuevo;
+  modo = nuevo; dejarDeBuscar();
   if (bloqueo == null) bloqueo = powerSaveBlocker.start("prevent-display-sleep");   // que la pantalla no se apague tocando
   if (modo === "maestro") anunciar(); else dejarDeAnunciar();
   ventana.loadURL(pagina("v3.html", q));
