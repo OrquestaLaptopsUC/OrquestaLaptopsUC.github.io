@@ -1,0 +1,164 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes'?>
+<?xml-stylesheet href="./c74ref.xsl" type="text/xsl"?>
+
+<c74object name='jit.ndi.send~'>
+
+	<digest>Send video/audio over a network using the NDI protocol</digest>
+	<description>
+		NDI® is a protocol for streaming video/audio over IP. It allows multiple video systems to identify and communicate with one another over IP, and to encode, transmit and receive many streams of high quality, low latency, frame-accurate video and audio in real-time. NDI can operate bi-directionally over a local area network, with many video streams on a shared connection. It's encoding algorithm is resolution and frame-rate independent, supporting 4K and beyond, along with 16 channels and more of floating-point audio. The protocol includes tools that implement video access rights, grouping, bi-directional metadata, IP commands, tally status and PTZ camera control. <br/>
+		<br/>
+		NDI® is a trademark of Vizrt NDI AB. ©2023
+	</description>
+
+
+	<!--METADATA-->
+
+	<metadatalist>
+		<metadata name='author'>Pixsper</metadata>
+		<metadata name='tag'>video</metadata>
+		<metadata name='tag'>streaming</metadata>
+		<metadata name='tag'>network</metadata>
+	</metadatalist>
+
+
+	<!--ARGUMENTS-->
+
+	<objarglist>
+		<objarg name="name" optional="1" type="symbol">
+			<description>Sets the unique name of this NDI sender.</description>
+		</objarg>
+	</objarglist>
+
+
+	<!--MESSAGES-->
+
+	<methodlist>
+	
+		<method name='getruntimeurl'>
+			<digest>Outputs the URL for the NDI runtime from the dump outlet.</digest>
+			<description>Outputs the URL for the NDI runtime download for the current platform from the dump outlet. This is platform specific.</description>
+		</method>
+		
+		<method name='version'>
+			<digest>Prints the jit.ndi package version to the Max window.</digest>
+			<description>Prints the jit.ndi package version to the Max window.</description>
+		</method>
+		
+		<method name='ptz_panic'>
+			<digest>Resets the values for ptz_zoom_speed, ptz_pantilt_speed and ptz_focus_speed attributes to zero.</digest>
+			<description>Resets the values for ptz_zoom_speed, ptz_pantilt_speed and ptz_focus_speed attributes to zero. This is intended for use in a situation where a PTZ controller has disconnected whilst still sending adjustment values.</description>
+		</method>
+
+	</methodlist>
+
+
+	<!--ATTRIBUTES-->
+
+	<attributelist>
+
+		<attribute name='name' get='1' set='0' type='symbol' size='1' >
+			<digest>Name of NDI sender</digest>
+			<description>The unique ID which NDI receivers should use to receive video/audio from this sender. Can only be set by argument at object initialization.</description>
+		</attribute>
+		
+		<attribute name='num_channels' get='1' set='0' type='symbol' size='1' >
+			<digest>Number of audio channels</digest>
+			<description>The number of audio channels which will be sent from this sender. Automatically set by the channel count of the multichannel input.</description>
+		</attribute>
+	
+		<attribute name='colormode' get='1' set='1' type='long' size='1' >
+			<digest>Input matrices color encoding</digest>
+			<description>Input matrices color encoding. If set to ARGB then object will internally convert to UVYV as all NDI video is sent using this format.</description>
+		</attribute>
+		
+		<attribute name='framerate' get='1' set='1' type='long' size='1' >
+			<digest>NDI transmission framerate</digest>
+			<description>The framerate at which the input matrix is sent via NDI. Note that this is not connected to the rate at which the matrix is received at the inlet.</description>
+		</attribute>
+		
+		<attribute name='ptz_enable' get='1' set='1' type='long' size='1' >
+			<digest>PTZ control enable</digest>
+			<description>Whether PTZ control is allowed for this source. If enabled received PTZ control data will be output from the dump outlet.</description>
+		</attribute>
+		
+		<attribute name='tally_onpreview' get='1' set='0' type='long' size='1' >
+			<digest>Tally preview status</digest>
+			<description>The tally status of the source indicating whether any connected receivers are displaying the source on preview.</description>
+		</attribute>
+		
+		<attribute name='tally_onpreview' get='1' set='0' type='long' size='1' >
+			<digest>Tally program status</digest>
+			<description>The tally status of the source indicating whether any connected receivers are displaying the source on program.</description>
+		</attribute>
+		
+		<attribute name='ptz_zoom_sensitivity' get='1' set='1' type='float' size='1' >
+			<digest>Adjusts the sensitivity of PTZ zoom adjustment from NDI receivers.</digest>
+			<description></description>
+		</attribute>
+		
+		<attribute name='ptz_pantilt_sensitivity' get='1' set='1' type='float' size='2' >
+			<digest>Adjusts the sensitivity of PTZ pan/tilt adjustment from NDI receivers.</digest>
+			<description></description>
+		</attribute>
+		
+		<attribute name='ptz_focus_sensitivity' get='1' set='1' type='float' size='1' >
+			<digest>Adjusts the sensitivity of PTZ focus adjustment from NDI receivers.</digest>
+			<description></description>
+		</attribute>
+		
+		<attribute name='ptz_zoom' get='1' set='1' type='float' size='1' >
+			<digest>Absolute PTZ zoom value</digest>
+			<description>Absolute PTZ zoom value. Sets the PTZ zoom value of the NDI source to this exact value. Can be adjusted locally but will be overwritten by any value sent from a connected NDI receiver.</description>
+		</attribute>
+		
+		<attribute name='ptz_pantilt' get='1' set='1' type='float' size='2' >
+			<digest>Absolute PTZ pan/tilt position</digest>
+			<description>Absolute PTZ pan/tilt position. Sets the PTZ pan/tilt position of the NDI source to this exact value. Can be adjusted locally but will be overwritten by any value sent from a connected NDI receiver.</description>
+		</attribute>
+		
+		<attribute name='ptz_autofocus' get='1' set='1' type='int' size='1' >
+			<digest>PTZ autofocus enabled.</digest>
+			<description>PTZ autofocus enabled. Can be adjusted locally but will be overwritten by any value sent from a connected NDI receiver.</description>
+		</attribute>
+
+		<attribute name='ptz_focus' get='1' set='1' type='float' size='1' >
+			<digest>Absolute PTZ focus position.</digest>
+			<description>Absolute PTZ focus value. Sets the PTZ focus value of the NDI source to this exact value. Only applied when 'ptz_autofocus' is set to 0. Can be adjusted locally but will be overwritten by any value sent from a connected NDI receiver.</description>
+		</attribute>
+		
+		<attribute name='ptz_whitebalance_mode' get='1' set='1' type='int' size='1' >
+			<digest>PTZ white balance mode</digest>
+			<description>PTZ white balance mode. 0 = Auto, 1 = Indoor, 2 = Outdoor, 3 = One-push, 4 = Manual. When in manual mode use 'ptz_whitebalance_red' and 'ptz_whitebalance_blue' to adjust white balance setting. Can be adjusted locally but will be overwritten by any value sent from a connected NDI receiver.</description>
+		</attribute>
+		
+		<attribute name='ptz_whitebalance_red' get='1' set='1' type='float' size='1' >
+			<digest>PTZ manual white balance red value.</digest>
+			<description>PTZ manual white balance red value. Only applied when 'ptz_whitebalance_mode' is set to 4 (manual). Can be adjusted locally but will be overwritten by any value sent from a connected NDI receiver.</description>
+		</attribute>
+		
+		<attribute name='ptz_whitebalance_blue' get='1' set='1' type='float' size='1' >
+			<digest>PTZ manual white balance blue value.</digest>
+			<description>PTZ manual white balance blue value. Only applied when 'ptz_whitebalance_mode' is set to 4 (manual). Can be adjusted locally but will be overwritten by any value sent from a connected NDI receiver.</description>
+		</attribute>
+		
+		<attribute name='ptz_autoexposure' get='1' set='1' type='int' size='1' >
+			<digest>PTZ auto exposure enabled.</digest>
+			<description>PTZ auto exposure enabled. Can be adjusted locally but will be overwritten by any value sent from a connected NDI receiver.</description>
+		</attribute>
+
+		<attribute name='ptz_exposure' get='1' set='1' type='float' size='1' >
+			<digest>Absolute PTZ exposure value</digest>
+			<description>Absolute PTZ exposure value. Sets the PTZ focus value of the NDI source to this exact value. Only applied when 'ptz_autoexposure' is set to 0. Can be adjusted locally but will be overwritten by any value sent from a connected NDI receiver.</description>
+		</attribute>
+
+	</attributelist>
+
+
+	<!--RELATED-->
+
+	<seealsolist>
+		<seealso name='jit.ndi.receive~' />
+	</seealsolist>
+
+
+</c74object>

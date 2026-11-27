@@ -1,6 +1,0 @@
-# Las apps pesan más de 100 MB: GitHub no acepta archivos tan grandes en el repositorio.
-# Quedan en esta carpeta para copiarlas con pendrive; en línea se descargan del release de GitHub.
-descargas/*.zip
-app/node_modules/
-app/dist/
-app/web/

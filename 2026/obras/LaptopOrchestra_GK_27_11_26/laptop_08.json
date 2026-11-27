@@ -1,0 +1,678 @@
+{
+  "laptop": "Laptop 08",
+  "fin": "07:42",
+  "presets": [
+    {
+      "en": "00:00",
+      "numero": 2
+    },
+    {
+      "en": "00:44.5",
+      "numero": 1
+    },
+    {
+      "en": "01:00",
+      "numero": 7
+    },
+    {
+      "en": "01:14",
+      "numero": 5
+    },
+    {
+      "en": "01:34",
+      "numero": 6
+    },
+    {
+      "en": "01:49",
+      "numero": 4
+    },
+    {
+      "en": "02:07",
+      "numero": 7
+    },
+    {
+      "en": "02:47.5",
+      "numero": 2
+    },
+    {
+      "en": "03:15.25",
+      "numero": 4
+    },
+    {
+      "en": "03:57",
+      "numero": 7
+    },
+    {
+      "en": "04:19",
+      "numero": 6
+    },
+    {
+      "en": "04:47.5",
+      "numero": 1
+    },
+    {
+      "en": "05:12",
+      "numero": 2
+    },
+    {
+      "en": "05:25",
+      "numero": 6
+    },
+    {
+      "en": "05:59.5",
+      "numero": 2
+    },
+    {
+      "en": "06:23",
+      "numero": 4
+    },
+    {
+      "en": "06:51.25",
+      "numero": 5
+    },
+    {
+      "en": "07:20",
+      "numero": 6
+    }
+  ],
+  "instrucciones": [
+    {
+      "en": "00:00",
+      "titulo": "Quietud",
+      "texto": "Quieto."
+    },
+    {
+      "en": "00:23",
+      "titulo": "Acercar y alejar el rostro",
+      "texto": "Acerca y aleja el rostro.",
+      "imagen": "gestos/02_rostro_distancia.png"
+    },
+    {
+      "en": "00:48",
+      "titulo": "Negar con la cabeza",
+      "texto": "Niega con la cabeza.",
+      "imagen": "gestos/01_cabeza_negacion.png"
+    },
+    {
+      "en": "01:04",
+      "titulo": "Balancear el torso",
+      "texto": "Balancea el torso de lado a lado.",
+      "imagen": "gestos/03_torso_pendulo.png"
+    },
+    {
+      "en": "01:18",
+      "titulo": "Arco con el brazo izquierdo",
+      "texto": "Brazo izquierdo: arco de derecha a izquierda.",
+      "imagen": "gestos/08_arco_brazo_izquierdo.png"
+    },
+    {
+      "en": "01:36",
+      "titulo": "Brazo izquierdo libre",
+      "texto": "Mueve libremente el brazo izquierdo.",
+      "imagen": "gestos/05_brazo_izquierdo_libre.png"
+    },
+    {
+      "en": "01:45",
+      "titulo": "Balancear el torso",
+      "texto": "Balancea el torso de lado a lado.",
+      "imagen": "gestos/03_torso_pendulo.png"
+    },
+    {
+      "en": "02:11",
+      "titulo": "Dedos de la mano izquierda",
+      "texto": "Mueve los dedos de la mano izquierda cerca de la cámara.",
+      "imagen": "gestos/11_dedos_mano_izquierda.png"
+    },
+    {
+      "en": "02:51",
+      "titulo": "Acercar el computador",
+      "texto": "Levanta el computador y acércalo al rostro.",
+      "imagen": "gestos/13_acercar_computador.png"
+    },
+    {
+      "en": "03:19",
+      "titulo": "Pararse, alejarse y acercarse",
+      "texto": "Párate, aléjate y vuelve a acercarte un poco.",
+      "imagen": "gestos/14_pararse_y_desplazarse.png"
+    },
+    {
+      "en": "03:57",
+      "titulo": "Quietud",
+      "texto": "Regresa despacio, siéntate y apoya el computador. Luego, quieto."
+    },
+    {
+      "en": "04:23",
+      "titulo": "Acercar el computador",
+      "texto": "Levanta el computador y acércalo al rostro.",
+      "imagen": "gestos/13_acercar_computador.png"
+    },
+    {
+      "en": "04:51",
+      "titulo": "Balancear el torso",
+      "texto": "Balancea el torso de lado a lado.",
+      "imagen": "gestos/03_torso_pendulo.png"
+    },
+    {
+      "en": "05:12",
+      "titulo": "Quietud",
+      "texto": "Quieto."
+    },
+    {
+      "en": "05:30",
+      "titulo": "Arco con ambos brazos",
+      "texto": "Ambos brazos: arco de izquierda a derecha.",
+      "imagen": "gestos/09_arco_ambos_brazos.png"
+    },
+    {
+      "en": "05:50",
+      "titulo": "Arco con el brazo izquierdo",
+      "texto": "Brazo izquierdo: arco de derecha a izquierda.",
+      "imagen": "gestos/08_arco_brazo_izquierdo.png"
+    },
+    {
+      "en": "06:27",
+      "titulo": "Brazo izquierdo libre",
+      "texto": "Mueve libremente el brazo izquierdo.",
+      "imagen": "gestos/05_brazo_izquierdo_libre.png"
+    },
+    {
+      "en": "06:55",
+      "titulo": "Negar con la cabeza",
+      "texto": "Niega con la cabeza.",
+      "imagen": "gestos/01_cabeza_negacion.png"
+    },
+    {
+      "en": "07:20",
+      "titulo": "Quietud",
+      "texto": "Quieto."
+    }
+  ],
+  "movimiento": [
+    {
+      "en": "00:00",
+      "estado": "quieto"
+    },
+    {
+      "en": "00:23",
+      "estado": "muevete"
+    },
+    {
+      "en": "00:25.75",
+      "estado": "quieto"
+    },
+    {
+      "en": "00:27.75",
+      "estado": "muevete"
+    },
+    {
+      "en": "00:30.75",
+      "estado": "quieto"
+    },
+    {
+      "en": "00:32.75",
+      "estado": "muevete"
+    },
+    {
+      "en": "00:35.75",
+      "estado": "quieto"
+    },
+    {
+      "en": "00:37.75",
+      "estado": "muevete"
+    },
+    {
+      "en": "00:43.75",
+      "estado": "quieto"
+    },
+    {
+      "en": "00:48",
+      "estado": "muevete"
+    },
+    {
+      "en": "00:50.5",
+      "estado": "quieto"
+    },
+    {
+      "en": "00:56.5",
+      "estado": "muevete"
+    },
+    {
+      "en": "01:01.5",
+      "estado": "quieto"
+    },
+    {
+      "en": "01:02.5",
+      "estado": "muevete"
+    },
+    {
+      "en": "01:04",
+      "estado": "quieto"
+    },
+    {
+      "en": "01:06.75",
+      "estado": "muevete"
+    },
+    {
+      "en": "01:10.75",
+      "estado": "quieto"
+    },
+    {
+      "en": "01:13.75",
+      "estado": "muevete"
+    },
+    {
+      "en": "01:15.75",
+      "estado": "quieto"
+    },
+    {
+      "en": "01:19.5",
+      "estado": "muevete"
+    },
+    {
+      "en": "01:23.5",
+      "estado": "quieto"
+    },
+    {
+      "en": "01:25.5",
+      "estado": "muevete"
+    },
+    {
+      "en": "01:29.5",
+      "estado": "quieto"
+    },
+    {
+      "en": "01:34.5",
+      "estado": "muevete"
+    },
+    {
+      "en": "01:39.75",
+      "estado": "quieto"
+    },
+    {
+      "en": "01:43.75",
+      "estado": "muevete"
+    },
+    {
+      "en": "01:45",
+      "estado": "quieto"
+    },
+    {
+      "en": "01:46.75",
+      "estado": "muevete"
+    },
+    {
+      "en": "01:50.75",
+      "estado": "quieto"
+    },
+    {
+      "en": "01:55.75",
+      "estado": "muevete"
+    },
+    {
+      "en": "01:59.75",
+      "estado": "quieto"
+    },
+    {
+      "en": "02:00.75",
+      "estado": "muevete"
+    },
+    {
+      "en": "02:05.75",
+      "estado": "quieto"
+    },
+    {
+      "en": "02:07.75",
+      "estado": "muevete"
+    },
+    {
+      "en": "02:08.75",
+      "estado": "quieto"
+    },
+    {
+      "en": "02:15.25",
+      "estado": "muevete"
+    },
+    {
+      "en": "02:19.25",
+      "estado": "quieto"
+    },
+    {
+      "en": "02:20.25",
+      "estado": "muevete"
+    },
+    {
+      "en": "02:24.25",
+      "estado": "quieto"
+    },
+    {
+      "en": "02:27.25",
+      "estado": "muevete"
+    },
+    {
+      "en": "02:29.25",
+      "estado": "quieto"
+    },
+    {
+      "en": "02:30.25",
+      "estado": "muevete"
+    },
+    {
+      "en": "02:33.25",
+      "estado": "quieto"
+    },
+    {
+      "en": "02:37.25",
+      "estado": "muevete"
+    },
+    {
+      "en": "02:40.25",
+      "estado": "quieto"
+    },
+    {
+      "en": "02:41.25",
+      "estado": "muevete"
+    },
+    {
+      "en": "02:47.25",
+      "estado": "quieto"
+    },
+    {
+      "en": "02:53.75",
+      "estado": "muevete"
+    },
+    {
+      "en": "02:59.75",
+      "estado": "quieto"
+    },
+    {
+      "en": "03:00.75",
+      "estado": "muevete"
+    },
+    {
+      "en": "03:04.75",
+      "estado": "quieto"
+    },
+    {
+      "en": "03:09.75",
+      "estado": "muevete"
+    },
+    {
+      "en": "03:12.75",
+      "estado": "quieto"
+    },
+    {
+      "en": "03:13.75",
+      "estado": "muevete"
+    },
+    {
+      "en": "03:16.75",
+      "estado": "quieto"
+    },
+    {
+      "en": "03:19",
+      "estado": "muevete"
+    },
+    {
+      "en": "03:21",
+      "estado": "quieto"
+    },
+    {
+      "en": "03:24",
+      "estado": "muevete"
+    },
+    {
+      "en": "03:26",
+      "estado": "quieto"
+    },
+    {
+      "en": "03:27",
+      "estado": "muevete"
+    },
+    {
+      "en": "03:29",
+      "estado": "quieto"
+    },
+    {
+      "en": "03:33",
+      "estado": "muevete"
+    },
+    {
+      "en": "03:39",
+      "estado": "quieto"
+    },
+    {
+      "en": "03:42",
+      "estado": "muevete"
+    },
+    {
+      "en": "03:46",
+      "estado": "quieto"
+    },
+    {
+      "en": "03:49",
+      "estado": "muevete"
+    },
+    {
+      "en": "03:54",
+      "estado": "quieto"
+    },
+    {
+      "en": "03:56",
+      "estado": "muevete"
+    },
+    {
+      "en": "03:57",
+      "estado": "quieto"
+    },
+    {
+      "en": "04:24",
+      "estado": "muevete"
+    },
+    {
+      "en": "04:27",
+      "estado": "quieto"
+    },
+    {
+      "en": "04:28",
+      "estado": "muevete"
+    },
+    {
+      "en": "04:32",
+      "estado": "quieto"
+    },
+    {
+      "en": "04:35",
+      "estado": "muevete"
+    },
+    {
+      "en": "04:40",
+      "estado": "quieto"
+    },
+    {
+      "en": "04:44",
+      "estado": "muevete"
+    },
+    {
+      "en": "04:45",
+      "estado": "quieto"
+    },
+    {
+      "en": "04:51",
+      "estado": "muevete"
+    },
+    {
+      "en": "04:52.25",
+      "estado": "quieto"
+    },
+    {
+      "en": "04:54.25",
+      "estado": "muevete"
+    },
+    {
+      "en": "04:57.25",
+      "estado": "quieto"
+    },
+    {
+      "en": "05:01.25",
+      "estado": "muevete"
+    },
+    {
+      "en": "05:06.25",
+      "estado": "quieto"
+    },
+    {
+      "en": "05:09.25",
+      "estado": "muevete"
+    },
+    {
+      "en": "05:12",
+      "estado": "quieto"
+    },
+    {
+      "en": "05:37.6",
+      "estado": "muevete"
+    },
+    {
+      "en": "05:39.1",
+      "estado": "quieto"
+    },
+    {
+      "en": "05:47.1",
+      "estado": "muevete"
+    },
+    {
+      "en": "05:48.6",
+      "estado": "quieto"
+    },
+    {
+      "en": "05:53.5",
+      "estado": "muevete"
+    },
+    {
+      "en": "05:57.5",
+      "estado": "quieto"
+    },
+    {
+      "en": "06:00.5",
+      "estado": "muevete"
+    },
+    {
+      "en": "06:02.5",
+      "estado": "quieto"
+    },
+    {
+      "en": "06:03.5",
+      "estado": "muevete"
+    },
+    {
+      "en": "06:07.5",
+      "estado": "quieto"
+    },
+    {
+      "en": "06:09.5",
+      "estado": "muevete"
+    },
+    {
+      "en": "06:14.5",
+      "estado": "quieto"
+    },
+    {
+      "en": "06:15.5",
+      "estado": "muevete"
+    },
+    {
+      "en": "06:19.5",
+      "estado": "quieto"
+    },
+    {
+      "en": "06:22.5",
+      "estado": "muevete"
+    },
+    {
+      "en": "06:29.25",
+      "estado": "quieto"
+    },
+    {
+      "en": "06:34.25",
+      "estado": "muevete"
+    },
+    {
+      "en": "06:36.25",
+      "estado": "quieto"
+    },
+    {
+      "en": "06:39.25",
+      "estado": "muevete"
+    },
+    {
+      "en": "06:41.25",
+      "estado": "quieto"
+    },
+    {
+      "en": "06:44.25",
+      "estado": "muevete"
+    },
+    {
+      "en": "06:45.25",
+      "estado": "quieto"
+    },
+    {
+      "en": "06:49.25",
+      "estado": "muevete"
+    },
+    {
+      "en": "06:55",
+      "estado": "quieto"
+    },
+    {
+      "en": "06:57",
+      "estado": "muevete"
+    },
+    {
+      "en": "07:01",
+      "estado": "quieto"
+    },
+    {
+      "en": "07:03",
+      "estado": "muevete"
+    },
+    {
+      "en": "07:07",
+      "estado": "quieto"
+    },
+    {
+      "en": "07:10",
+      "estado": "muevete"
+    },
+    {
+      "en": "07:11",
+      "estado": "quieto"
+    },
+    {
+      "en": "07:16",
+      "estado": "muevete"
+    },
+    {
+      "en": "07:20",
+      "estado": "quieto"
+    }
+  ],
+  "samples": [
+    {
+      "en": "00:00",
+      "numero": 1
+    },
+    {
+      "en": "03:50",
+      "numero": 2
+    },
+    {
+      "en": "05:07",
+      "numero": 3
+    },
+    {
+      "en": "06:56",
+      "numero": 4
+    }
+  ]
+}
