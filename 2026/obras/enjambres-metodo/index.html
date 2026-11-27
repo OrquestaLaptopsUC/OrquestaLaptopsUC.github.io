@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generating Music from Flocking Dynamics: an interactive companion</title>
+<style>
+  :root{
+    --bg:#f6f4ef; --paper:#fffdf9; --line:#d9d4c8; --tx:#1d1c1a; --dim:#5f5b53; --tenue:#8d887d;
+    --acc:#9a3412; --azul:#1d4f91;
+    --ui: ui-sans-serif,system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --serif: "Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--tx);font:17px/1.62 var(--serif)}
+  header{max-width:1280px;margin:0 auto;padding:46px 30px 6px}
+  header .sobre{font:700 11px var(--ui);letter-spacing:.2em;text-transform:uppercase;color:var(--acc)}
+  h1{font:600 clamp(30px,4.4vw,50px)/1.08 var(--serif);margin:.2em 0 .25em;letter-spacing:-.012em;text-wrap:balance}
+  header .aut{font-size:18px;margin:0 0 .6em}
+  header p{color:var(--dim);max-width:74ch;margin:.5em 0}
+  .cuerpo{max-width:1280px;margin:0 auto;padding:16px 30px 70px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.02fr);gap:40px;align-items:start}
+  @media (max-width:1000px){.cuerpo{grid-template-columns:1fr}.fijo{position:static !important}}
+  .fijo{position:sticky;top:12px}
+  .tarjeta{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-family:var(--ui)}
+  .rotulo{display:flex;gap:10px;align-items:baseline;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--dim)}
+  .rotulo b{color:var(--tx);font-size:13.5px} .rotulo .grow{flex:1}
+  .rotulo .m{font:12.5px var(--mono)} .rotulo .m b{font-size:14px}
+  .dos{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:0}
+  @media (max-width:560px){.dos{grid-template-columns:1fr}}
+  #caja{width:100%;aspect-ratio:1/1;display:block;background:#fff;border-right:1px solid var(--line);cursor:pointer;touch-action:none}
+  .lado{padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:12.5px;color:var(--dim);min-width:0}
+  .espec{position:relative;border-top:1px solid var(--line);background:#fff}
+  #espec{width:100%;height:230px;display:block}
+  .espec i{position:absolute;left:4px;font:10px var(--mono);color:var(--dim);font-style:normal;transform:translateY(-50%);pointer-events:none}
+  .espec span{position:absolute;right:8px;top:5px;font-size:10.5px;color:var(--tenue);pointer-events:none;background:rgba(255,255,255,.8);padding:0 4px}
+  #avance{height:3px;background:var(--acc);width:0}
+  button,select,input[type=number]{background:#fff;color:var(--tx);border:1px solid #bdb7aa;border-radius:6px;padding:6px 11px;font:13px var(--ui);cursor:pointer}
+  button:hover{border-color:var(--azul)}
+  button.on{background:var(--tx);border-color:var(--tx);color:#fff;font-weight:600}
+  button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+  .seg{display:flex;border:1px solid #bdb7aa;border-radius:7px;overflow:hidden}
+  .seg button{border:0;border-radius:0;border-right:1px solid #bdb7aa;padding:6px 10px;flex:1;font-size:12.5px}
+  .seg button:last-child{border-right:0}
+  .ctl{display:grid;grid-template-columns:150px 1fr 56px;gap:5px 10px;align-items:center;padding:10px 12px;border-top:1px solid var(--line);font-size:12.5px;color:var(--dim)}
+  .ctl output{font:12px var(--mono);color:var(--tx);text-align:right}
+  .ctl .off{opacity:.3}
+  input[type=range]{accent-color:var(--azul);width:100%;margin:0}
+  section{margin:0 0 34px}
+  h2{font:600 27px/1.2 var(--serif);margin:0 0 .35em}
+  h2 small{font:700 12px var(--ui);letter-spacing:.14em;color:var(--acc);margin-right:10px}
+  h3{font:600 21px/1.25 var(--serif);margin:1.3em 0 .3em}
+  h3 small{font:700 11px var(--ui);letter-spacing:.14em;color:var(--acc);margin-right:8px}
+  section p{margin:.55em 0;max-width:66ch}
+  .ec{font:17px/1.7 var(--serif);background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--azul);border-radius:6px;padding:9px 16px;margin:10px 0;overflow-x:auto;white-space:nowrap}
+  .ec .n{float:right;font:12px var(--mono);color:var(--tenue);margin-left:18px;padding-top:5px}
+  .ec sub,.ec sup{font-size:.68em}
+  .fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .2em;line-height:1.35}
+  .fr>span:first-child{border-bottom:1px solid currentColor}
+  .fr>span{padding:0 .35em}
+  .fig{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:14px 0;font-family:var(--ui)}
+  .fig .cab{font-size:13px;color:var(--dim);margin-bottom:9px;line-height:1.45}
+  .fig .cab b{color:var(--tx)}
+  .fig .bot{display:flex;gap:8px;flex-wrap:wrap}
+  .fig .bot button{flex:1;min-width:150px;text-align:left;line-height:1.3;padding:8px 11px}
+  .fig .bot button small{display:block;color:var(--tenue);font:11.5px var(--mono)}
+  .fig .bot button.on small{color:#cfc9bb}
+  #f71{width:100%;height:270px;display:block;margin-top:8px}
+  table{border-collapse:collapse;font:12px var(--mono);width:100%}
+  th,td{padding:3px 7px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{font:700 11px var(--ui);color:var(--dim)}
+  td:last-child,th:last-child{text-align:left;font-family:var(--ui);white-space:normal;color:var(--dim)}
+  tbody tr{cursor:pointer} tbody tr:hover{background:#f1ede3} tbody tr.on{background:var(--tx);color:#fff} tbody tr.on td{color:#fff}
+  .tabla{max-height:330px;overflow:auto;border:1px solid var(--line);border-radius:6px;background:var(--paper);margin-top:8px}
+  .nota{font:13px/1.55 var(--ui);color:var(--dim);max-width:74ch}
+  .nota a,section a{color:var(--azul)}
+  .aviso{font:13px/1.5 var(--ui);background:#fbf3e4;border:1px solid #e6d3a8;border-radius:6px;padding:9px 13px;margin:12px 0;color:#5b4410}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="sobre">Interactive companion</div>
+  <h1>Generating Music from Flocking Dynamics</h1>
+  <p class="aut">Cristián Huepe, Marco Colasso and Rodrigo F. Cádiz</p>
+  <p>This page accompanies the paper of the same title (American Control Conference, 2012) and its extended version (Chapter 7 of <i>Controls and Art</i>, Springer, 2014). It runs the flocking model and the three sound mappings described there, in the browser, so that the examples in the figures can be seen and heard rather than read. Section and equation numbers follow the chapter.</p>
+</header>
+
+<div class="cuerpo">
+
+  <!-- ===================== live simulation ===================== -->
+  <div class="fijo">
+    <div class="tarjeta">
+      <div class="rotulo"><b id="titEj">Free run</b><span id="subEj">coupled oscillators</span><span class="grow"></span>
+        <span class="m">η <b id="vEta">0.85</b></span><span class="m">ψ <b id="vPsi">0.00</b></span></div>
+      <div id="avance"></div>
+      <div class="dos">
+        <canvas id="caja"></canvas>
+        <div class="lado">
+          <button id="bSonido" class="pri">▶ Turn sound on</button>
+          <div class="seg" id="segMapeo">
+            <button data-m="direct">Direct</button>
+            <button data-m="coupled">Coupled osc.</button>
+            <button data-m="friction">Friction</button>
+          </div>
+          <div style="display:flex;gap:8px"><button id="bPausa" style="flex:1">Pause</button><button id="bReset" style="flex:1" title="new random positions, headings and preferred frequencies">Restart</button></div>
+          <label style="display:flex;gap:8px;align-items:center">volume <input type="range" id="vol" min="0" max="1" step="0.01" value="0.6"></label>
+          <div>Agents are drawn as in the figures: a dot with a tick along its heading. Click one to see its Vicsek radius <i>R</i> (solid) and its sonic range <i>R<sub>S</sub></i> (dashed).</div>
+        </div>
+      </div>
+      <div class="espec"><canvas id="espec"></canvas><span id="rotEspec">spectrogram · 15 s · 0–5.5 kHz</span><div id="ejes"></div></div>
+      <div class="ctl" id="ctl"></div>
+    </div>
+  </div>
+
+  <!-- ===================== text ===================== -->
+  <div>
+    <section>
+      <h2><small>7.1</small>Order, disorder, flocks, and music</h2>
+      <p>The chapter starts from an observation about music: to be interesting, it needs both order and disorder, coherence and decoherence, structures that consolidate and collapse. Groups of agents following decentralized control rules show the same interplay. They can reach consensus and move as one, or act independently. The question is what happens when one is mapped into the other: which mappings let a listener hear the collective state of a flock, and which produce musically interesting results.</p>
+    </section>
+
+    <section>
+      <h2><small>7.2</small>A minimal flocking algorithm</h2>
+      <p>The model is the Vicsek model. <i>N</i> point-like agents move at a fixed common speed <i>v</i><sub>0</sub> in a two-dimensional square box of side <i>L</i> with periodic boundary conditions. Their only interaction is alignment: at every step each agent steers toward the mean heading of all agents within a radius <i>R</i>, with some noise.</p>
+      <div class="ec"><span class="n">(7.1)</span><i>θ<sub>i</sub></i>(<i>t</i>+Δ<i>t</i>) = Ang{ Σ<sub><i>j</i>∈<i>Z<sub>i</sub></i>(<i>t</i>)</sub> Vel[<i>θ<sub>j</sub></i>(<i>t</i>)] } + <i>η ξ<sub>i</sub></i>(<i>t</i>)</div>
+      <div class="ec"><span class="n">(7.2)</span><b>x</b><sub><i>i</i></sub>(<i>t</i>+Δ<i>t</i>) = <b>x</b><sub><i>i</i></sub>(<i>t</i>) + Δ<i>t v</i><sub>0</sub> Vel[<i>θ<sub>i</sub></i>(<i>t</i>)]</div>
+      <p>Ang{·} gives the angle of a vector, Vel[·] the unit vector along an angle, <i>Z<sub>i</sub></i> is the set of agents within distance <i>R</i> of agent <i>i</i>, and <i>ξ<sub>i</sub></i> is a random number uniformly distributed in [−1/2, 1/2]. For low noise the agents converge to a common heading; for high noise they point in random directions. The polarization order parameter measures which:</p>
+      <div class="ec"><span class="n">(7.3)</span><i>ψ</i> = <span class="fr"><span>1</span><span><i>v</i><sub>0</sub> <i>N</i></span></span> ‖ Σ<sub><i>i</i>=1…<i>N</i></sub> <b>v</b><sub><i>i</i></sub>(<i>t</i>) ‖</div>
+      <p>It is 0 in the disordered state and 1 in the polarized flocking state. In both phases agents gather into clusters that keep splitting and merging, with more large clusters at low noise. Clusters do not influence each other until they come closer than <i>R</i>.</p>
+
+      <div class="fig">
+        <div class="cab"><b>Fig. 7.1, recomputed.</b> Polarization <i>ψ</i> as a function of noise <i>η</i>, for systems of equal mean density and different numbers of agents. The transition sharpens as <i>N</i> grows, but even for the <i>N</i> = 30 used in the sound examples the two states are clearly different.</div>
+        <div class="bot"><button id="b71">Compute N = 30 and N = 300</button><button id="b71b">Add N = 3000 (slow)</button></div>
+        <canvas id="f71"></canvas>
+      </div>
+    </section>
+
+    <section>
+      <h2><small>7.4</small>From emergent dynamics to emerging sounds</h2>
+      <p>Each agent drives one sinusoidal generator, <i>A<sub>i</sub></i>(<i>t</i>) sin[<i>ω<sub>i</sub></i>(<i>t</i>) <i>t</i>]. Every mapping produces a normalized frequency <i>ω<sub>i</sub></i> between 0 and 1 and an amplitude <i>A<sub>i</sub></i>; a final stage maps <i>ω<sub>i</sub></i> linearly or exponentially onto a chosen range of audible frequencies. The three approaches differ in where <i>ω<sub>i</sub></i> comes from.</p>
+      <p>Each figure of the chapter shows five panels for one approach: snapshots of the disordered (a) and ordered (b) states, the spectrograms of their sound (c, d), and the spectrogram of a run in which the noise is lowered so that the system goes from disorder to order (e). The buttons below start those runs with <i>N</i> = 30 agents and the noise values quoted in the text. Each takes 15 seconds, the length of the printed spectrograms.</p>
+
+      <h3><small>7.4.1</small>The direct approach</h3>
+      <p>The state of each agent is tied directly to its sound: the <i>x</i> coordinate of agent <i>i</i> is its frequency <i>ω<sub>i</sub></i>. (In the full system the <i>y</i> coordinate sets the rate of an amplitude modulation; as in the chapter's example, the amplitude is kept constant here.)</p>
+      <div class="ec"><span class="n">direct</span><i>ω<sub>i</sub></i>(<i>t</i>) = <i>x<sub>i</sub></i>(<i>t</i>) / <i>L</i>, &nbsp; <i>A<sub>i</sub></i> = const.</div>
+      <div class="fig">
+        <div class="cab"><b>Fig. 7.3.</b> Direct approach. In disorder: several independently fluctuating frequencies. In order: all frequencies rise or fall at a similar rate, and jump to the opposite extreme when an agent crosses the edge of the periodic box.</div>
+        <div class="bot">
+          <button data-ej="direct:a">(a, c) Disordered<small>η = 0.87</small></button>
+          <button data-ej="direct:b">(b, d) Ordered<small>η = 0.07</small></button>
+          <button data-ej="direct:e">(e) Transition<small>η: 0.87 → 0.07</small></button>
+        </div>
+      </div>
+      <p>The individual dynamics of each agent can be followed, and the two phases are easy to tell apart, but clusters leave no trace in the sound and the result quickly becomes monotonous.</p>
+
+      <h3><small>7.4.2</small>The coupled oscillators approach</h3>
+      <p>Here the sound variable is decoupled from the instantaneous state of the flock. Each agent carries a frequency <i>ω<sub>i</sub></i>(<i>t</i>) and a randomly chosen preferred frequency <i>ω<sub>i</sub></i><sup>0</sup> in [0, 1] that stays fixed during the run. The frequency follows a consensus protocol with the agents inside a sonic interaction range <i>R<sub>S</sub></i> &gt; <i>R</i>:</p>
+      <div class="ec"><span class="n">(7.4)</span><span class="fr"><span>d<i>ω<sub>i</sub></i>(<i>t</i>)</span><span>d<i>t</i></span></span> = <i>β</i><sub>1</sub> [ Ω<sub><i>i</i></sub>(<i>t</i>) − <i>ω<sub>i</sub></i>(<i>t</i>) ]</div>
+      <div class="ec"><span class="n">(7.5)</span>Ω<sub><i>i</i></sub>(<i>t</i>) = <span class="fr"><span>1</span><span><i>β</i><sub>2</sub> + <i>ñ<sub>i</sub></i></span></span> [ <i>β</i><sub>2</sub> <i>ω<sub>i</sub></i><sup>0</sup> + Σ<sub><i>j</i>∈<i>S<sub>i</sub></i></sub> <i>ω<sub>j</sub></i>(<i>t</i>) ]</div>
+      <p><i>S<sub>i</sub></i> holds the <i>ñ<sub>i</sub></i> agents with ‖<b>x</b><sub><i>j</i></sub> − <b>x</b><sub><i>i</i></sub>‖ &lt; <i>R<sub>S</sub></i>. <i>β</i><sub>1</sub> sets how fast each frequency converges to its target; <i>β</i><sub>2</sub> sets the weight of the preferred frequency against the neighbors'. An isolated agent returns to <i>ω<sub>i</sub></i><sup>0</sup>; agents that flock together long enough end up almost in unison. The amplitude makes interacting agents more audible:</p>
+      <div class="ec"><span class="n">(7.6)</span><i>A<sub>i</sub></i>(<i>t</i>) = <span class="fr"><span><i>ñ<sub>i</sub> A</i><sub>max</sub> + <i>A</i><sub>min</sub></span><span><i>ñ<sub>i</sub></i> + 1</span></span></div>
+      <div class="fig">
+        <div class="cab"><b>Fig. 7.4.</b> Coupled oscillators, with <i>R<sub>S</sub></i> = 2<i>R</i>, <i>β</i><sub>1</sub> = 0.78, <i>β</i><sub>2</sub> = 0.30. In disorder: horizontal lines at the preferred frequencies, interrupted by quick excursions when agents meet. In order: loud stable notes from persistent clusters, with quieter fluctuating voices from smaller clusters and isolated agents.</div>
+        <div class="bot">
+          <button data-ej="coupled:a">(a, c) Disordered<small>η = 0.85</small></button>
+          <button data-ej="coupled:b">(b, d) Ordered<small>η = 0.03</small></button>
+          <button data-ej="coupled:e">(e) Transition<small>η: 0.85 → 0.03</small></button>
+        </div>
+      </div>
+      <p>Listen for what happens when a cluster splits: the agent that leaves jumps back to its preferred frequency very quickly, while the larger cluster drifts slowly to its new mean. In the transition run, frequencies converge and diverge repeatedly as clusters merge and split.</p>
+
+      <h3><small>7.4.3</small>The physical friction approach</h3>
+      <p>The third approach imagines a friction-like process in which agents produce sound as they "rub" against each other, as in a rotating motor whose pitch depends on the relative speed of its parts. The frequency of each agent is proportional to its speed relative to the mean velocity of its neighbors within <i>R<sub>S</sub></i>:</p>
+      <div class="ec"><span class="n">(7.7)</span><i>ω<sub>i</sub></i>(<i>t</i>) = <span class="fr"><span>1</span><span>2<i>v</i><sub>0</sub></span></span> ‖ [ <span class="fr"><span>1</span><span><i>ñ<sub>i</sub></i></span></span> Σ<sub><i>j</i>∈<i>S<sub>i</sub></i></sub> <b>v</b><sub><i>j</i></sub>(<i>t</i>) ] − <b>v</b><sub><i>i</i></sub>(<i>t</i>) ‖</div>
+      <p>This is 0 when an agent moves exactly with its neighbors and 1 when it moves against them. The amplitude is that of Eq. (7.6).</p>
+      <div class="fig">
+        <div class="cab"><b>Fig. 7.5.</b> Physical friction. In disorder: a random sequence of short sounds over the whole range. In order: almost all oscillators sit near <i>ω<sub>i</sub></i> = 0, set here to about 700 Hz. In the transition: the short notes are suppressed and sink toward <i>ω<sub>i</sub></i> = 0, with "sparkles" when a cluster fragments.</div>
+        <div class="bot">
+          <button data-ej="friction:a">(a, c) Disordered<small>η = 0.61</small></button>
+          <button data-ej="friction:b">(b, d) Ordered<small>η = 0.09</small></button>
+          <button data-ej="friction:e">(e) Transition<small>η: 0.61 → 0.09</small></button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2><small>7.5</small>From emergent dynamics to emerging music</h2>
+      <p><i>Ritmos Circadianos</i> (Cádiz, 2012) is a piece for the Logos Foundation's Man and Machine Robot Orchestra, generated in real time from a Vicsek simulation with twelve agents, one per robot instrument, using the coupled oscillators approach. It lasts 10 min 24 s: 26 sections of 24 s each, ten bars at 100 beats per minute, by analogy with a 24-hour circadian cycle. Each agent's <i>ω<sub>i</sub></i> is quantized to MIDI notes within its instrument's range; its distance to the center of the space sets its loudness; and its state rescales the periods of up to three superimposed pulses, so that agents close to the mean heading play regular patterns and agents far from it play irregular ones.</p>
+      <p>Table 7.1 lists the model parameters of each section. Click a row to put the twelve-agent flock in that state and hear its coupled-oscillator frequencies as sine tones.</p>
+      <div class="aviso">This is the flocking state behind each section, not the piece: the robot instruments, the MIDI quantization and the rhythmic pulses are not reproduced. Two readings are assumed because the chapter does not define them: the radius <i>r</i> is taken in units where the box side is <input type="number" id="ladoRC" value="10" min="1" max="50" step="1" style="width:58px;padding:2px 5px">, and the "position noise" <i>η<sub>p</sub></i> is applied as a random vector added to the mean heading before taking its angle.</div>
+      <div class="bot" style="display:flex;gap:8px;font-family:var(--ui)"><button id="bRC">▶ Play all 26 sections (10:24)</button><span class="nota" id="estRC" style="align-self:center"></span></div>
+      <div class="tabla"><table id="t71"><thead><tr><th>§</th><th>r</th><th>η<sub>p</sub></th><th>η<sub>a</sub></th><th>β<sub>1</sub></th><th>β<sub>2</sub></th><th>Instrumentation</th></tr></thead><tbody></tbody></table></div>
+    </section>
+
+    <section>
+      <h2><small>7.6</small>What to listen for</h2>
+      <p>All three mappings let a listener tell order from disorder. The two that use indirect measures of the dynamics, the coupled oscillators and the physical friction, give the more interesting and appealing results: their sound depends only on encounters between agents, not on where the agents are. The chapter suggests natural extensions that were out of reach of the original real-time tools, among them a Kuramoto model coupling the phases of neighboring agents, and treating a cluster as an elastic membrane.</p>
+    </section>
+
+    <p class="nota"><b>What comes from the chapter and what does not.</b> From the text: the model and Eqs. (7.1) to (7.7), <i>N</i> = 30, the noise values of every example, <i>R<sub>S</sub></i> = 2<i>R</i>, <i>β</i><sub>1</sub> = 0.78, <i>β</i><sub>2</sub> = 0.30, the 15 s spectrograms, the 700 Hz floor of the friction example, and Table 7.1. Read off the MaxMSP panel in Fig. 7.2: <i>R</i> = 0.1, 30 frames per second, the 200 to 5000 Hz range with exponential scaling for the coupled oscillators, and <i>A</i><sub>min</sub> = 0.1. Chosen here because the chapter does not state them: the box side (<i>L</i> = 1), the speed (0.2 box sides per second), linear scaling for the direct and friction examples (judged from the printed spectrograms), and noise <i>η</i> expressed as a fraction of a full turn, so that the heading perturbation is 2π<i>η ξ</i>. Equation (7.4) is advanced once per frame. Fig. 7.1 is recomputed at the density of the sound examples and over the full noise range, so its horizontal axis is not the printed one.</p>
+    <p class="nota">C. Huepe, R. F. Cádiz and M. Colasso, "Generating music from flocking dynamics," <i>Proc. American Control Conference</i>, Montréal, 2012, pp. 4339–4344. <a href="https://doi.org/10.1109/ACC.2012.6315529">doi:10.1109/ACC.2012.6315529</a><br>
+    C. Huepe, M. Colasso and R. F. Cádiz, "Generating music from flocking dynamics," in A. LaViers and M. Egerstedt (eds.), <i>Controls and Art</i>, Springer, 2014, pp. 155–179. <a href="https://doi.org/10.1007/978-3-319-03904-6_7">doi:10.1007/978-3-319-03904-6_7</a></p>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   Vicsek model in a periodic box (Eqs. 7.1–7.3) and the three
+   mappings of Sect. 7.4 (direct, Eqs. 7.4–7.6, Eq. 7.7).
+   One sine oscillator per agent. No dependencies.
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const L = 1, FPS = 30, DOS_PI = 2 * Math.PI, DUR = 15;
+const P = { N: 30, eta: 0.85, etaP: 0, R: 0.1, v: 0.2, b1: 0.78, b2: 0.30, amin: 0.1, fmin: 200, fmax: 5000, exp: 1 };
+const RANGO = { direct: { fmin: 200, fmax: 5000, exp: 0 }, coupled: { fmin: 200, fmax: 5000, exp: 1 }, friction: { fmin: 700, fmax: 5000, exp: 0 } };
+const NOMBRE = { direct: "direct approach", coupled: "coupled oscillators", friction: "physical friction" };
+const EJ = { direct: [0.87, 0.07], coupled: [0.85, 0.03], friction: [0.61, 0.09] };
+const CTL = [
+  { k: "N", n: "agents N", min: 2, max: 150, paso: 1 },
+  { k: "eta", n: "noise η", min: 0, max: 1, paso: 0.01 },
+  { k: "R", n: "radius R  (R_S = 2R)", min: 0.01, max: 0.5, paso: 0.005 },
+  { k: "v", n: "speed (box sides / s)", min: 0, max: 1, paso: 0.01 },
+  { k: "b1", n: "β₁ convergence rate", min: 0, max: 1, paso: 0.01, solo: "coupled" },
+  { k: "b2", n: "β₂ preferred-freq. weight", min: 0, max: 2, paso: 0.01, solo: "coupled" },
+  { k: "amin", n: "A min  (A max = 1)", min: 0, max: 1, paso: 0.01, no: "direct" },
+  { k: "fmin", n: "min frequency (Hz)", min: 50, max: 2000, paso: 1, log: true },
+  { k: "fmax", n: "max frequency (Hz)", min: 500, max: 5500, paso: 1, log: true },
+  { k: "exp", n: "scale: linear | exponential", min: 0, max: 1, paso: 1 },
+];
+let mapeo = "coupled", corriendo = true, elegido = -1, ag = [];
+let corrida = null;          /* {t0 (steps), plan(tSeg) → eta} while an example is being captured */
+let pasos = 0;
+
+const nuevo = () => { const w0 = Math.random(); return { x: Math.random() * L, y: Math.random() * L, a: Math.random() * DOS_PI, w0, w: w0, wf: 0, n: 0, om: 0, A: 0, f: 0 }; };
+function reiniciar() { ag = []; for (let i = 0; i < P.N; i++) ag.push(nuevo()); elegido = -1; }
+function ajustarN() { while (ag.length < P.N) ag.push(nuevo()); ag.length = P.N; if (elegido >= P.N) elegido = -1; }
+const dif = d => d - L * Math.round(d / L);                    /* separation in the periodic box */
+
+function paso() {
+  const n = ag.length, R2 = P.R * P.R, RS2 = 4 * R2;
+  const c = ag.map(a => Math.cos(a.a)), s = ag.map(a => Math.sin(a.a));
+  const th = new Float64Array(n), Om = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    let sx = 0, sy = 0, qx = 0, qy = 0, so = 0, nv = 0;
+    for (let j = 0; j < n; j++) {
+      const dx = dif(ag[i].x - ag[j].x), dy = dif(ag[i].y - ag[j].y), d2 = dx * dx + dy * dy;
+      if (d2 < R2) { sx += c[j]; sy += s[j]; }                              /* Z_i: within R (includes i) */
+      if (j !== i && d2 < RS2) { qx += c[j]; qy += s[j]; so += ag[j].w; nv++; }   /* S_i: within R_S */
+    }
+    if (P.etaP > 0) { const q = DOS_PI * Math.random(), m = Math.hypot(sx, sy) || 1; sx = sx / m + P.etaP * Math.cos(q); sy = sy / m + P.etaP * Math.sin(q); }
+    th[i] = Math.atan2(sy, sx) + DOS_PI * P.eta * (Math.random() - 0.5);    /* (7.1) */
+    Om[i] = (P.b2 * ag[i].w0 + so) / ((P.b2 + nv) || 1);                     /* (7.5) */
+    if (P.b2 + nv === 0) Om[i] = ag[i].w;
+    ag[i].wf = nv ? 0.5 * Math.hypot(qx / nv - c[i], qy / nv - s[i]) : 0;   /* (7.7), unit velocities */
+    ag[i].n = nv;
+  }
+  const d = P.v / FPS;
+  for (let i = 0; i < n; i++) {
+    const a = ag[i];
+    a.w += P.b1 * (Om[i] - a.w);                                            /* (7.4), one step per frame */
+    a.a = th[i];
+    a.x = ((a.x + d * Math.cos(a.a)) % L + L) % L;                          /* (7.2) */
+    a.y = ((a.y + d * Math.sin(a.a)) % L + L) % L;
+  }
+  pasos++;
+}
+function derivar() {
+  const lo = Math.min(P.fmin, P.fmax), hi = Math.max(P.fmin, P.fmax);
+  for (const a of ag) {
+    a.om = mapeo === "direct" ? a.x / L : mapeo === "friction" ? Math.min(1, a.wf) : Math.min(1, Math.max(0, a.w));
+    a.A = mapeo === "direct" ? 1 : (a.n + P.amin) / (a.n + 1);              /* (7.6) with A max = 1 */
+    a.f = P.exp ? lo * Math.pow(hi / lo, a.om) : lo + a.om * (hi - lo);
+  }
+}
+function psi() { let sx = 0, sy = 0; for (const a of ag) { sx += Math.cos(a.a); sy += Math.sin(a.a); } return ag.length ? Math.hypot(sx, sy) / ag.length : 0; }   /* (7.3) */
+
+/* ---------- sound: one sine per agent ---------- */
+let ctx = null, salida = null, bus = null, an = null, voces = [], bins = null;
+function crearAudio() {
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  bus = ctx.createGain();
+  const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -10; comp.ratio.value = 6;
+  salida = ctx.createGain(); salida.gain.value = +$("vol").value;
+  an = ctx.createAnalyser(); an.fftSize = 4096; an.smoothingTimeConstant = 0; an.minDecibels = -85; an.maxDecibels = -25;
+  bus.connect(an); bus.connect(comp); comp.connect(salida); salida.connect(ctx.destination);
+  bins = new Uint8Array(an.frequencyBinCount);
+}
+const suena = () => ctx && ctx.state === "running";
+async function sonidoOn() { if (!ctx) crearAudio(); if (ctx.state !== "running") { try { await ctx.resume(); } catch (e) { } } pintarSonido(); }
+function pintarSonido() { const on = suena(); $("bSonido").textContent = on ? "Sound is on (click to mute)" : "▶ Turn sound on"; $("bSonido").classList.toggle("pri", !on); }
+function sonar() {
+  if (!suena()) return;
+  const t = ctx.currentTime, k = 0.6 / Math.sqrt(Math.max(1, ag.length));
+  while (voces.length < ag.length) {
+    const o = ctx.createOscillator(), g = ctx.createGain(); g.gain.value = 0; o.frequency.value = ag[voces.length].f || 440;
+    o.connect(g); g.connect(bus); o.start(); voces.push({ o, g });
+  }
+  while (voces.length > ag.length) { const v = voces.pop(); v.g.gain.setTargetAtTime(0, t, 0.02); v.o.stop(t + 0.2); }
+  for (let i = 0; i < ag.length; i++) {
+    voces[i].o.frequency.setTargetAtTime(ag[i].f, t, 0.012);
+    voces[i].g.gain.setTargetAtTime(corriendo ? ag[i].A * k : 0, t, 0.02);
+  }
+}
+
+/* ---------- drawing: the box, as in panels (a) and (b) ---------- */
+const caja = $("caja"), g = caja.getContext("2d");
+function medir(cv) { const d = devicePixelRatio || 1, r = cv.getBoundingClientRect(), w = Math.round(r.width * d), h = Math.round(r.height * d); const cambio = cv.width !== w || cv.height !== h; if (cambio) { cv.width = w; cv.height = h; } return [r.width, r.height, d, cambio]; }
+function dibujar() {
+  const [W, H, d] = medir(caja);
+  g.setTransform(d, 0, 0, d, 0, 0);
+  g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+  if (elegido >= 0 && ag[elegido]) {
+    const e = ag[elegido];
+    for (const ox of [-1, 0, 1]) for (const oy of [-1, 0, 1]) {
+      const X = (e.x + ox) * W, Y = (1 - e.y - oy) * H;
+      g.strokeStyle = "#1d4f91"; g.lineWidth = 1; g.beginPath(); g.arc(X, Y, P.R * W, 0, DOS_PI); g.stroke();
+      g.strokeStyle = "#9a3412"; g.setLineDash([4, 4]); g.beginPath(); g.arc(X, Y, 2 * P.R * W, 0, DOS_PI); g.stroke(); g.setLineDash([]);
+    }
+    g.strokeStyle = "rgba(154,52,18,.45)";
+    for (const b of ag) { if (b === e) continue; const dx = dif(b.x - e.x), dy = dif(b.y - e.y);
+      if (dx * dx + dy * dy < 4 * P.R * P.R) { g.beginPath(); g.moveTo(e.x * W, (1 - e.y) * H); g.lineTo((e.x + dx) * W, (1 - e.y - dy) * H); g.stroke(); } }
+  }
+  ag.forEach((a, i) => {
+    const X = a.x * W, Y = (1 - a.y) * H, r = 2.2 + 2.2 * a.A, ca = Math.cos(a.a), sa = -Math.sin(a.a);
+    g.strokeStyle = g.fillStyle = i === elegido ? "#9a3412" : "#111"; g.lineWidth = 1.4;
+    g.beginPath(); g.moveTo(X, Y); g.lineTo(X + ca * (r + 7), Y + sa * (r + 7)); g.stroke();
+    g.beginPath(); g.arc(X, Y, r, 0, DOS_PI); g.fill();
+  });
+}
+
+/* ---------- spectrogram: 15 s wide, 0–5.5 kHz linear, dark on light as printed ---------- */
+const esp = $("espec"), ge = esp.getContext("2d"), F_TOP = 5500, COLS = DUR * FPS;
+let col = 0;
+function limpiarEspec() { const [, , , ] = medir(esp); ge.setTransform(1, 0, 0, 1, 0, 0); ge.fillStyle = "#ececea"; ge.fillRect(0, 0, esp.width, esp.height); col = 0; }
+function columna() {
+  const [, , , cambio] = medir(esp); if (cambio) { limpiarEspec(); }
+  const w = esp.width, h = esp.height, cw = w / COLS;
+  ge.setTransform(1, 0, 0, 1, 0, 0);
+  let x;
+  if (col < COLS) x = col * cw; else { const p = Math.ceil(cw); ge.drawImage(esp, p, 0, w - p, h, 0, 0, w - p, h); x = w - p; }
+  const ancho = Math.ceil(cw);
+  ge.fillStyle = "#ececea"; ge.fillRect(x, 0, ancho, h);
+  if (suena()) {
+    an.getByteFrequencyData(bins);
+    const hzBin = ctx.sampleRate / an.fftSize;
+    for (let y = 0; y < h; y++) {
+      const v = bins[Math.min(bins.length - 1, Math.round((1 - y / h) * F_TOP / hzBin))] / 255;
+      if (v < 0.04) continue;
+      const q = Math.round(236 - 236 * Math.pow(v, 0.8));
+      ge.fillStyle = `rgb(${q},${q},${q})`; ge.fillRect(x, y, ancho, 1);
+    }
+  } else {                                   /* no sound yet: draw the frequencies the model is asking for */
+    for (const a of ag) { const q = Math.round(200 - 200 * a.A); ge.fillStyle = `rgb(${q},${q},${q})`; ge.fillRect(x, Math.round((1 - a.f / F_TOP) * h) - 1, ancho, 2); }
+  }
+  col++;
+}
+$("ejes").innerHTML = [0, 1, 2, 3, 4, 5].map(k => `<i style="top:${100 * (1 - k * 1000 / F_TOP)}%">${k}.0k</i>`).join("");
+
+/* ---------- controls ---------- */
+const aS = (q, v) => q.log ? 1000 * Math.log(v / q.min) / Math.log(q.max / q.min) : v;
+const deS = (q, s) => q.log ? Math.round(q.min * Math.pow(q.max / q.min, s / 1000)) : +s;
+const fmt = (q, v) => q.k === "exp" ? (v ? "exp" : "lin") : q.paso >= 1 ? String(Math.round(v)) : (+v).toFixed(q.paso >= 0.01 ? 2 : 3);
+const filas = CTL.map(q => {
+  const l = document.createElement("label"), r = document.createElement("input"), o = document.createElement("output");
+  l.textContent = q.n; r.type = "range"; r.min = q.log ? 0 : q.min; r.max = q.log ? 1000 : q.max; r.step = q.log ? 1 : q.paso;
+  r.oninput = () => { P[q.k] = deS(q, r.value); o.textContent = fmt(q, P[q.k]); if (q.k === "N") ajustarN(); if (q.k === "eta") soltarCorrida(); };
+  $("ctl").append(l, r, o);
+  return { q, l, r, o, poner() { r.value = aS(q, P[q.k]); o.textContent = fmt(q, P[q.k]); } };
+});
+const poner = () => filas.forEach(f => f.poner());
+function elegirMapeo(m, conRango) {
+  mapeo = m;
+  if (conRango !== false) Object.assign(P, RANGO[m]);
+  for (const b of document.querySelectorAll("#segMapeo button")) b.classList.toggle("on", b.dataset.m === m);
+  for (const f of filas) { const off = (f.q.solo && f.q.solo !== m) || f.q.no === m; for (const e of [f.l, f.r, f.o]) e.classList.toggle("off", off); }
+  $("subEj").textContent = NOMBRE[m]; poner();
+}
+for (const b of document.querySelectorAll("#segMapeo button")) b.onclick = () => { soltarCorrida(); elegirMapeo(b.dataset.m); };
+
+/* ---------- the examples of Figs. 7.3–7.5 ---------- */
+function marcar(boton) { for (const b of document.querySelectorAll("[data-ej]")) b.classList.toggle("on", b === boton); for (const r of document.querySelectorAll("#t71 tbody tr")) r.classList.remove("on"); }
+function soltarCorrida() { if (corrida) { corrida = null; $("avance").style.width = "0"; $("titEj").textContent = "Free run"; marcar(null); } }
+async function ejemplo(m, panel, boton) {
+  await sonidoOn();
+  pararRC();
+  const [alto, bajo] = EJ[m], fig = { direct: "7.3", coupled: "7.4", friction: "7.5" }[m];
+  Object.assign(P, { N: 30, R: 0.1, v: 0.2, b1: 0.78, b2: 0.30, amin: 0.1, etaP: 0 });
+  elegirMapeo(m); reiniciar();
+  P.eta = panel === "b" ? bajo : alto;
+  for (let k = 0; k < 900; k++) paso();                 /* let the state settle before the 15 s that are shown */
+  corrida = { t0: pasos, plan: panel === "e" ? (t => t < 5 ? alto : bajo) : null };
+  $("titEj").textContent = `Fig. ${fig} ` + (panel === "a" ? "(a, c) disordered" : panel === "b" ? "(b, d) ordered" : "(e) transition");
+  corriendo = true; pintarPausa(); limpiarEspec(); marcar(boton); poner();
+}
+for (const b of document.querySelectorAll("[data-ej]")) b.onclick = () => { const [m, p] = b.dataset.ej.split(":"); ejemplo(m, p, b); };
+
+/* ---------- Table 7.1: Ritmos Circadianos ---------- */
+const T71 = [[8,0,0,.2,.3,"Heli, Llor"],[8,.1,.01,.2,.3,"Heli, Sax, Llor, Klar, So"],[3.1,.1,.2,.2,.3,"Heli, Sax, Llor, Klar, So"],[3.1,.1,.2,.2,.3,"Heli, Vibi, Sax, Qt, Vox, Klar, So"],
+ [2.1,.5,.6,.6,.2,"Heli, Vibi, Sax, Qt, Vox, Llor, Klar, So"],[2.1,.5,.6,.6,.2,"Fa, Qt, Klar, So"],[2.1,.5,.6,.6,.2,"Sax, Klar"],[2.1,.8,.8,.5,.5,"Vibi, Vox, So, PERC"],
+ [7.1,.1,.2,.5,.5,"Sax, Fa, Klar, So"],[7.1,.05,0,.5,.5,"Vibi, So"],[8.1,.05,.3,.5,.5,"Vibi, Qt"],[8.1,.45,.3,.5,.5,"Vacca, Vibi"],[3.1,.85,.7,.5,.5,"Vacca, Vibi"],
+ [8.1,.45,.3,.5,.5,"Vacca"],[8.1,.45,.3,.5,.5,"Vacca, Vibi, PERC"],[3.1,.45,.3,.5,.5,"Heli"],[8.1,.01,.01,.5,.5,"Heli, Fa"],[7.1,.05,.03,.9,.1,"Heli, Vibi, So"],
+ [8.1,.01,.01,.5,.5,"Heli, Vacca, Vibi, Sax, Fa, Vox, Klar, So"],[8.1,.01,.01,.5,.5,"Vox"],[8.1,.01,.01,.5,.5,"Heli, Vacca, Vibi, Sax, Fa, Vox, Klar, So, PERC"],
+ [1.1,.81,.81,.3,.4,"Vacca, PERC"],[1.1,.81,.81,.3,.4,"Vacca, Sax, Fa, Vox, Klar, PERC"],[1.1,.51,.51,.3,.4,"Heli, Vacca, Vibi, Sax, Fa, Qt, Vox, Llor, Klar, PERC"],
+ [4.1,.15,.23,.4,.5,"Heli, Vibi, Llor, So"],[8,0,0,.2,.3,"Heli, Llor"]];
+const cuerpoT = $("t71").querySelector("tbody");
+T71.forEach((s, i) => { const tr = document.createElement("tr"); tr.innerHTML = `<td>${i + 1}</td>` + s.slice(0, 5).map(v => `<td>${v}</td>`).join("") + `<td>${s[5]}</td>`; tr.onclick = () => { pararRC(); seccion(i, true); }; cuerpoT.appendChild(tr); });
+let rc = null;
+async function seccion(i, nueva) {
+  await sonidoOn();
+  const s = T71[i], lado = Math.max(1, +$("ladoRC").value || 10);
+  corrida = null; $("avance").style.width = "0"; marcar(null);
+  if (mapeo !== "coupled" || P.N !== 12) { elegirMapeo("coupled"); P.N = 12; if (nueva || ag.length !== 12) reiniciar(); }
+  Object.assign(P, { R: Math.min(0.5, s[0] / lado), etaP: s[1], eta: s[2], b1: s[3], b2: s[4], v: 0.2, amin: 0.1 });
+  [...cuerpoT.children].forEach((r, k) => r.classList.toggle("on", k === i));
+  $("titEj").textContent = `Ritmos Circadianos · section ${i + 1}`; corriendo = true; pintarPausa(); poner();
+}
+function pararRC() { if (rc) { clearInterval(rc.id); rc = null; $("bRC").textContent = "▶ Play all 26 sections (10:24)"; $("estRC").textContent = ""; } }
+$("bRC").onclick = async () => {
+  if (rc) return pararRC();
+  rc = { t0: performance.now(), i: -1 }; $("bRC").textContent = "■ Stop";
+  const tic = () => { const t = (performance.now() - rc.t0) / 1000, i = Math.floor(t / 24);
+    if (i >= 26) return pararRC();
+    if (i !== rc.i) { rc.i = i; seccion(i, i === 0); cuerpoT.children[i].scrollIntoView({ block: "nearest" }); }
+    $("estRC").textContent = `section ${i + 1} of 26 · ${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`; };
+  tic(); rc.id = setInterval(tic, 250);
+};
+
+/* ---------- Fig. 7.1: ψ(η) at equal density, different N (cell lists) ---------- */
+function psiDe(N, eta, tibio, medir_) {
+  const lado = Math.sqrt(N / 30), R = 0.1, nc = Math.max(1, Math.floor(lado / R)), tc = lado / nc, d = 0.2 / FPS;
+  const x = new Float64Array(N), y = new Float64Array(N), a = new Float64Array(N), na = new Float64Array(N), c = new Float64Array(N), s = new Float64Array(N);
+  for (let i = 0; i < N; i++) { x[i] = Math.random() * lado; y[i] = Math.random() * lado; a[i] = Math.random() * DOS_PI; }
+  const cab = new Int32Array(nc * nc), sig = new Int32Array(N);
+  let acc = 0;
+  for (let k = 0; k < tibio + medir_; k++) {
+    cab.fill(-1);
+    for (let i = 0; i < N; i++) { c[i] = Math.cos(a[i]); s[i] = Math.sin(a[i]); const q = Math.min(nc - 1, Math.floor(x[i] / tc)) + nc * Math.min(nc - 1, Math.floor(y[i] / tc)); sig[i] = cab[q]; cab[q] = i; }
+    for (let i = 0; i < N; i++) {
+      const cx = Math.min(nc - 1, Math.floor(x[i] / tc)), cy = Math.min(nc - 1, Math.floor(y[i] / tc)); let sx = 0, sy = 0;
+      const vistos = nc < 3 ? [[0, 0]] : null;
+      for (let ox = -1; ox <= 1; ox++) for (let oy = -1; oy <= 1; oy++) {
+        if (vistos && (ox || oy)) continue;
+        for (let j = nc < 3 ? 0 : cab[((cx + ox + nc) % nc) + nc * ((cy + oy + nc) % nc)]; j >= 0 && j < N; j = nc < 3 ? j + 1 : sig[j]) {
+          let dx = x[i] - x[j], dy = y[i] - y[j]; dx -= lado * Math.round(dx / lado); dy -= lado * Math.round(dy / lado);
+          if (dx * dx + dy * dy < R * R) { sx += c[j]; sy += s[j]; }
+        }
+      }
+      na[i] = Math.atan2(sy, sx) + DOS_PI * eta * (Math.random() - 0.5);
+    }
+    let px = 0, py = 0;
+    for (let i = 0; i < N; i++) { a[i] = na[i]; const ca = Math.cos(a[i]), sa = Math.sin(a[i]); x[i] = ((x[i] + d * ca) % lado + lado) % lado; y[i] = ((y[i] + d * sa) % lado + lado) % lado; px += ca; py += sa; }
+    if (k >= tibio) acc += Math.hypot(px, py) / N;
+  }
+  return acc / medir_;
+}
+const curvas = [], ETAS = Array.from({ length: 26 }, (_, i) => i * 0.02);
+function pintar71() {
+  const cv = $("f71"), [W, H, d] = medir(cv), c = cv.getContext("2d"), mi = 46, md = 14, ms = 12, mb = 38;
+  c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, W, H);
+  const X = e => mi + e / 0.5 * (W - mi - md), Y = p => ms + (1 - p) * (H - ms - mb);
+  c.strokeStyle = "#1d1c1a"; c.lineWidth = 1; c.strokeRect(mi, ms, W - mi - md, H - ms - mb);
+  c.fillStyle = "#1d1c1a"; c.font = "11px ui-monospace,Menlo,monospace"; c.textAlign = "center";
+  for (let e = 0; e <= 0.5001; e += 0.1) { c.fillText(e.toFixed(1), X(e), H - mb + 15); c.beginPath(); c.moveTo(X(e), H - mb); c.lineTo(X(e), H - mb - 5); c.stroke(); }
+  c.textAlign = "right"; for (let p = 0; p <= 1.001; p += 0.2) { c.fillText(p.toFixed(1), mi - 6, Y(p) + 4); c.beginPath(); c.moveTo(mi, Y(p)); c.lineTo(mi + 5, Y(p)); c.stroke(); }
+  c.textAlign = "center"; c.font = "13px Georgia,serif"; c.fillText("Control parameter η (fraction of a turn)", (mi + W - md) / 2, H - 6);
+  c.save(); c.translate(13, (ms + H - mb) / 2); c.rotate(-Math.PI / 2); c.fillText("Polarization ψ", 0, 0); c.restore();
+  const COL = { 30: "#3b3b9c", 300: "#8c2d5a", 3000: "#8a7a1c" };
+  curvas.forEach((cu, k) => {
+    c.strokeStyle = c.fillStyle = COL[cu.N]; c.lineWidth = 1.2; c.beginPath();
+    cu.p.forEach((p, i) => { if (i) c.lineTo(X(ETAS[i]), Y(p)); else c.moveTo(X(ETAS[i]), Y(p)); }); c.stroke();
+    cu.p.forEach((p, i) => { c.beginPath(); c.arc(X(ETAS[i]), Y(p), 3, 0, DOS_PI); c.fill(); });
+    c.font = "italic 12px Georgia,serif"; c.textAlign = "left"; c.fillText("N = " + cu.N, W - md - 78, ms + 18 + 16 * k);
+    c.beginPath(); c.arc(W - md - 88, ms + 14 + 16 * k, 3, 0, DOS_PI); c.fill();
+  });
+  if (!curvas.length) { c.fillStyle = "#8d887d"; c.font = "13px ui-sans-serif,system-ui"; c.textAlign = "center"; c.fillText("not computed yet", (mi + W - md) / 2, (ms + H - mb) / 2); }
+}
+let calculando = false;
+function calcular(Ns) {
+  if (calculando) return; calculando = true;
+  const cola = []; for (const N of Ns) { if (curvas.some(c => c.N === N)) continue; const cu = { N, p: [] }; curvas.push(cu); for (const e of ETAS) cola.push([cu, e]); }
+  const sig = () => { if (!cola.length) { calculando = false; return; } const [cu, e] = cola.shift();
+    const N = cu.N, pasosN = N >= 3000 ? [900, 250] : N >= 300 ? [1500, 500] : [1500, 1500];
+    let p = 0; const rep = N === 30 ? 8 : N === 300 ? 4 : 1; for (let r = 0; r < rep; r++) p += psiDe(N, e, pasosN[0], pasosN[1]) / rep;
+    cu.p.push(p); pintar71(); setTimeout(sig, 0); };
+  sig();
+}
+$("b71").onclick = () => calcular([30, 300]);
+$("b71b").onclick = () => calcular([3000]);
+new ResizeObserver(pintar71).observe($("f71"));
+
+/* ---------- buttons, keys ---------- */
+function pintarPausa() { $("bPausa").textContent = corriendo ? "Pause" : "Resume"; $("bPausa").classList.toggle("on", !corriendo); }
+$("bSonido").onclick = async () => { if (suena()) { await ctx.suspend(); pintarSonido(); } else await sonidoOn(); };
+$("bPausa").onclick = () => { corriendo = !corriendo; pintarPausa(); sonar(); };
+$("bReset").onclick = () => { reiniciar(); limpiarEspec(); };
+$("vol").oninput = () => { if (salida) salida.gain.setTargetAtTime(+$("vol").value, ctx.currentTime, 0.03); };
+caja.addEventListener("pointerdown", e => {
+  const r = caja.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = 1 - (e.clientY - r.top) / r.height;
+  let mejor = -1, dm = 0.05 * 0.05;
+  ag.forEach((a, i) => { const d2 = dif(a.x - x) ** 2 + dif(a.y - y) ** 2; if (d2 < dm) { dm = d2; mejor = i; } });
+  elegido = mejor === elegido ? -1 : mejor;
+});
+
+/* ---------- clock: 30 frames per second, as in the original patch ---------- */
+let psiS = 0;
+setInterval(() => {
+  if (!corriendo) return;
+  if (corrida) {
+    const t = (pasos - corrida.t0) / FPS;
+    if (corrida.plan) { const e = corrida.plan(t); if (e !== P.eta) { P.eta = e; poner(); } }
+    $("avance").style.width = Math.min(100, 100 * t / DUR) + "%";
+  }
+  paso(); derivar(); sonar(); columna();
+  psiS += 0.25 * (psi() - psiS);
+  $("vPsi").textContent = psiS.toFixed(2); $("vEta").textContent = P.eta.toFixed(2);
+}, 1000 / FPS);
+(function cuadro() { requestAnimationFrame(cuadro); dibujar(); })();
+
+reiniciar(); elegirMapeo("coupled"); derivar(); limpiarEspec(); pintar71(); pintarPausa();
+</script>
+</body>
+</html>

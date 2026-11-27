@@ -1,2 +1,7 @@
 portafolios/.DS_Store
 .DS_Store
+
+# Archivos de más de 100 MB (límite de GitHub). Las apps se descargan desde
+# los Releases de cada estudiante, no desde este repositorio.
+2026/portafolios/Felipe_Osorio/Genesis-darwin-arm64/
+2026/portafolios/Felipe_Osorio/Genesis-mac-arm64.zip

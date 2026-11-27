@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ENJAMBRES · PARTITURA</title>
+<style>
+  :root{--tx:#14181f;--dim:#5a6577;--line:#cfd6e0;--dir:#8a5a00;--bgdir:#fff6e3}
+  *{box-sizing:border-box}
+  body{margin:0;padding:22px 28px;color:var(--tx);font:13px/1.45 ui-sans-serif,system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;background:#fff}
+  h1{font-size:22px;letter-spacing:.3em;margin:0}
+  .sub{color:var(--dim);margin:2px 0 14px}
+  .barra{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+  .barra button{font:12px inherit;padding:5px 12px;border:1px solid var(--line);border-radius:7px;background:#f4f6f9;cursor:pointer}
+  .barra button.on{background:var(--tx);color:#fff;border-color:var(--tx)}
+  #linea{display:flex;height:34px;border:1px solid var(--tx);border-radius:6px;overflow:hidden;margin-bottom:6px}
+  #linea div{border-right:1px solid var(--tx);padding:2px 6px;font-size:11px;font-weight:700;overflow:hidden;white-space:nowrap;line-height:1.25}
+  #linea div:last-child{border-right:0}
+  #linea div span{display:block;font-weight:400;color:var(--dim);font-family:ui-monospace,Menlo,monospace;font-size:10px}
+  #manos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0 16px}
+  #manos div{border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+  #manos b{display:block;letter-spacing:.12em;font-size:11px;margin-bottom:2px}
+  .etapa{border:1px solid var(--tx);border-radius:10px;margin-bottom:12px;break-inside:avoid;overflow:hidden}
+  .etapa header{display:flex;align-items:baseline;gap:14px;padding:7px 14px;border-bottom:1px solid var(--tx);background:#f4f6f9}
+  .etapa header b{font-size:18px;letter-spacing:.04em}
+  .etapa header .t{font:700 15px ui-monospace,Menlo,monospace}
+  .etapa header .n{color:var(--dim);font-weight:700}
+  .etapa header .r{margin-left:auto;color:var(--dim);font-size:11.5px}
+  .cols{display:grid;grid-template-columns:1.1fr 1fr}
+  .cols>div{padding:9px 14px}
+  .director{background:var(--bgdir);border-right:1px solid var(--line);font-size:15px;line-height:1.4;white-space:pre-line}
+  .director small,.interp small,.reglas small{display:block;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:3px;white-space:normal}
+  .director small{color:var(--dir)}
+  .director strong{color:var(--dir)}
+  .interp{font-size:13.5px;white-space:pre-line}
+  .reglas{padding:7px 14px;border-top:1px solid var(--line);font-size:11.5px;color:#2b3442;display:grid;grid-template-columns:repeat(4,1fr);gap:4px 16px}
+  .reglas div b{font-weight:700}
+  .reglas .ancho{grid-column:1/-1}
+  body.director .interp{display:none} body.director .cols{grid-template-columns:1fr} body.director .director{border-right:0;font-size:17px}
+  body.interpretes .director{display:none} body.interpretes .cols{grid-template-columns:1fr} body.interpretes .interp{font-size:16px} body.interpretes #manos{display:none}
+  @media print{ .barra{display:none} body{padding:0} @page{margin:12mm} }
+</style>
+</head>
+<body>
+<h1>ENJAMBRES</h1>
+<div class="sub">Orquesta de Laptops UC · versión de concierto · <span id="dur"></span> · sobre el método de Huepe, Colasso y Cádiz, «Generating Music from Flocking Dynamics» (2014)</div>
+<div class="barra">
+  <button data-v="" class="on">completa</button><button data-v="director">solo director</button><button data-v="interpretes">solo intérpretes</button>
+  <button onclick="print()" style="margin-left:auto">imprimir</button>
+</div>
+<div id="linea"></div>
+<div id="manos">
+  <div><b>MANO IZQUIERDA (IZQ)</b>Su posición lleva el <b style="display:inline;letter-spacing:0">imán general</b> por el escenario: todos los agentes van hacia él y suenan en las laptops que quedan cerca. Más arriba, más fuerza. Mano abajo: imán suelto.</div>
+  <div><b>MANO DERECHA (DER)</b>A los lados: orden (izquierda) o caos (derecha), sobre el ruido de todos. Adelante y atrás: κ, cuánto se ven entre sí los enjambres (adelante = 1, un solo enjambre). Altura: nivel de toda la obra; abajo, silencio.</div>
+  <div><b>PEDAL</b>Pasa a la etapa siguiente antes de que lo haga el reloj (el primer toque empieza la obra). Las etapas cambian solas a la hora indicada; cada cambio toma unos segundos (la rampa), para que nada salte.</div>
+</div>
+<div id="etapas"></div>
+
+<script src="modelo.js"></script>
+<script src="partitura.js"></script>
+<script>
+"use strict";
+const { PARAMS, CONJUNTO, ALIAS_CEDE, NOMBRE_MAPEO, NOMBRE_VOZ, NOMBRE_AFINACION } = Enjambres;
+const P = window.ENJAMBRES_PARTITURA || { etapas: [], eventos: [] };
+const mmss = s => Math.floor(s / 60) + ":" + String(Math.round(s % 60)).padStart(2, "0");
+const esc = s => String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+const E = (P.etapas || []).slice().sort((a, b) => a.t - b.t);
+const fin = E.length ? E[E.length - 1].t + 15 : 0;
+const PAD = { movimiento: "MOVIMIENTO", forma: "FORMA", sincronia: "SINCRONÍA", registro: "REGISTRO", timbre: "TIMBRE", pulso: "PULSO", iman: "su imán", todo: "todo" };
+const corto = { vNoise: "ruido η₁", vel: "velocidad", radio: "radio R", coh: "forma", b1: "β₁", b2: "β₂", fmin: "f mín", fmax: "f máx", nivel: "nivel", color: "color",
+                pulso: "pulso", kfase: "fase", iman: "imán", amin: "A mín", cNoise: "ruido η₂", voz: "voz", mapeo: "mapeo", afinacion: "afinación", kappa: "κ" };
+const nom = k => corto[k] || k;
+const val = (k, v) => NOMBRE_MAPEO[v] || NOMBRE_VOZ[v] || (k === "afinacion" ? NOMBRE_AFINACION[v] : null) || (k === "nivel" ? v + " dB" : /^f(min|max)$/.test(k) ? v + " Hz" : k === "pulso" ? v + " Hz" : String(v));
+document.getElementById("dur").textContent = E.length ? `${E.length} etapas · ${mmss(fin)} aprox.` : "sin etapas";
+document.getElementById("linea").innerHTML = E.map((e, i) => {
+  const d = (E[i + 1] ? E[i + 1].t : fin) - e.t;
+  return `<div style="flex:${Math.max(d, 1)}">${i + 1}. ${esc(e.nombre)}<span>${mmss(e.t)}</span></div>`;
+}).join("");
+document.getElementById("etapas").innerHTML = E.map((e, i) => {
+  const hasta = E[i + 1] ? E[i + 1].t : fin, v = e.vals || {};
+  const cede = (e.cede || []).map(c => PAD[c] || nom(c)).join(", ") || "nada: todo lo rige la maestra";
+  const lim = Object.keys(e.limites || {}).map(k => `${nom(k)} ${val(k, e.limites[k][0])} a ${val(k, e.limites[k][1])}`).join(" · ");
+  const otros = Object.keys(v).filter(k => !["mapeo", "voz", "afinacion"].includes(k)).map(k => `${nom(k)} ${val(k, v[k])}`).join(" · ");
+  const grupos = (e.grupos || []).map((g, j) => `<b>${j + 1}</b> ${esc(g.nombre)} (${Object.keys(g.vals || {}).map(k => nom(k) + " " + val(k, g.vals[k])).join(", ")})`).join(" &nbsp;|&nbsp; ");
+  const msgs = (P.eventos || []).filter(m => m.t >= e.t && m.t < hasta).map(m => `${mmss(m.t)} ${m.para === "todos" ? "" : "(laptop " + m.para + ") "}«${esc(m.texto)}»`).join(" · ");
+  const dir = esc(e.director || "").replace(/^(IZQ|DER|PEDAL)\b/gm, "<strong>$1</strong>");
+  return `<section class="etapa">
+    <header><span class="n">${i + 1}</span><b>${esc(e.nombre)}</b><span class="t">${mmss(e.t)} – ${mmss(hasta)}</span>
+      <span class="r">${e.espera ? "al final ESPERA EL PEDAL · " : ""}rampa ${e.rampa || 0} s</span></header>
+    <div class="cols"><div class="director"><small>director · Gametrak</small>${dir || "–"}</div>
+      <div class="interp"><small>intérpretes</small>${esc(e.texto) || "–"}${msgs ? `<div style="margin-top:6px;color:var(--dim);font-size:12px">mensajes: ${msgs}</div>` : ""}</div></div>
+    <div class="reglas">
+      <div><b>mapeo</b> ${(e.grupos || []).length ? "por grupo" : v.mapeo ? NOMBRE_MAPEO[v.mapeo] : "el anterior"}</div>
+      <div><b>voz</b> ${(e.grupos || []).length ? "por grupo" : v.voz ? NOMBRE_VOZ[v.voz] : "la anterior"}${v.afinacion && v.afinacion !== "libre" ? " · " + NOMBRE_AFINACION[v.afinacion] : ""}</div>
+      <div><b>agentes por laptop</b> ${e.maxAgentes == null ? "libre" : "hasta " + e.maxAgentes}</div>
+      <div><b>κ</b> ${e.conj && e.conj.kappa != null ? e.conj.kappa : "–"} <span style="color:var(--dim)">(sin Gametrak)</span></div>
+      <div class="ancho"><b>cada intérprete maneja</b> ${cede}${lim ? ` &nbsp;·&nbsp; <b>dentro de</b> ${lim}` : ""}</div>
+      ${grupos ? `<div class="ancho"><b>grupos</b> (${e.reparto === "alternado" ? "alternados" : "bloques del arco, de izquierda a derecha del público"}): ${grupos}</div>` : ""}
+      ${otros ? `<div class="ancho" style="color:var(--dim)"><b>la maestra fija / punto de partida</b> ${otros}</div>` : ""}
+    </div></section>`;
+}).join("") || "<p>Esta partitura no tiene etapas.</p>";
+for (const b of document.querySelectorAll("[data-v]")) b.onclick = () => {
+  document.body.className = b.dataset.v;
+  for (const x of document.querySelectorAll("[data-v]")) x.classList.toggle("on", x === b);
+};
+const q = new URLSearchParams(location.search).get("ver"); if (q) { const b = document.querySelector(`[data-v="${q}"]`); if (b) b.click(); }
+</script>
+</body>
+</html>

@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ENJAMBRES · MAESTRA</title>
+<link rel="stylesheet" href="estilo.css">
+<style>
+  :root{--mio:var(--acc2)}
+  #dir{font-size:11.5px;color:var(--dim);display:flex;align-items:center;gap:8px}
+  #dir b{color:var(--tx);font:15px var(--mono);background:var(--panel2);border:1px solid var(--line);
+    border-radius:7px;padding:2px 9px;user-select:text;-webkit-user-select:text}
+  #dir.mal{color:var(--warn)}
+  #izq{display:flex;flex-direction:column;min-width:0;min-height:0}
+  #escena{flex:1}
+  #lienzo{position:absolute;inset:0;height:100%}
+  #ayuda{position:absolute;left:14px;top:10px;color:var(--tenue);font-size:11px;pointer-events:none;line-height:1.7}
+  #opciones{position:absolute;right:14px;top:10px;display:flex;gap:14px;font-size:11px;color:var(--dim)}
+  #opciones label{display:flex;gap:5px;align-items:center;cursor:pointer;text-transform:none;letter-spacing:0;font-size:11px}
+  #mensajes{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;max-width:80%;text-align:center;pointer-events:none}
+  #mensajes div{background:rgba(14,19,28,.92);border:1px solid var(--line);border-radius:99px;padding:5px 14px;margin-top:5px;font-size:13px}
+  #mensajes small{color:var(--dim);margin-right:8px}
+  #cajon{height:260px;border-top:1px solid var(--line);display:flex;flex-direction:column;min-height:0;position:relative}
+  #cajon.cerrado{height:30px !important}
+  #tirador{position:absolute;left:0;right:0;top:-4px;height:8px;cursor:ns-resize;z-index:5}
+  #cajonTabs{display:flex;gap:2px;padding:3px 8px 0;background:var(--panel);border-bottom:1px solid var(--line)}
+  .tab{border:1px solid transparent;border-bottom:0;border-radius:7px 7px 0 0;background:transparent;color:var(--dim);padding:4px 12px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
+  .tab.on{background:var(--bg);color:var(--tx);border-color:var(--line)}
+  #cajonCuerpo{flex:1;min-height:0;position:relative}
+  #cajon.cerrado #cajonCuerpo{display:none}
+  .hoja{position:absolute;inset:0}
+  #panel{display:flex;flex-direction:column;min-height:0}
+  #panelTabs{display:flex;gap:2px;padding:6px 10px 0;border-bottom:1px solid var(--line)}
+  #panelCuerpo{flex:1;overflow-y:auto;min-height:0}
+  .sec h2 .grow{flex:1}
+  .botones{display:flex;gap:6px;flex-wrap:wrap}
+  #laptops .lap{display:grid;grid-template-columns:26px 1fr auto;gap:8px;align-items:center;padding:4px 6px;border-radius:8px;cursor:pointer;border:1px solid transparent}
+  #laptops .lap:hover{background:#151d2a}
+  #laptops .lap.sel{border-color:var(--acc);background:#14203a}
+  .num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#0c1017;font-size:12px}
+  .num.m{border-radius:6px}
+  .lap .info{font-size:11px;color:var(--dim);line-height:1.35}
+  .lap .info b{color:var(--tx);font-weight:600}
+  .lap .acc{display:flex;gap:4px}
+  .lap .acc button{padding:0 8px;font-size:13px;line-height:19px;min-width:26px}
+  .lap .est{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;margin-left:4px}
+  .lap .est.fuera{color:var(--warn)} .lap .est.real{color:var(--ok)}
+  footer{padding:5px 14px;border-top:1px solid var(--line);background:var(--panel);color:var(--dim);font-size:11px;display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+  footer b{color:var(--tx);font:600 11px var(--mono)}
+  /* --- versión de concierto: etapa en curso, Gametrak y vista del director --- */
+  #etapa{flex:none;background:rgba(14,19,28,.94);border-bottom:1px solid var(--line);border-left:4px solid var(--acc2);padding:6px 14px}
+  #etapa:empty{display:none}
+  #etapa small{display:flex;gap:10px;align-items:center;font-size:10px;color:var(--dim);letter-spacing:.14em;text-transform:uppercase}
+  #etapa small i{font-style:normal;margin-left:auto;font-family:var(--mono);letter-spacing:.04em}
+  #etapa b{display:block;font-size:17px;letter-spacing:.04em}
+  #etapa .dirTxt{font-size:13px;line-height:1.35;color:var(--acc2);margin-top:2px;white-space:pre-line}
+  #etapa .intTxt{font-size:11.5px;line-height:1.35;color:var(--dim);margin-top:3px;white-space:pre-line}
+  #etapa button{padding:1px 8px;font-size:11px}
+  .manos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .manos canvas{width:100%;aspect-ratio:1/1.12;display:block;touch-action:none}
+  #gtEstado{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--dim);margin-bottom:8px}
+  .casillas{display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;margin-top:8px}
+  .casillas label{display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-size:11px;cursor:pointer}
+  #gtCrudo{font:10.5px var(--mono);color:var(--tenue);margin-top:8px;white-space:pre}
+  #listaEtapas div{display:grid;grid-template-columns:38px 1fr auto;gap:8px;padding:3px 6px;border-radius:7px;cursor:pointer;font-size:11.5px;border:1px solid transparent}
+  #listaEtapas div:hover{background:#151d2a}
+  #listaEtapas div.on{border-color:var(--acc2);background:#2b2214}
+  #listaEtapas div span{font-family:var(--mono);color:var(--dim)}
+  #vistaDir{position:fixed;inset:0;background:#05070b;z-index:20;display:flex;flex-direction:column;padding:1.6vh 1.6vw;gap:1.2vh}
+  #vdCab{display:flex;align-items:baseline;gap:2vw}
+  #vdCab #vdNum{font:700 2.4vw var(--mono);color:var(--dim)}
+  #vdCab #vdNombre{font-size:4.2vw;font-weight:800;letter-spacing:.06em;line-height:1}
+  #vdCab #vdReloj{font:700 3.6vw var(--mono);margin-left:auto}
+  #vdCab #vdQueda{font:600 2vw var(--mono);color:var(--acc2);min-width:13vw;text-align:right}
+  #vdCuerpo{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:1.4vw;align-items:center}
+  #vdCuerpo canvas{width:100%;display:block}
+  #vdIzq,#vdDer{aspect-ratio:1/1.1;max-height:100%}
+  #vdCentro{position:relative;height:100%;min-height:0}
+  #vdCentro canvas{position:absolute;inset:0;height:100%}
+  #vdTexto{font-size:2.5vw;line-height:1.25;font-weight:600;color:var(--acc2);white-space:pre-line;min-height:6.4vw}
+  #vdPie{display:flex;gap:2vw;align-items:center;font-size:1.5vw;color:var(--dim)}
+  #vdPie b{color:var(--tx)}
+  #vdPie button{font-size:1.1vw;margin-left:auto}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ENJAMBRES</h1>
+  <span class="chip maestra">MAESTRA</span>
+  <span id="dir"></span>
+  <span class="grow"></span>
+  <button id="bCorrer" title="espacio">⏸ pausa</button>
+  <button id="bReiniciar" title="los agentes vuelven a nacer junto a su laptop">reiniciar</button>
+  <button id="bVaciar" class="peligro" title="quita todos los agentes (pide un segundo clic)">vaciar</button>
+  <button id="bProyeccion" title="abre el enjambre en una ventana aparte, para proyectar a pantalla completa (sin ningún texto)">proyección</button>
+  <button id="bVistaDir" title="pantalla del director: etapa, qué hacer con el Gametrak y las dos manos, en grande (tecla D)">vista del director</button>
+  <button id="bApagar" class="peligro oculta" title="apaga el Servidor Enjambres (pide un segundo clic)">apagar servidor</button>
+  <button id="bSonido">activar sonido</button>
+  <select id="monitor" title="qué se escucha en esta laptop"></select>
+  <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8" style="width:80px" title="volumen">
+</header>
+
+<main>
+  <div id="izq">
+    <div id="etapa"></div>
+    <section id="escena">
+      <canvas id="lienzo"></canvas>
+      <div id="ayuda">arrastra una laptop por el arco · clic: elegirla · arrastra adentro: el imán (el de todas si lo retienes; si no, el de la elegida)<br><kbd>espacio</kbd> pausa · <kbd>+</kbd> <kbd>−</kbd> agentes de la elegida · <kbd>N</kbd> <kbd>B</kbd> etapa siguiente y anterior · <kbd>D</kbd> vista del director</div>
+      <div id="opciones">
+        <label><input type="checkbox" id="oLineas" checked> ganancias de la elegida</label>
+        <label><input type="checkbox" id="oMalla" checked> malla</label>
+        <label><input type="checkbox" id="oRadios"> radios</label>
+      </div>
+      <div id="mensajes"></div>
+    </section>
+    <div id="cajon">
+      <div id="tirador" title="arrastra para cambiar la altura"></div>
+      <div id="cajonTabs">
+        <button class="tab on" data-h="hPartitura">partitura</button>
+        <button class="tab" data-h="hEspectro">espectrograma</button>
+        <span class="grow"></span>
+        <button class="tab" id="bCajon" title="mostrar u ocultar">▾</button>
+      </div>
+      <div id="cajonCuerpo">
+        <div class="hoja" id="hPartitura"></div>
+        <div class="hoja oculta" id="hEspectro"><div id="cajaEsp" class="hoja"><canvas id="espectro"></canvas><div id="marcas"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <aside id="panel">
+    <div id="panelTabs">
+      <button class="tab on" data-p="pEnjambre">enjambre</button>
+      <button class="tab" data-p="pLaptops">laptops <span id="nLaps"></span></button>
+      <button class="tab" data-p="pDirector">director</button>
+      <button class="tab" data-p="pAvanzado">avanzado</button>
+    </div>
+    <div id="panelCuerpo">
+      <div id="pEnjambre">
+        <div class="sec">
+          <h2>Enjambre<span class="grow"></span>
+            <button class="chico" id="bRetTodo" title="todos los parámetros los fija la maestra">retener todo</button>
+            <button class="chico" id="bCedTodo" title="cada laptop usa sus propios valores">ceder todo</button></h2>
+          <div class="nota" style="margin-bottom:8px">Cada pad mueve dos parámetros. Su botón lo <b style="color:var(--acc2)">retiene</b> (rige para todas) o lo <b style="color:#8cc0f0">cede</b> (cada laptop usa el suyo; sus puntos aparecen en el pad).</div>
+          <div id="filaIman"></div>
+          <div class="pads" id="pads" style="margin-top:8px"></div>
+          <div class="opcion"><button class="cand" id="candVoz"></button><div id="segVoz"></div></div>
+          <div class="ayudaVoz" id="ayudaVoz"></div>
+          <div class="opcion"><button class="cand" id="candMapeo"></button><div id="segMapeo"></div></div>
+          <div style="margin-top:12px" id="filaKappa"></div>
+        </div>
+      </div>
+      <div id="pLaptops" class="oculta">
+        <div class="sec">
+          <h2>Laptops<span class="grow"></span>
+            <button class="chico" id="bMasLap" title="agrega una laptop simulada, para probar sin las reales">+ simulada</button>
+            <button class="chico" id="bRepartir">repartir</button></h2>
+          <label style="display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-size:11px;margin-bottom:6px;cursor:pointer">
+            <input type="checkbox" id="oBots"> las simuladas tocan solas (agregan, quitan y mutean agentes)</label>
+          <div id="laptops"></div>
+        </div>
+        <div class="sec oculta" id="secLaptop">
+          <h2 id="tLaptop">Laptop</h2>
+          <div class="nota" id="nLaptop"></div>
+          <div class="botones" id="botLaptop" style="margin:8px 0 4px">
+            <button id="bMenosAg">− agente</button>
+            <button id="bMasAg">+ agente</button>
+            <button class="chico" id="bMuteTodos">mutear todos</button>
+            <button class="chico" id="bDesmuteTodos">desmutear todos</button>
+            <button class="chico" id="bQuitarLap" style="margin-left:auto">quitar laptop</button>
+          </div>
+          <div id="chips"></div>
+          <div class="fila sin" style="margin-top:8px">
+            <div class="nom"><span>salidas de audio</span><span class="aviso" id="avisoSalidas"></span></div>
+            <select id="salidas" class="ctl" style="grid-column:1/3"></select>
+          </div>
+          <div class="pads" id="padsLap" style="margin-top:10px"></div>
+          <div class="opcion" id="opVozLap"><span class="lbl">voz</span><div id="segVozLap"></div></div>
+          <div class="opcion" id="opMapeoLap"><span class="lbl">mapeo</span><div id="segMapeoLap"></div></div>
+        </div>
+      </div>
+      <div id="pDirector" class="oculta">
+        <div class="sec">
+          <h2>Gametrak <small>las manos del director</small></h2>
+          <div id="gtEstado"></div>
+          <div class="manos"><canvas id="gtIzq"></canvas><canvas id="gtDer"></canvas></div>
+          <div class="nota" style="margin-top:6px">El punto es la mano; la barra, su altura (bajo la línea roja la mano no actúa).
+            <b style="color:#fffaeb">Izquierda</b>: lleva el imán general por el escenario; más arriba, más fuerza.
+            <b style="color:var(--acc2)">Derecha</b>: a los lados, orden o caos; adelante y atrás, κ; la altura es el nivel de toda la obra (abajo = silencio).
+            <b>Pedal</b>: etapa siguiente.</div>
+          <div class="casillas">
+            <label><input type="checkbox" id="gtActivo"> Gametrak activo</label>
+            <label><input type="checkbox" id="gtSim"> probar con el mouse (arrastra en los gráficos; rueda = altura)</label>
+            <label><input type="checkbox" data-d="iman"> izquierda → imán general</label>
+            <label><input type="checkbox" data-d="general"> derecha, altura → nivel general</label>
+            <label><input type="checkbox" data-d="caos"> derecha, x → orden · caos</label>
+            <label><input type="checkbox" data-d="kappa"> derecha, y → κ</label>
+            <label><input type="checkbox" data-d="pedal"> pedal → etapa siguiente</label>
+          </div>
+          <div class="botones" style="margin-top:10px">
+            <button id="gtAprender" title="parte con los cordeles recogidos; luego mueve las dos manos por todo el espacio que vas a usar">calibrar (8 s)</button>
+            <button class="chico" id="gtManos" title="si la mano izquierda mueve el gráfico de la derecha">intercambiar manos</button>
+            <button class="chico" id="gtRestablecer">valores de fábrica</button>
+          </div>
+          <div class="casillas" id="gtInv"></div>
+          <div id="gtCrudo"></div>
+        </div>
+        <div class="sec">
+          <h2>Etapas<span class="grow"></span>
+            <button class="chico" id="bEtAnt" title="tecla B">◂ anterior</button>
+            <button class="chico" id="bEtSig" title="tecla N, o el pedal">siguiente ▸</button></h2>
+          <div id="listaEtapas"></div>
+          <div class="nota" style="margin-top:6px">Clic en una etapa: el reloj salta a su comienzo y se aplica. Las etapas se editan en la partitura (abajo) y se imprimen con <a href="partitura.html" target="_blank" style="color:var(--acc)">partitura.html</a>.</div>
+        </div>
+      </div>
+      <div id="pAvanzado" class="oculta">
+        <div class="sec">
+          <h2>Parámetros, uno por uno</h2>
+          <div class="nota" style="margin-bottom:6px">MAESTRA: su valor rige para todas · CEDIDO: cada laptop usa el suyo</div>
+          <div id="params"></div>
+        </div>
+        <div class="sec">
+          <h2>Conjunto <small>solo la maestra</small></h2>
+          <div id="conj"></div>
+          <div class="botones" style="margin-top:8px"><button class="chico" id="bPaso" title=".">un paso</button></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<footer id="pie"></footer>
+
+<div id="vistaDir" class="oculta">
+  <div id="vdCab"><span id="vdNum"></span><span id="vdNombre"></span><span id="vdReloj"></span><span id="vdQueda"></span></div>
+  <div id="vdCuerpo"><canvas id="vdIzq"></canvas><div id="vdCentro"><canvas id="vdLienzo"></canvas></div><canvas id="vdDer"></canvas></div>
+  <div id="vdTexto"></div>
+  <div id="vdPie"><span id="vdSigue"></span><span id="vdDatos"></span><button id="vdDeNuevo" style="margin-left:auto" title="vuelve a 0:00 y quita todos los agentes (pide un segundo clic)">volver al comienzo (0)</button><button id="vdCerrar" style="margin-left:0">volver a la maestra (D)</button></div>
+</div>
+
+<script src="modelo.js"></script>
+<script src="protocolo.js"></script>
+<script src="simulador.js"></script>
+<script src="sonido.js"></script>
+<script src="vista.js"></script>
+<script src="ui.js"></script>
+<script src="gametrak.js"></script>
+<script src="editor.js"></script>
+<script src="partitura.js"></script>
+<script>
+"use strict";
+const { Motor, PARAMS, CONJUNTO, MAPEOS, NOMBRE_MAPEO, VOCES, NOMBRE_VOZ, NOMBRE_AFINACION, AYUDA_VOZ, decodificar, Vista, Espectro, etiqueta,
+        Pad, PADS, paramsDePad, padDeValores, valoresDePad, textoPad, Segmentos, mensajesEn, etapasEn, mmss, EditorPartitura, Gametrak, dibujarMano } = Enjambres;
+
+/* Abierta desde el Servidor Enjambres (http), se conecta y espera a las laptops reales.
+   Abierta con doble clic (file://), no hay red: arranca con laptops simuladas para probar. */
+const SERVIDOR = /^https?:$/.test(location.protocol) ? location.host : null;
+const SIMULADAS_SIN_SERVIDOR = 7;   /* la obra parte sin agentes: cada laptop agrega y quita los suyos */
+const $ = id => document.getElementById(id);
+const motor = new Motor();
+
+let est = null, tEstado = performance.now();   /* último estado que mandó el simulador */
+let cuadro = null, bytesCuadro = 0;
+let elegida = null;
+const porNum = new Map();      /* num → laptop del último estado */
+
+/* La maestra es la única que escribe sus propios valores: los guarda aquí y le avisa
+   al simulador de cada cambio. */
+const maestra = { vals: {}, retenido: {}, conj: {} };
+for (const p of PARAMS) { maestra.vals[p.k] = p.def; maestra.retenido[p.k] = true; }
+for (const p of CONJUNTO) maestra.conj[p.k] = p.def;
+
+/* ---------- el simulador, en un Worker (simulador.js) ---------- */
+let proy = null;               /* ventana de proyección, si está abierta */
+let editor = null, editorTocado = false;
+const sim = crearSimulador(recibir);
+const llamar = (metodo, ...args) => sim.enviar({ cmd: "llamar", metodo, args });
+const fijarMaestra = (grupo, k, v) => { maestra[grupo][k] = v; sim.enviar({ cmd: "maestra", grupo, k, v }); };
+
+let cuadrosMedidos = 0, tCuadros = performance.now(), cuadrosPorSeg = 0, restauradoVisto = 0, versionVista = 0, guardadaVista = 0, revVista = 0;
+/* La app "Enjambres Director" (si esta página corre dentro de ella): guarda la partitura, abre la proyección, lee el Gametrak. */
+const NATIVO = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.enjambres || null;
+const nativo = m => { try { NATIVO.postMessage(m); return true; } catch (e) { return false; } };
+function recibir(m) {
+  if (m.tipo === "cuadro") {
+    const inst = decodificar(m.buf);
+    if (!inst) return;
+    cuadro = inst; bytesCuadro = m.buf.byteLength; cuadrosMedidos++;
+    motor.actualizar(inst);            /* la maestra suena con lo mismo que reciben las laptops */
+    vista.alimentar(inst);
+    if (proy && !proy.closed) proy.postMessage({ tipo: "cuadro", buf: m.buf }, "*");
+  } else if (m.tipo === "estado") {
+    est = m; tEstado = performance.now();
+    porNum.clear();
+    for (const l of est.laptops) porNum.set(l.num, l);
+    if ((est.red.restaurado || 0) !== restauradoVisto) {      /* se recuperó un respaldo: adoptar sus valores */
+      restauradoVisto = est.red.restaurado || 0;
+      for (const g of ["vals", "retenido", "conj"]) Object.assign(maestra[g], est.maestra[g]);
+      refrescarTodo();
+    }
+    if (est.revMaestra !== revVista) {                        /* una etapa de la partitura movió valores: adoptarlos */
+      revVista = est.revMaestra;
+      Object.assign(maestra.vals, est.maestra.vals); Object.assign(maestra.retenido, est.maestra.retenido);
+      for (const k in est.maestra.conj) if (!(k in gt.enviado)) maestra.conj[k] = est.maestra.conj[k];   /* salvo lo que lleva el Gametrak */
+      refrescarTodo();
+    }
+    if (editor && est.versionPartitura !== versionVista && !editorTocado) { versionVista = est.versionPartitura; editor.fijar(est.partitura); }
+    if (editor && est.red.guardada && est.red.guardada.n !== guardadaVista) {
+      guardadaVista = est.red.guardada.n;
+      editor.estado(est.red.guardada.ok ? "guardada en " + est.red.guardada.ruta : "no se pudo guardar: " + est.red.guardada.error);
+    }
+    $("oBots").checked = est.bots;
+    pintarRed();
+    $("bCorrer").textContent = est.corriendo ? "⏸ pausa" : "▶ correr";
+    $("bCorrer").classList.toggle("on", !est.corriendo);
+    pintarLaptops();
+    refrescarLap();
+    if (proy && !proy.closed) proy.postMessage({ tipo: "info", laptops: est.laptops.map(l =>
+      ({ num: l.num, color: l.color, conectada: l.simulada || l.conectada || l.maestra, nivel: l.ef.nivel, radio: l.ef.radio })) }, "*");
+  }
+}
+
+/* ---------- red: dónde se conectan las demás laptops ---------- */
+function pintarRed() {
+  const r = est.red, d = $("dir");
+  $("bApagar").classList.toggle("oculta", r.estado !== "conectada");
+  d.classList.toggle("mal", r.estado === "rechazada" || r.estado === "reconectando");
+  d.title = SERVIDOR ? "" : "para que entren las laptops reales, abre la maestra con Servidor Enjambres";
+  if (!SERVIDOR) d.innerHTML = `<span class="punto"></span> sin servidor: solo laptops simuladas`;
+  else if (r.estado === "conectada") d.innerHTML = `<span class="punto ok"></span> las laptops abren: ` +
+    (r.direcciones.length ? r.direcciones.map(x => `<b>${x}</b>`).join(" o ") : `<span style="color:var(--warn)">no encontré una red: ¿Wi-Fi o cable?</span>`);
+  else if (r.estado === "rechazada") d.innerHTML = `<span class="punto mal"></span> esta no es la laptop servidora: la maestra se abre en la laptop que corre Servidor Enjambres`;
+  else if (r.estado === "apagado") d.innerHTML = `<span class="punto mal"></span> servidor apagado`;
+  else d.innerHTML = `<span class="punto mal"></span> ${r.estado === "conectando" ? "conectando con" : "sin conexión con"} el servidor (${SERVIDOR})…`;
+}
+
+/* ---------- formato y filas (pestaña avanzado) ---------- */
+function decimales(p) { return p.paso >= 1 ? 0 : p.paso >= 0.1 ? 1 : p.paso >= 0.01 ? 2 : 3; }
+function fmt(p, v) { return p.opciones ? (NOMBRE_MAPEO[v] || NOMBRE_AFINACION[v] || NOMBRE_VOZ[v] || v) : Number(v).toFixed(decimales(p)); }
+const aSlider = (p, v) => p.log ? 1000 * Math.log(v / p.min) / Math.log(p.max / p.min) : v;
+const deSlider = (p, s) => p.log ? Math.round(p.min * Math.pow(p.max / p.min, s / 1000)) : +s;
+
+function fila(p, obt, fij, opc) {
+  opc = opc || {};
+  const el = document.createElement("div");
+  el.className = "fila" + (opc.candado ? "" : " sin");
+  el.innerHTML = `<div class="nom"><span>${p.n}</span><span class="aviso"></span></div>`;
+  let cand = null;
+  if (opc.candado) { cand = document.createElement("button"); cand.className = "cand"; cand.onclick = () => retener([p.k], !maestra.retenido[p.k]); el.appendChild(cand); }
+  let ctl, tocando = false;
+  if (p.opciones) {
+    ctl = document.createElement("select");
+    for (const o of p.opciones) ctl.add(new Option(fmt(p, o), o));
+    ctl.onchange = () => { fij(ctl.value); refrescarTodo(); };
+  } else {
+    ctl = document.createElement("input"); ctl.type = "range";
+    ctl.min = p.log ? 0 : p.min; ctl.max = p.log ? 1000 : p.max; ctl.step = p.log ? 1 : p.paso;
+    ctl.oninput = () => { fij(deSlider(p, ctl.value)); val.textContent = fmt(p, deSlider(p, ctl.value)); };
+    ctl.onpointerdown = () => { tocando = true; };
+    addEventListener("pointerup", () => { tocando = false; });
+    ctl.ondblclick = () => { fij(p.def); refrescarTodo(); };
+    ctl.title = "doble clic: valor por defecto (" + fmt(p, p.def) + ")";
+  }
+  ctl.classList.add("ctl"); el.appendChild(ctl);
+  const val = document.createElement("span"); val.className = "val";
+  if (p.opciones) ctl.style.gridColumn = opc.candado ? "2 / 4" : "1 / 3"; else el.appendChild(val);
+  function refrescar() {
+    const v = obt(); if (v === undefined) return;
+    if (!tocando) { if (p.opciones) { if (document.activeElement !== ctl) ctl.value = v; } else { ctl.value = aSlider(p, v); val.textContent = fmt(p, v); } }
+    if (cand) { const r = maestra.retenido[p.k]; cand.textContent = r ? "MAESTRA" : "CEDIDO"; cand.className = "cand " + (r ? "ret" : "ced"); el.classList.toggle("apagada", !r); }
+  }
+  refrescar();
+  return { el, refrescar };
+}
+const filas = [];
+for (const p of PARAMS) { const f = fila(p, () => maestra.vals[p.k], v => fijarMaestra("vals", p.k, v), { candado: true }); $("params").appendChild(f.el); filas.push(f); }
+{ /* la fuerza del imán también va en la primera pestaña; su candado retiene o cede el imán entero (fuerza y lugar) */
+  const p = PARAMS.find(q => q.k === "iman");
+  const f = fila(Object.assign({}, p, { n: "IMÁN · repele (−) · atrae (+) · su lugar: arrastra en el escenario" }), () => maestra.vals.iman, v => fijarMaestra("vals", "iman", Math.abs(v) < 0.04 ? 0 : v), { candado: true });
+  f.el.querySelector(".cand").onclick = () => retener(["iman", "ix", "iy"], !maestra.retenido.iman);
+  $("filaIman").appendChild(f.el); filas.push(f);
+}
+const filasConj = [];              /* el Gametrak y las etapas los mueven: se refrescan solos */
+for (const p of CONJUNTO) {
+  const f = fila(p, () => maestra.conj[p.k], v => fijarMaestra("conj", p.k, v));
+  (p.k === "kappa" ? $("filaKappa") : $("conj")).appendChild(f.el); filas.push(f); filasConj.push(f);
+}
+function retener(ks, si) { for (const k of ks) fijarMaestra("retenido", k, si); refrescarTodo(); }
+$("bRetTodo").onclick = () => retener(PARAMS.map(p => p.k), true);
+$("bCedTodo").onclick = () => retener(PARAMS.map(p => p.k), false);
+
+/* ---------- pads de la maestra, con su candado ---------- */
+const NOMBRES_MAPEO = { directo: "directo", osciladores: "osciladores", friccion: "fricción" };
+const grupoPad = (cont, i) => { if (i === 0 || i === 3) { const t = document.createElement("div"); t.className = "grupoPad"; t.textContent = i ? "sonido" : "comportamiento"; cont.appendChild(t); } };
+const pads = PADS.map((d, i) => {
+  grupoPad($("pads"), i);
+  const ks = paramsDePad(d);
+  const pad = new Pad($("pads"), d, { alCambiar: (x, y) => {
+    const v = valoresDePad(d, x, y);
+    for (const k in v) fijarMaestra("vals", k, v[k]);
+    pad.texto(textoPad(d, maestra.vals));
+    for (const f of filas) f.refrescar();
+  } });
+  const cand = document.createElement("span"); cand.className = "candPad";
+  cand.title = "retener (rige la maestra) o ceder (cada laptop usa el suyo)";
+  cand.onclick = () => retener(ks, !ks.every(k => maestra.retenido[k]));
+  pad.cab.appendChild(cand);
+  return { d, ks, pad, cand };
+});
+const segMapeo = new Segmentos($("segMapeo"), MAPEOS, NOMBRES_MAPEO, v => { fijarMaestra("vals", "mapeo", v); refrescarTodo(); });
+$("candMapeo").onclick = () => retener(["mapeo"], !maestra.retenido.mapeo);
+const segVoz = new Segmentos($("segVoz"), VOCES, NOMBRE_VOZ, v => { fijarMaestra("vals", "voz", v); refrescarTodo(); });
+$("candVoz").onclick = () => retener(["voz"], !maestra.retenido.voz);
+function refrescarPads() {
+  for (const { d, ks, pad, cand } of pads) {
+    const ret = ks.filter(k => maestra.retenido[k]).length;
+    cand.textContent = ret === ks.length ? "MAESTRA" : ret ? "MIXTO" : "CEDIDO";
+    cand.className = "candPad " + (ret === ks.length ? "ret" : ret ? "mixto" : "ced");
+    const p = padDeValores(d, maestra.vals);
+    pad.fijar(p.x, p.y, textoPad(d, maestra.vals));
+    const f = [];                                  /* cedido: los valores de cada laptop, en su color */
+    if (ret < ks.length && est) for (const l of est.laptops) if (!l.maestra) {
+      const q = padDeValores(d, Object.assign({}, maestra.vals, l.params));
+      f.push({ x: q.x, y: q.y, color: l.color, etiqueta: String(l.num) });
+    }
+    pad.fantasmas(f);
+  }
+  segMapeo.fijar(maestra.vals.mapeo);
+  const r = maestra.retenido.mapeo;
+  $("candMapeo").textContent = r ? "MAESTRA" : "CEDIDO"; $("candMapeo").className = "cand " + (r ? "ret" : "ced");
+  segVoz.fijar(maestra.vals.voz);
+  const rv = maestra.retenido.voz;
+  $("candVoz").textContent = rv ? "MAESTRA" : "CEDIDO"; $("candVoz").className = "cand " + (rv ? "ret" : "ced");
+  $("ayudaVoz").textContent = AYUDA_VOZ[maestra.vals.voz] || "";
+}
+function refrescarTodo() { for (const f of filas) f.refrescar(); refrescarPads(); refrescarLap(); }
+
+/* ---------- pestañas ---------- */
+for (const b of document.querySelectorAll("[data-p]")) b.onclick = () => {
+  for (const x of document.querySelectorAll("[data-p]")) { x.classList.toggle("on", x === b); $(x.dataset.p).classList.toggle("oculta", x !== b); }
+  for (const { pad } of pads.concat(padsLap)) pad.dibujar();
+};
+for (const b of document.querySelectorAll("[data-h]")) b.onclick = () => {
+  $("cajon").classList.remove("cerrado"); $("bCajon").textContent = "▾";
+  for (const x of document.querySelectorAll("[data-h]")) { x.classList.toggle("on", x === b); $(x.dataset.h).classList.toggle("oculta", x !== b); }
+  if (b.dataset.h === "hEspectro") espectro.medir();
+};
+/* el cajón de abajo se agranda o achica arrastrando su borde superior */
+$("tirador").addEventListener("pointerdown", e => {
+  const y0 = e.clientY, h0 = $("cajon").getBoundingClientRect().height, t = $("tirador");
+  t.setPointerCapture(e.pointerId);
+  const mover = m => { $("cajon").style.height = Math.max(120, Math.min(innerHeight * 0.75, h0 + (y0 - m.clientY))) + "px"; };
+  const soltar = () => { t.removeEventListener("pointermove", mover); t.removeEventListener("pointerup", soltar); espectro.medir(); };
+  t.addEventListener("pointermove", mover); t.addEventListener("pointerup", soltar);
+});
+$("bCajon").onclick = () => { $("cajon").classList.toggle("cerrado"); $("bCajon").textContent = $("cajon").classList.contains("cerrado") ? "▴" : "▾"; };
+
+/* ---------- laptops ---------- */
+const nombreLap = num => num === 0 ? "maestra" : "laptop " + num;
+const grados = fi => Math.round(fi * 180 / Math.PI) + "°";
+let firmaLaps = "";
+function pintarLaptops(forzar) {
+  if (!est) return;
+  const laps = [...est.laptops].sort((a, b) => a.num - b.num);
+  const firma = laps.map(l => l.num + (l.simulada ? "s" : "")).join(",") + "|" + elegida;
+  if (firma !== firmaLaps || forzar) {
+    firmaLaps = firma;
+    const cont = $("laptops"); cont.innerHTML = "";
+    for (const l of laps) {
+      const d = document.createElement("div");
+      d.className = "lap" + (l.num === elegida ? " sel" : "");
+      d.innerHTML = `<div class="num${l.maestra ? " m" : ""}" style="background:${l.color}">${etiqueta(l.num)}</div><div class="info" data-num="${l.num}"></div>` +
+        (l.maestra ? `<div></div>` : `<div class="acc"><button title="quitar un agente">−</button><button title="agregar un agente">+</button></div>`);
+      d.onclick = () => elegir(l.num === elegida ? null : l.num);
+      if (!l.maestra) {
+        const [menos, mas] = d.querySelectorAll(".acc button");
+        menos.onclick = e => { e.stopPropagation(); llamar("quitarAgente", l.num); };
+        mas.onclick = e => { e.stopPropagation(); llamar("crearAgente", l.num); };
+      }
+      cont.appendChild(d);
+    }
+    $("nLaps").textContent = "(" + laps.filter(l => !l.maestra).length + ")";
+    armarPanelLaptop(); armarMonitor(); if (editor) editor.pintar();
+  }
+  for (const el of document.querySelectorAll("#laptops .info")) {
+    const l = porNum.get(+el.dataset.num); if (!l) continue;
+    if (l.maestra) { el.innerHTML = `<b>maestra</b> · parlante del arco · ${grados(l.fi)}`; continue; }
+    const e = l.simulada ? `<span class="est">simulada</span>` : l.conectada ? `<span class="est real">conectada</span>` : `<span class="est fuera">desconectada</span>`;
+    el.innerHTML = `<b>${l.n}</b> agentes${l.mudos ? ` (${l.mudos} mudos)` : ""} · ψ ${l.psi.toFixed(2)} · ${grados(l.fi)} ${e}`;
+  }
+}
+function elegir(num) { elegida = num; pintarLaptops(true); }
+$("bMasLap").onclick = () => { if (!est) return; let n = 1; while (porNum.has(n)) n++; llamar("agregarLaptop", n, { simulada: true }); elegida = n; };
+$("bRepartir").onclick = () => llamar("repartir");
+$("oBots").onchange = () => sim.enviar({ cmd: "bots", si: $("oBots").checked });
+
+/* Panel de la laptop elegida: los mismos pads que ve ella (solo se mueven los ejes cedidos). */
+const padsLap = PADS.map((d, i) => {
+  grupoPad($("padsLap"), i);
+  const pad = new Pad($("padsLap"), d, { alCambiar: (x, y) => {
+    if (elegida == null) return;
+    const v = valoresDePad(d, x, y), l = porNum.get(elegida);
+    for (const k in v) { if (maestra.retenido[k]) continue; if (l) l.params[k] = v[k]; sim.enviar({ cmd: "laptop", num: elegida, k, v: v[k] }); }
+  } });
+  return { d, ks: paramsDePad(d), pad };
+});
+const segMapeoLap = new Segmentos($("segMapeoLap"), MAPEOS, NOMBRES_MAPEO, v => sim.enviar({ cmd: "laptop", num: elegida, k: "mapeo", v }));
+const segVozLap = new Segmentos($("segVozLap"), VOCES, NOMBRE_VOZ, v => sim.enviar({ cmd: "laptop", num: elegida, k: "voz", v }));
+function refrescarLap() {
+  const l = elegida != null ? porNum.get(elegida) : null;
+  if (!l || l.maestra) return;
+  for (const { d, ks, pad } of padsLap) {
+    const ef = Object.assign({}, maestra.vals); for (const k of ks) if (!maestra.retenido[k]) ef[k] = l.params[k];
+    const p = padDeValores(d, ef);
+    const hx = d.k === "registro" ? ks.every(k => !maestra.retenido[k]) : !maestra.retenido[d.px];
+    const hy = d.k === "registro" ? hx : !maestra.retenido[d.py];
+    pad.habilitar(hx, hy, !hx && !hy ? "rige la maestra" : "");
+    pad.fijar(p.x, p.y, textoPad(d, ef));
+    pad.colorear(l.color);
+  }
+  segVozLap.fijar(maestra.retenido.voz ? maestra.vals.voz : l.params.voz);
+  segVozLap.habilitar(!maestra.retenido.voz);
+  segMapeoLap.fijar(maestra.retenido.mapeo ? maestra.vals.mapeo : l.params.mapeo);
+  segMapeoLap.habilitar(!maestra.retenido.mapeo);
+}
+function armarPanelLaptop() {
+  const sec = $("secLaptop"), l = elegida != null ? porNum.get(elegida) : null;
+  if (!l) { sec.classList.add("oculta"); return; }
+  sec.classList.remove("oculta");
+  $("tLaptop").innerHTML = `<div class="num${l.maestra ? " m" : ""}" style="background:${l.color}">${etiqueta(l.num)}</div> ${nombreLap(l.num)}` +
+    (l.simulada ? " <small>simulada</small>" : l.maestra ? "" : l.conectada ? " <small>conectada</small>" : " <small>desconectada</small>");
+  $("botLaptop").style.display = l.maestra ? "none" : "";
+  $("padsLap").style.display = $("opMapeoLap").style.display = $("opVozLap").style.display = l.maestra ? "none" : "";
+  $("nLaptop").textContent = l.maestra ? "La maestra no tiene sub-enjambre: suena como un parlante más del arco."
+    : l.simulada ? "Laptop simulada: aquí se hace lo que haría su intérprete." : "Laptop real: lo que se cambie aquí lo verá también en su pantalla.";
+  pintarAvisoSalidas();
+  firmaChips = null;
+  if (l.maestra) $("chips").innerHTML = "";
+  refrescarLap();
+  for (const { pad } of padsLap) pad.dibujar();
+}
+let firmaChips = null;
+function pintarChips() {
+  if (elegida == null || elegida === 0 || !cuadro) return;
+  const l = porNum.get(elegida); if (!l) return;
+  const A = cuadro.agentes, C = cuadro.campos.length, mios = [];
+  for (let i = 0; i < A.length; i += C) if (A[i + 1] === elegida) mios.push({ id: A[i], mudo: A[i + 9] });
+  const firma = mios.map(a => a.id + (a.mudo ? "m" : "")).join(",");
+  if (firma === firmaChips) return;
+  firmaChips = firma;
+  const c = $("chips"); c.innerHTML = "";
+  for (const a of mios) {
+    const s = document.createElement("span");
+    s.className = "ag" + (a.mudo ? " mudo" : ""); s.style.background = l.color; s.textContent = a.id;
+    s.title = a.mudo ? "muteado: sigue en el modelo, no suena" : "clic para mutear";
+    s.onclick = () => llamar("mutear", a.id);
+    c.appendChild(s);
+  }
+  if (!mios.length) c.innerHTML = `<span class="nota">sin agentes</span>`;
+}
+$("salidas").onchange = () => {
+  const n = +$("salidas").value;
+  llamar("fijarSalidas", elegida, n);
+  if (elegida === 0) motor.fijarCanales(n);          /* la maestra: sus salidas son los canales de este dispositivo */
+  const l = porNum.get(elegida); if (l) l.salidas = n;
+  pintarAvisoSalidas();
+};
+function pintarAvisoSalidas() {
+  const av = $("avisoSalidas"), sel = $("salidas"), l = porNum.get(elegida);
+  if (!l) return;
+  const disp = l.maestra ? motor.canalesDisponibles() : null;
+  sel.innerHTML = "";
+  for (let n = 1; n <= Enjambres.MAX_CANALES; n++) {
+    const nombre = n === 1 ? "1 · mono" : n === 2 ? "2 · estéreo" : n + " canales";
+    const o = new Option(nombre + (disp != null && n > disp ? " · no disponible" : ""), n);
+    o.disabled = disp != null && n > disp; sel.add(o);
+  }
+  sel.value = String(l.salidas);
+  av.textContent = l.maestra ? (disp == null ? "activa el sonido para ver cuántos hay" : `este dispositivo: ${disp} canales`) : (l.simulada ? "simulada" : "");
+}
+$("bMasAg").onclick = () => llamar("crearAgente", elegida);
+$("bMenosAg").onclick = () => llamar("quitarAgente", elegida);
+$("bMuteTodos").onclick = () => llamar("mutearTodos", elegida, true);
+$("bDesmuteTodos").onclick = () => llamar("mutearTodos", elegida, false);
+$("bQuitarLap").onclick = () => { if (elegida) { llamar("quitarLaptop", elegida); elegir(null); } };
+
+/* ---------- sonido y monitor ---------- */
+function armarMonitor() {
+  const s = $("monitor"), antes = s.value || "L0";
+  s.innerHTML = "";
+  s.add(new Option("escuchar: la maestra", "L0"));
+  for (const l of [...est.laptops].filter(l => !l.maestra).sort((a, b) => a.num - b.num)) s.add(new Option("escuchar: laptop " + l.num, "L" + l.num));
+  s.add(new Option("escuchar: toda la sala (estéreo)", "E"));
+  s.add(new Option("silencio", "S"));
+  s.value = [...s.options].some(o => o.value === antes) ? antes : "L0";
+  aplicarMonitor();
+}
+function aplicarMonitor() {
+  const v = $("monitor").value;
+  motor.fijarModo(v === "E" ? { tipo: "estereo" } : v === "S" ? { tipo: "silencio" } : { tipo: "laptop", num: +v.slice(1), fisico: v === "L0" });
+}
+$("monitor").onchange = aplicarMonitor;
+$("vol").oninput = () => motor.fijarVolumen(+$("vol").value);
+$("bSonido").onclick = async () => {
+  if (motor.ctx && motor.ctx.state === "running") await motor.ctx.suspend();
+  else { const m = porNum.get(0); if (m) motor.fijarCanales(m.salidas); await motor.iniciar(); }
+  const on = motor.ctx.state === "running";
+  pintarAvisoSalidas();
+  $("bSonido").textContent = on ? "sonido activo" : "activar sonido";
+  $("bSonido").classList.toggle("on", on);
+};
+
+/* ---------- transporte ---------- */
+$("bCorrer").onclick = () => sim.enviar({ cmd: "correr", si: !(est && est.corriendo) });
+$("bPaso").onclick = () => sim.enviar({ cmd: "paso" });
+$("bReiniciar").onclick = () => llamar("reiniciar");
+function dobleClic(boton, accion) {          /* el primer clic arma, el segundo (dentro de 3 s) actúa */
+  let t = -1e9;
+  boton.onclick = () => {
+    const ahora = performance.now();
+    if (ahora - t < 3000) { t = -1e9; boton.classList.remove("armado"); accion(); return; }
+    t = ahora; boton.classList.add("armado");
+    setTimeout(() => { if (performance.now() - t >= 2900) boton.classList.remove("armado"); }, 3000);
+  };
+}
+dobleClic($("bVaciar"), () => llamar("vaciar"));
+dobleClic($("bApagar"), () => sim.enviar({ cmd: "apagar" }));
+document.addEventListener("keydown", e => {
+  if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName) && e.target.type !== "range" && e.target.type !== "checkbox") return;
+  if (e.key === " ") { e.preventDefault(); $("bCorrer").click(); }
+  else if (e.key === ".") sim.enviar({ cmd: "paso" });
+  else if (e.key === "n" || e.key === "N") etapaSig();
+  else if (e.key === "b" || e.key === "B") etapaAnt();
+  else if (e.key === "d" || e.key === "D") alternarVistaDir();
+  else if (e.key === "0") $("vdDeNuevo").click();
+  else if ((e.key === "+" || e.key === "=") && elegida) llamar("crearAgente", elegida);
+  else if ((e.key === "-" || e.key === "_") && elegida) llamar("quitarAgente", elegida);
+});
+
+/* ---------- partitura (solo mensajes) ---------- */
+editor = new EditorPartitura($("hPartitura"), {
+  alCambiar: p => {
+    editorTocado = true; sim.enviar({ cmd: "partitura", partitura: p });
+    clearTimeout(editor._t); editor._t = setTimeout(() => { editorTocado = false; versionVista = -1; }, 1500);
+  },
+  alIr: ms => sim.enviar({ cmd: "reloj", accion: "ir", ms }),
+  alReloj: accion => sim.enviar({ cmd: "reloj", accion }),
+  alGuardar: () => {
+    /* el Servidor Enjambres escribe siempre la partitura.js de la versión 1: aquí la guarda la app Enjambres Director */
+    if (!est) return;
+    const p = Object.assign({}, est.partitura, { mod: est.partitura.mod || Date.now() });
+    if (!nativo({ cmd: "guardarPartitura", texto: JSON.stringify(p, null, 1) }))
+      editor.estado("en el navegador la partitura se guarda con exportar; con la app Enjambres Director, «guardar» escribe partitura.js");
+  },
+  carriles: () => est ? est.laptops.filter(l => !l.maestra).map(l => l.num) : [],
+  color: n => (porNum.get(n) || {}).color || Enjambres.colorDe(n),
+});
+const msReloj = () => !est ? 0 : est.reloj.estado === "corriendo" ? est.reloj.ms + (performance.now() - tEstado) : est.reloj.ms;
+const escapar = s => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+function pintarMensajes() {
+  if (!est) return;
+  const { actuales, proximo } = mensajesEn(est.partitura, msReloj(), null);
+  const para = e => e.para === "todos" ? "todos" : "laptop " + e.para;
+  const html = actuales.map(e => `<div><small>${para(e)}</small>${escapar(e.texto) || "…"}</div>`).join("") +
+    (proximo && est.reloj.estado === "corriendo" && proximo.faltaMs < 15000
+      ? `<div style="opacity:.6"><small>en ${Math.ceil(proximo.faltaMs / 1000)} s · ${para(proximo.ev)}</small>${escapar(proximo.ev.texto)}</div>` : "");
+  if ($("mensajes").innerHTML !== html) $("mensajes").innerHTML = html;
+}
+
+/* la app avisa cómo le fue al guardar */
+window.EnjambresNativo = { guardada: (ok, detalle) => editor.estado(ok ? "guardada en " + detalle : "no se pudo guardar: " + detalle) };
+
+/* ---------- etapas: la que rige, qué hace el director, y saltar de una a otra ---------- */
+const etapaSig = () => sim.enviar({ cmd: "etapa", accion: "siguiente" });
+const etapaAnt = () => sim.enviar({ cmd: "etapa", accion: "anterior" });
+$("bEtSig").onclick = etapaSig; $("bEtAnt").onclick = etapaAnt;
+let htmlEtapa = "", firmaLista = "";
+function pintarEtapa() {
+  if (!est) return;
+  const E = est.partitura.etapas || [], et = est.etapa, ms = msReloj();
+  let html = "";
+  if (et) {
+    const falta = et.fin != null ? Math.max(0, et.fin * 1000 - ms) : null;
+    html = `<small>etapa ${et.i + 1} de ${et.n}${est.reloj.calderon ? " · ESPERA AL DIRECTOR (pedal)" : ""}<i>${falta != null ? "quedan " + mmss(falta) : "última"}</i>` +
+      `<button id="eAnt" title="tecla B">◂</button><button id="eSig" title="tecla N, o el pedal">▸</button></small>` +
+      `<b>${escapar(et.nombre) || "…"}</b>` + (et.director ? `<div class="dirTxt">${escapar(et.director)}</div>` : "") +
+      (et.texto ? `<div class="intTxt">intérpretes: ${escapar(et.texto).replace(/\n/g, " · ")}</div>` : "");
+  } else if (E.length) {
+    html = `<small>partitura de ${E.length} etapas · reloj en espera<i>${mmss(E[E.length - 1].t * 1000)}+</i><button id="eSig">▸ empezar</button></small>` +
+      `<div class="intTxt">Nada impuesto todavía: al empezar (▶, tecla N o el pedal) rige la etapa 1, «${escapar(E[0].nombre)}».</div>`;
+  }
+  /* sin el reloj (cambia cada segundo) para no rehacer los botones a cada rato */
+  const firma = html.replace(/<i>.*?<\/i>/, "");
+  if (firma !== htmlEtapa) {
+    htmlEtapa = firma; $("etapa").innerHTML = html;
+    const s = $("eSig"), a = $("eAnt"); if (s) s.onclick = etapaSig; if (a) a.onclick = etapaAnt;
+  } else { const i = $("etapa").querySelector("small i"), m = html.match(/<i>(.*?)<\/i>/); if (i && m) i.textContent = m[1]; }
+  /* la lista, en la pestaña director */
+  const fl = E.map(e => e.id + e.t + e.nombre).join("|") + "#" + (et ? et.i : -1);
+  if (fl !== firmaLista) {
+    firmaLista = fl;
+    const c = $("listaEtapas"); c.innerHTML = E.length ? "" : `<span class="nota">esta partitura no tiene etapas</span>`;
+    E.forEach((e, i) => {
+      const d = document.createElement("div"); d.className = et && et.i === i ? "on" : "";
+      d.innerHTML = `<span>${mmss(e.t * 1000)}</span><b>${i + 1}. ${escapar(e.nombre)}</b><span>${e.maxAgentes != null ? "≤ " + e.maxAgentes + " ag." : ""}</span>`;
+      d.title = e.director || ""; d.onclick = () => sim.enviar({ cmd: "etapa", accion: "ir", i });
+      c.appendChild(d);
+    });
+  }
+}
+
+/* ---------- el Gametrak del director ---------- */
+const gt = new Gametrak({
+  alCambiar: c => { for (const k in c) { maestra.conj[k] = c[k]; sim.enviar({ cmd: "maestra", grupo: "conj", k, v: c[k], auto: true }); } },
+  alPedal: etapaSig,
+});
+gt.probarCon($("gtIzq"), "izq"); gt.probarCon($("gtDer"), "der");
+gt.probarCon($("vdIzq"), "izq"); gt.probarCon($("vdDer"), "der");
+$("gtActivo").onchange = () => { gt.cfg.activo = $("gtActivo").checked; gt.guardar(); };
+$("gtSim").onchange = () => gt.simular($("gtSim").checked);
+for (const c of document.querySelectorAll("[data-d]")) c.onchange = () => { gt.cfg.dest[c.dataset.d] = c.checked; gt.guardar(); };
+$("gtManos").onclick = () => { const t = gt.cfg.izq; gt.cfg.izq = gt.cfg.der; gt.cfg.der = t; gt.guardar(); };
+$("gtRestablecer").onclick = () => { gt.restablecer(); pintarGtOpciones(); };
+$("gtAprender").onclick = () => {
+  if (!gt.conectado()) { $("gtAprender").textContent = "no hay Gametrak"; setTimeout(() => { $("gtAprender").textContent = "calibrar (8 s)"; }, 1500); return; }
+  gt.aprender(8, ok => { $("gtAprender").textContent = ok ? "calibrado" : "no sirvió: mueve las dos manos"; setTimeout(() => { $("gtAprender").textContent = "calibrar (8 s)"; }, 2500); });
+};
+const NOMBRE_EJE = ["izq. x", "izq. y", "izq. altura", "der. x", "der. y", "der. altura"];
+function pintarGtOpciones() {
+  $("gtActivo").checked = gt.cfg.activo; $("gtSim").checked = !!gt.sim;
+  for (const c of document.querySelectorAll("[data-d]")) c.checked = !!gt.cfg.dest[c.dataset.d];
+  const cont = $("gtInv"); cont.innerHTML = "";
+  [...gt.cfg.izq, ...gt.cfg.der].forEach((eje, j) => {
+    const l = document.createElement("label");
+    l.innerHTML = `<input type="checkbox"${gt.cfg.inv[eje] ? " checked" : ""}> invertir ${NOMBRE_EJE[j]}`;
+    l.firstChild.onchange = e => { gt.cfg.inv[eje] = e.target.checked; gt.guardar(); };
+    cont.appendChild(l);
+  });
+}
+pintarGtOpciones();
+function pintarGametrak(lento) {
+  const dir = !$("vistaDir").classList.contains("oculta"), pest = !$("pDirector").classList.contains("oculta");
+  if (dir) { dibujarMano($("vdIzq"), gt, "izq"); dibujarMano($("vdDer"), gt, "der"); }
+  else if (pest) { dibujarMano($("gtIzq"), gt, "izq"); dibujarMano($("gtDer"), gt, "der"); }
+  if (!lento || !pest) return;
+  const pr = gt.progresoAprender(), hay = gt.conectado();
+  if (pr != null) $("gtAprender").textContent = pr < 0.15 ? "cordeles recogidos…" : "mueve las dos manos… " + Math.ceil(8 * (1 - pr)) + " s";
+  $("gtEstado").innerHTML = hay ? `<span class="punto ok"></span> ${escapar(gt.nombre || "Gametrak")} · por ${gt.fuente === "app" ? "la app" : "el navegador"}`
+    : gt.sim ? `<span class="punto"></span> probando con el mouse` : `<span class="punto mal"></span> sin Gametrak` + (NATIVO ? ": conéctalo (revisa el adaptador USB)" : ": en Chrome, mueve un cordel o pisa el pedal; o usa la app Enjambres Director");
+  $("gtCrudo").textContent = hay ? "ejes  " + gt.crudo.map(v => v.toFixed(2)).join("  ") + (gt.botones.some(Boolean) ? "   PEDAL" : "") : "";
+}
+
+/* ---------- vista del director: lo que necesita ver de pie, con las manos en los cordeles ---------- */
+const vistaD = new Vista($("vdLienzo"));
+function alternarVistaDir() {
+  $("vistaDir").classList.toggle("oculta");
+  if (!$("vistaDir").classList.contains("oculta")) vistaD.medir();
+}
+$("bVistaDir").onclick = alternarVistaDir; $("vdCerrar").onclick = alternarVistaDir;
+/* volver al comienzo: reloj a 0:00 y enjambre vacío. Pide confirmar (segundo clic, o segunda vez la tecla 0, dentro de 3 s). */
+dobleClic($("vdDeNuevo"), () => sim.enviar({ cmd: "deNuevo" }));
+function pintarVistaDir() {
+  if ($("vistaDir").classList.contains("oculta") || !est) return;
+  vistaD.dibujar(cuadro, { info, sinTexto: true, malla: true });
+  const E = est.partitura.etapas || [], et = est.etapa, ms = msReloj();
+  const falta = et && et.fin != null ? Math.max(0, et.fin * 1000 - ms) : null;
+  const sig = et ? E[et.i + 1] : E[0];
+  const poner = (id, t) => { if ($(id).textContent !== t) $(id).textContent = t; };
+  poner("vdNum", et ? `${et.i + 1}/${et.n}` : "");
+  poner("vdNombre", et ? et.nombre : E.length ? "en espera" : "sin partitura");
+  poner("vdReloj", mmss(ms));
+  poner("vdQueda", est.reloj.calderon ? "PEDAL" : falta != null ? "−" + mmss(falta) : et && est.reloj.estado === "detenido" ? "FIN" : "");
+  poner("vdTexto", et ? et.director || "" : E.length ? "Pedal (o tecla N): empieza la obra." : "");
+  poner("vdSigue", sig ? `sigue: ${sig.nombre}${sig.director ? " · " + sig.director.split("\n")[0] : ""}` : et ? "última etapa" : "");
+  poner("vdDatos", `agentes ${est.N} · ψ ${est.psi.toFixed(2)} · ${est.laptops.filter(l => !l.maestra && (l.conectada || l.simulada)).length} laptops`);
+  $("vdQueda").style.color = falta != null && falta < 10000 ? "var(--warn)" : "";
+}
+
+/* ---------- proyección: ventana aparte, recibe los cuadros por postMessage ---------- */
+$("bProyeccion").onclick = () => {
+  if (nativo({ cmd: "proyeccion" })) return;        /* en la app: ventana propia, a pantalla completa en la segunda pantalla */
+  if (proy && !proy.closed) { proy.focus(); return; }
+  proy = window.open("proyeccion.html", "enjambres-proyeccion", "popup,width=1280,height=720");
+};
+
+/* ---------- dibujo del semicírculo (vista.js) ---------- */
+const lienzo = $("lienzo"), vista = new Vista(lienzo);
+const info = new Map();
+let arrastrando = null, sobre = null, abajo = null, fiLocal = null;
+let arrIman = null, tIman = 0;      /* {num, x, y}: num = null → el imán de la maestra (retenido) */
+function dibujar() {
+  info.clear();
+  for (const l of porNum.values()) info.set(l.num, { color: l.color, ef: l.ef, conectada: l.simulada || l.conectada });
+  vista.dibujar(cuadro, {
+    info, elegida, resaltar: [arrastrando, sobre].filter(n => n != null),
+    lineas: $("oLineas").checked, radios: $("oRadios").checked, malla: $("oMalla").checked,
+    mover: arrastrando != null ? { n: arrastrando, fi: fiLocal } : null,
+    manija: !maestra.retenido.ix && elegida ? elegida : null,
+    iman: arrIman && arrIman.num != null ? { n: arrIman.num, x: arrIman.x, y: arrIman.y } : null,
+    vacio: ["sin agentes: cada laptop agrega los suyos", SERVIDOR ? "(o aquí: elige una laptop y usa  + agente)" : "(aquí, con las simuladas: elige una laptop y usa  + agente)"],
+  });
+}
+/* de quién es el imán que se mueve arrastrando dentro del escenario */
+function duenoIman() {
+  if (maestra.retenido.ix && maestra.retenido.iy) return { num: null };
+  const l = elegida ? porNum.get(elegida) : null;
+  return l && !l.maestra ? { num: elegida } : null;
+}
+function mandarIman(forzar) {
+  const ahora = performance.now();
+  if (!forzar && ahora - tIman < 33) return;
+  tIman = ahora;
+  const x = +arrIman.x.toFixed(3), y = +arrIman.y.toFixed(3);
+  if (arrIman.num == null) { fijarMaestra("vals", "ix", x); fijarMaestra("vals", "iy", y); }
+  else { const l = porNum.get(arrIman.num); if (l) { l.params.ix = x; l.params.iy = y; }
+         sim.enviar({ cmd: "laptop", num: arrIman.num, k: "ix", v: x }); sim.enviar({ cmd: "laptop", num: arrIman.num, k: "iy", v: y }); }
+}
+lienzo.addEventListener("pointerdown", e => {
+  const [X, Y] = vista.pos(e);
+  abajo = { X, Y, num: vista.laptopEn(cuadro, X, Y), movio: false };
+  if (abajo.num != null) { arrastrando = abajo.num; fiLocal = null; lienzo.setPointerCapture(e.pointerId); }
+  else if (vista.dentro(X, Y) && !vista.agenteEn(cuadro, X, Y)) { abajo.iman = duenoIman(); if (abajo.iman) lienzo.setPointerCapture(e.pointerId); }
+});
+lienzo.addEventListener("pointermove", e => {
+  const [X, Y] = vista.pos(e);
+  if (arrastrando != null) {
+    if (Math.hypot(X - abajo.X, Y - abajo.Y) > 3) abajo.movio = true;
+    if (abajo.movio) { fiLocal = vista.fiDe(X, Y); llamar("moverLaptop", arrastrando, fiLocal); }
+  } else if (abajo && abajo.iman) {
+    if (Math.hypot(X - abajo.X, Y - abajo.Y) > 3) abajo.movio = true;
+    if (abajo.movio) {
+      if (!arrIman) {            /* al empezar: un imán sin fuerza no llama a nadie */
+        const q = abajo.iman;
+        if (q.num == null) { if (Math.abs(maestra.vals.iman) < 0.02) { fijarMaestra("vals", "iman", 0.6); refrescarTodo(); } }
+        else if (!maestra.retenido.iman) { const l = porNum.get(q.num); if (l && Math.abs(l.params.iman) < 0.02) sim.enviar({ cmd: "laptop", num: q.num, k: "iman", v: 0.6 }); }
+      }
+      arrIman = Object.assign({ num: abajo.iman.num }, vista.aModelo(X, Y)); mandarIman(false);
+    }
+  } else {
+    sobre = vista.laptopEn(cuadro, X, Y);
+    lienzo.style.cursor = sobre != null ? "grab" : vista.agenteEn(cuadro, X, Y) ? "pointer" : vista.dentro(X, Y) && duenoIman() ? "crosshair" : "default";
+  }
+});
+lienzo.addEventListener("pointerup", e => {
+  const [X, Y] = vista.pos(e);
+  if (arrIman) mandarIman(true);
+  if (abajo && !abajo.movio) {
+    if (abajo.num != null) elegir(abajo.num === elegida ? null : abajo.num);
+    else { const a = vista.agenteEn(cuadro, X, Y); elegir(a ? a.dueno : null); }
+  }
+  arrastrando = null; abajo = null; fiLocal = null; arrIman = null;
+});
+const espectro = new Espectro($("espectro"), $("marcas"));
+
+/* ---------- pie ---------- */
+function pintarPie() {
+  const ahora = performance.now();
+  if (ahora - tCuadros >= 1000) { cuadrosPorSeg = cuadrosMedidos * 1000 / (ahora - tCuadros); cuadrosMedidos = 0; tCuadros = ahora; }
+  if (!est) { $("pie").textContent = sim.error ? "simulador: " + sim.error : "esperando al simulador…"; return; }
+  const mudos = est.laptops.reduce((s, l) => s + l.mudos, 0), kb = bytesCuadro / 1024, nl = est.laptops.length;
+  $("pie").innerHTML =
+    `agentes <b>${est.N}</b>${mudos ? ` (${mudos} mudos)` : ""} · ψ <b>${est.psi.toFixed(3)}</b> · vecinos <b>${est.vecinos.toFixed(1)}</b> · ` +
+    `<b>${est.pasosPorSeg.toFixed(1)}</b> pasos/s${est.pasosMin != null ? ` (mín. ${est.pasosMin.toFixed(1)})` : ""} en ${sim.donde}` +
+    `${sim.error ? ` <b style="color:var(--warn)">${sim.error}</b>` : ""} · cuadro <b>${kb.toFixed(2)} kB</b> → ${(kb * cuadrosPorSeg * nl / 1024).toFixed(2)} MB/s con ${nl} · ` +
+    `voces aquí <b>${motor.voces.size}</b>` + (motor.ctx ? ` · salida ${motor.S} de ${motor.canalesDisponibles()} canales` : "");
+}
+
+let tLento = 0;
+function cuadroPantalla(t) {
+  requestAnimationFrame(cuadroPantalla);   /* primero: un error en un cuadro no debe detener el dibujo */
+  try {
+    gt.tick(t);
+    dibujar();
+    pintarVistaDir();
+    if (!$("hEspectro").classList.contains("oculta") && !$("cajon").classList.contains("cerrado")) espectro.dibujar(motor);
+    pintarChips();
+    if (est) { editor.reloj_(est.reloj.estado, msReloj()); editor.marcarEtapa(est.etapa ? est.etapa.id : null); }
+    const lento = t - tLento > 250;
+    pintarGametrak(lento);
+    if (lento) { tLento = t; pintarPie(); pintarMensajes(); pintarEtapa(); refrescarPads(); for (const f of filasConj) f.refrescar(); }
+  } catch (e) {
+    if (!cuadroPantalla.avisado) { console.error("dibujo:", e); cuadroPantalla.avisado = true; }
+  }
+}
+
+sim.enviar({ cmd: "iniciar", servidor: SERVIDOR, simuladas: SERVIDOR ? 0 : SIMULADAS_SIN_SERVIDOR,
+             partitura: window.ENJAMBRES_PARTITURA || null });
+requestAnimationFrame(cuadroPantalla);
+</script>
+</body>
+</html>

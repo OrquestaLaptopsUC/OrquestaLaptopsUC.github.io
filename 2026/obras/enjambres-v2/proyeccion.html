@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ENJAMBRES 2 · PROYECCIÓN</title>
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  #pista{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);color:#6f7b8a;
+    font:12px ui-sans-serif,system-ui,sans-serif;letter-spacing:.06em;transition:opacity 1.5s;pointer-events:none;text-align:center}
+  #pista b{color:#b8c4d6}
+  body.quieto{cursor:none}
+</style>
+</head>
+<body>
+<canvas id="lienzo"></canvas>
+<div id="pista">clic o <b>F</b>: pantalla completa · <b>L</b>: laptops · <b>A</b>: escenario · <b>E</b>: largo de las estelas · <b>M</b>: malla · <b>I</b>: imanes</div>
+
+<script src="modelo.js"></script>
+<script src="protocolo.js"></script>
+<script src="sonido.js"></script>
+<script src="vista.js"></script>
+<script>
+"use strict";
+/* ============================================================
+   ENJAMBRES 2 · proyección
+   El enjambre para el público, con el mismo dibujo que ven los intérpretes
+   (vista.js) pero sin texto: luces con estela, la malla entre vecinos, los
+   destellos de los pulsos y las laptops encendiéndose con lo que suenan.
+   Recibe los cuadros de la maestra que la abrió (postMessage) o, abierta en
+   otro computador, del Servidor Enjambres (WebSocket, como "vista").
+   ============================================================ */
+const { decodificar, Vista } = Enjambres;
+const $ = id => document.getElementById(id);
+const vista = new Vista($("lienzo"), { proyeccion: true });
+let cuadro = null, tCuadro = 0;
+const info = new Map();             /* num → {color, conectada, ef:{nivel, radio}} */
+let verLaptops = true, verArco = true, malla = true, imanes = true;
+const LARGOS = [14, 30, 48];
+let largo = 1;
+
+function dibujar() {
+  requestAnimationFrame(dibujar);
+  const viejo = !cuadro || performance.now() - tCuadro > 3000;
+  let c = viejo ? null : cuadro;
+  if (c && !imanes) c = Object.assign({}, c, { laptops: c.laptops.map(l => Object.assign({}, l, { iman: 0 })) });
+  vista.dibujar(c, { info, sinTexto: true, verLaptops, verArco, malla, largo: LARGOS[largo] });
+}
+
+/* ---------- de dónde llegan los cuadros ---------- */
+function alCuadro(buf) {
+  const inst = decodificar(buf); if (!inst) return;
+  cuadro = inst; tCuadro = performance.now();
+  vista.alimentar(inst);
+}
+/* 1) abierta desde la maestra */
+addEventListener("message", e => {
+  const m = e.data || {};
+  if (m.tipo === "cuadro") alCuadro(m.buf);
+  else if (m.tipo === "info") for (const l of m.laptops) info.set(l.num, { color: l.color, conectada: l.conectada, ef: { nivel: l.nivel, radio: l.radio } });
+});
+/* 2) abierta en otro computador: se conecta al servidor como "vista" */
+if (!window.opener && /^https?:$/.test(location.protocol)) {
+  let intento = 0;
+  const conectar = () => {
+    const ws = new WebSocket(`ws://${location.host}/enjambres`);
+    ws.binaryType = "arraybuffer";
+    ws.onopen = () => { intento = 0; ws.send(JSON.stringify({ t: "hola", rol: "vista" })); };
+    ws.onmessage = e => {
+      if (typeof e.data !== "string") return alCuadro(e.data);
+      const m = JSON.parse(e.data);
+      const de = (l, k) => m.retenido[k] ? m.vals[k] : l.params[k];
+      if (m.t === "config") for (const l of m.laptops)
+        info.set(l.num, { color: l.color, conectada: l.simulada || l.conectada || l.maestra, ef: { nivel: de(l, "nivel"), radio: de(l, "radio") } });
+    };
+    ws.onclose = () => setTimeout(conectar, Math.min(5000, 500 * Math.pow(2, intento++)));
+  };
+  conectar();
+}
+
+/* ---------- pantalla completa, teclas, cursor ---------- */
+const completa = () => { if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { }); };
+addEventListener("click", completa);
+addEventListener("keydown", e => {
+  const k = e.key.toLowerCase();
+  if (k === "f") document.fullscreenElement ? document.exitFullscreen() : completa();
+  else if (k === "l") verLaptops = !verLaptops;
+  else if (k === "a") verArco = !verArco;
+  else if (k === "m") malla = !malla;
+  else if (k === "i") imanes = !imanes;
+  else if (k === "e") largo = (largo + 1) % LARGOS.length;
+});
+let tQuieto = null;
+addEventListener("pointermove", () => {
+  document.body.classList.remove("quieto"); $("pista").style.opacity = 1;
+  clearTimeout(tQuieto); tQuieto = setTimeout(() => { document.body.classList.add("quieto"); $("pista").style.opacity = 0; }, 2500);
+});
+setTimeout(() => { $("pista").style.opacity = 0; document.body.classList.add("quieto"); }, 5000);
+
+requestAnimationFrame(dibujar);
+</script>
+</body>
+</html>

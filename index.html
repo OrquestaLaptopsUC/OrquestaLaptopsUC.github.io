@@ -3,447 +3,571 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="Orquesta de Laptops UC: ensamble donde computadores portátiles se usan como instrumentos musicales. Conciertos, creación, repertorio y actividades abiertas." />
-  <title>Orquesta de Laptops UC</title>
+  <title>Orquesta de Laptops UC · Concierto viernes 11 de diciembre, 19:00, Auditorio Luksic</title>
+  <meta name="description" content="Orquesta de Laptops UC, Pontificia Universidad Católica de Chile. Concierto de cierre 2026: viernes 11 de diciembre, 19:00, Auditorio Luksic, Campus San Joaquín UC. Entrada gratuita. Un proyecto Impacto UC de la Dirección de Artes y Cultura UC." />
+  <meta name="theme-color" content="#0E1430" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/identidad/favicon-32.png" />
+  <link rel="icon" type="image/svg+xml" href="assets/identidad/oluc-icono-512.svg" />
+  <link rel="apple-touch-icon" href="assets/identidad/oluc-icono-180.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Orquesta de Laptops UC" />
+  <meta property="og:description" content="Concierto de cierre 2026: viernes 11 de diciembre, 19:00, Auditorio Luksic, Campus San Joaquín UC. Entrada gratuita. Un proyecto Impacto UC." />
+  <meta property="og:image" content="https://orquestalaptopsuc.github.io/assets/identidad/oluc-og.jpg" />
+  <meta property="og:url" content="https://orquestalaptopsuc.github.io/" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MusicEvent",
+    "name": "Orquesta de Laptops UC · Concierto de cierre 2026",
+    "startDate": "2026-12-11T19:00:00-03:00",
+    "eventStatus": "https://schema.org/EventScheduled",
+    "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+    "location": {"@type": "Place", "name": "Auditorio Luksic, Campus San Joaquín UC", "address": {"@type": "PostalAddress", "streetAddress": "Av. Vicuña Mackenna 4860", "addressLocality": "Macul, Santiago", "addressCountry": "CL"}},
+    "isAccessibleForFree": true,
+    "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CLP"},
+    "performer": {"@type": "MusicGroup", "name": "Orquesta de Laptops UC"},
+    "organizer": {"@type": "Organization", "name": "Pontificia Universidad Católica de Chile", "url": "https://www.uc.cl"},
+    "funder": {"@type": "Organization", "name": "Impacto UC, Dirección de Artes y Cultura UC"},
+    "image": "https://orquestalaptopsuc.github.io/assets/identidad/oluc-og.jpg",
+    "description": "Concierto de cierre 2026 de la Orquesta de Laptops UC, con obras creadas por los integrantes de la orquesta."
+  }
+  </script>
 
   <style>
+    /* Paleta de la identidad OLUC (Identidad/generar_identidad.py) */
     :root{
-      --bg:#0b0f19;
-      --card:#111827;
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --accent:#60a5fa;
-      --accent2:#34d399;
-      --border:rgba(255,255,255,.08);
-      --shadow:0 10px 30px rgba(0,0,0,.35);
-      --radius:16px;
-      --max:1040px;
+      --ink:#0E1430; --ink2:#141B3D; --faint:#1B2350; --muted:#2C3768;
+      --light:#E9ECF5; --paper:#F5F6FA; --subtle:#8C95C4;
+      --citrus:#F4C430; --citrus-d:#C99A00;
+      --blue:#5E8BFF; --spoke:#3654BE; --mesh:#323D78; --node:#56649F;
+      --line:rgba(140,149,196,.18);
+      --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+      --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      --max:1160px;
     }
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
-      background:radial-gradient(1200px 800px at 20% 0%, rgba(96,165,250,.18), transparent 60%),
-                 radial-gradient(1000px 700px at 80% 10%, rgba(52,211,153,.14), transparent 60%),
-                 var(--bg);
-      color:var(--text); line-height:1.55}
-    a{color:var(--accent);text-decoration:none}
-    a:hover{text-decoration:underline}
+    html{scroll-behavior:smooth; scroll-padding-top:72px}
+    @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} }
+    body{margin:0; background:var(--ink); color:var(--light); font-family:var(--sans);
+      font-size:17px; line-height:1.6; -webkit-font-smoothing:antialiased}
+    a{color:var(--blue); text-decoration:none}
+    a:hover{text-decoration:underline; text-underline-offset:3px}
+    img,svg{display:block; max-width:100%}
+    .wrap{max-width:var(--max); margin:0 auto; padding:0 24px}
+    .mono{font-family:var(--mono)}
+    .uc{color:var(--citrus)}
 
-    header{
-      position:sticky; top:0; z-index:10;
-      background:rgba(11,15,25,.72); backdrop-filter: blur(10px);
-      border-bottom:1px solid var(--border);
-    }
-    .nav{
-      max-width:var(--max); margin:0 auto; padding:12px 16px;
-      display:flex; align-items:center; justify-content:space-between; gap:14px;
-    }
+    /* ---------- barra superior ---------- */
+    .top{position:sticky; top:0; z-index:20; background:rgba(14,20,48,.82);
+      backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-bottom:1px solid var(--line)}
+    .top .wrap{display:flex; align-items:center; justify-content:space-between; gap:20px; height:64px}
+    .top .logo img{height:46px; width:auto}
+    .menu{display:flex; gap:22px; font-family:var(--mono); font-size:13px; letter-spacing:.06em; text-transform:uppercase}
+    .menu a{color:var(--light); opacity:.82}
+    .menu a:hover{opacity:1; text-decoration:none; color:var(--citrus)}
+    @media (max-width:920px){ .menu{display:none} }
 
-    /* Brand (logo UC + título) */
-    .brand{display:flex; align-items:center; gap:12px; min-width: 260px;}
-    .ucmark{
-      height:32px; width:auto; max-width:140px;
-      display:block;
-      border-radius:8px;
-      background:rgba(255,255,255,.04);
-      border:1px solid var(--border);
-      padding:4px;
-      object-fit:contain;
-    }
-    .brandtext{display:flex; flex-direction:column; line-height:1.05}
-    .brandtext strong{font-size:15px; letter-spacing:.2px}
-    .brandtext span{font-size:12px; color:var(--muted); margin-top:2px}
-
-    .links{display:flex; flex-wrap:wrap; gap:10px 14px; font-size:14px}
-    .links a{color:var(--text); opacity:.9}
-    .links a:hover{opacity:1}
-
-    .wrap{max-width:var(--max); margin:0 auto; padding:20px 16px 60px}
-
-    /* Header image */
-    .header-hero{
-      max-width:var(--max);
-      margin:18px auto 0;
-      border-radius:22px;
-      overflow:hidden;
-      border:1px solid var(--border);
-      box-shadow:var(--shadow);
-      background:#000;
-      position:relative;
-    }
-    .header-hero img.header-photo{
-      width:100%;
-      height:min(56vh, 520px);
-      object-fit:cover;
-      display:block;
-      filter: saturate(1.05) contrast(1.05);
-    }
-    .header-overlay{
-      position:absolute; inset:0;
-      background:linear-gradient(0deg, rgba(11,15,25,.86) 0%, rgba(11,15,25,.15) 55%, rgba(11,15,25,.05) 100%);
-      pointer-events:none;
-      z-index:1;
-    }
-    .header-content{
-      position:absolute;
-      left:16px; right:16px; bottom:16px;
-      max-width:900px;
-      padding:18px;
-      border-radius:18px;
-      border:1px solid var(--border);
-      background:rgba(17,24,39,.55);
-      backdrop-filter: blur(10px);
-      display:flex;
-      gap:14px;
-      align-items:flex-start;
-      z-index:2;
+    /* ---------- portada ---------- */
+    .hero{position:relative; min-height:calc(100svh - 64px); max-height:900px; overflow:hidden;
+      background:radial-gradient(120% 90% at 62% 100%, var(--ink2) 0%, var(--ink) 70%)}
+    .hero canvas{position:absolute; inset:0; width:100%; height:100%}
+    .hero::after{content:""; position:absolute; inset:0; pointer-events:none;
+      background:linear-gradient(90deg, rgba(14,20,48,.88) 0%, rgba(14,20,48,.55) 38%, rgba(14,20,48,0) 62%)}
+    @media (max-width:900px){ .hero::after{background:linear-gradient(180deg, rgba(14,20,48,.7) 0%, rgba(14,20,48,.35) 55%, rgba(14,20,48,0) 75%)} .hero .wrap{padding-bottom:230px} }
+    .hero .wrap{position:relative; z-index:2; padding-top:clamp(40px,8vh,96px); padding-bottom:40px}
+    .kicker{font-family:var(--mono); font-size:13px; letter-spacing:.16em; text-transform:uppercase; color:var(--subtle); margin:0 0 18px}
+    .hero h1{font-family:var(--mono); font-weight:600; font-size:clamp(40px,6.4vw,84px); line-height:1.02;
+      letter-spacing:-.01em; margin:0 0 36px; max-width:11ch}
+    .lede{font-size:clamp(17px,1.6vw,20px); max-width:34em; color:#C9CEE3; margin:0 0 34px}
+    .entrada{display:inline-grid; grid-template-columns:auto auto; gap:0; border:1px solid rgba(244,196,48,.55);
+      border-radius:4px; background:rgba(14,20,48,.72); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); max-width:100%}
+    .entrada .fecha{padding:18px 22px; border-right:1px dashed rgba(244,196,48,.45); text-align:center; font-family:var(--mono)}
+    .entrada .fecha .dia{display:block; font-size:54px; line-height:1; font-weight:600; color:var(--citrus)}
+    .entrada .fecha .mes{display:block; font-size:13px; letter-spacing:.18em; text-transform:uppercase; margin-top:6px}
+    .entrada .info{padding:16px 22px}
+    .entrada .tit{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--citrus); margin:0 0 6px}
+    .entrada .lugar{font-size:21px; font-weight:600; margin:0; color:var(--light)}
+    .entrada:hover{text-decoration:none; border-color:var(--citrus)}
+    .entrada .det{font-size:14.5px; color:var(--subtle); margin:4px 0 0}
+    .cuenta{font-family:var(--mono); font-size:13px; color:var(--light); margin-top:8px}
+    .financia{font-family:var(--mono); font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:var(--light);
+      margin:20px 0 0; display:flex; align-items:center; gap:10px}
+    .financia::before{content:""; width:28px; height:2px; background:var(--citrus)}
+    .financia strong{color:var(--citrus); font-weight:600}
+    .apoyo{margin-top:36px; padding:22px 24px; border:1px solid rgba(244,196,48,.55); border-radius:4px; background:rgba(244,196,48,.06)}
+    .apoyo .tit{font-family:var(--mono); font-size:12.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--citrus); margin:0 0 6px}
+    .apoyo p{margin:0; font-size:17px}
+    .acciones{display:flex; flex-wrap:wrap; gap:12px; margin-top:28px}
+    .btn{display:inline-flex; align-items:center; gap:8px; padding:12px 18px; border-radius:4px;
+      font-family:var(--mono); font-size:14px; font-weight:500; letter-spacing:.03em;
+      border:1px solid var(--line); color:var(--light); background:rgba(255,255,255,.03)}
+    .btn:hover{text-decoration:none; border-color:var(--blue)}
+    .btn.primario{background:var(--citrus); border-color:var(--citrus); color:var(--ink)}
+    .btn.primario:hover{background:#ffd34d}
+    @media (max-width:560px){
+      .entrada{grid-template-columns:1fr}
+      .entrada .fecha{border-right:none; border-bottom:1px dashed rgba(244,196,48,.45); display:flex; align-items:baseline; gap:12px; justify-content:flex-start}
+      .entrada .fecha .dia{font-size:40px}
     }
 
-    .header-uc{
-      flex:0 0 auto;
-      height:130px;      /* was 56px */
-      width:auto;
-      max-width:400px;  /* was 150px */
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.04);
-      padding:10px;
-      display:block;
-      object-fit:contain;
-    }
+    /* ---------- secciones ---------- */
+    section.bloque{padding:96px 0; border-top:1px solid var(--line)}
+    .etiqueta{font-family:var(--mono); font-size:12.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--citrus); margin:0 0 14px}
+    h2{font-family:var(--mono); font-weight:600; font-size:clamp(28px,3.4vw,42px); line-height:1.12; margin:0 0 20px; letter-spacing:-.01em}
+    h3{font-family:var(--mono); font-weight:600; font-size:18px; margin:0 0 6px}
+    p{margin:0 0 16px}
+    .dos{display:grid; grid-template-columns:1.25fr .75fr; gap:56px; align-items:start}
+    @media (max-width:900px){ .dos{grid-template-columns:1fr; gap:36px} section.bloque{padding:72px 0} }
+    .suave{color:#B9BFD8}
 
-    .header-copy{flex:1 1 auto}
-    .header-copy h1{margin:0 0 8px; font-size:34px; line-height:1.15}
-    .header-copy p{margin:0; color:var(--muted); font-size:16px}
+    /* concierto */
+    .ficha{border:1px solid var(--line); border-radius:4px; background:rgba(20,27,61,.6)}
+    .ficha dl{margin:0}
+    .ficha .fila{display:grid; grid-template-columns:120px 1fr; gap:16px; padding:18px 22px; border-bottom:1px solid var(--line)}
+    .ficha .fila:last-child{border-bottom:none}
+    .ficha dt{font-family:var(--mono); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--subtle); padding-top:3px}
+    .ficha dd{margin:0; font-size:17px}
+    .pendiente{font-family:var(--mono); font-size:12px; letter-spacing:.08em; color:var(--citrus);
+      border:1px solid rgba(244,196,48,.45); border-radius:999px; padding:2px 9px; margin-left:8px; white-space:nowrap; vertical-align:2px}
 
-    .card{
-      background:rgba(17,24,39,.72);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:22px;
-    }
-    h2{margin:0 0 10px; font-size:22px}
-    h3{margin:0 0 8px; font-size:17px}
-    p{margin:0 0 12px}
-    .muted{color:var(--muted)}
+    .prog-tit{font-size:13px; letter-spacing:.16em; text-transform:uppercase; color:var(--citrus); margin:28px 0 4px}
+    .programa{list-style:none; margin:0 0 18px; padding:0}
+    .programa li{display:grid; grid-template-columns:44px 1fr auto; align-items:baseline; column-gap:16px; row-gap:0; padding:14px 0; border-bottom:1px solid var(--line)}
+    .programa .n{font-family:var(--mono); font-size:13px; color:var(--citrus); letter-spacing:.06em}
+    .programa .d{grid-column:2 / 4; margin:6px 0 0 0; font-size:15px; line-height:1.55; color:#B9BFD8; max-width:46em}
+    .programa .o.pend{color:var(--subtle); font-weight:400; font-style:italic}
+    .programa .o{font-family:var(--mono); font-weight:500; font-size:16.5px}
+    .programa .c{color:var(--subtle); font-size:15px; white-space:nowrap; text-align:right}
+    .programa .c small{display:block; font-size:13px; opacity:.85}
+    @media (max-width:600px){ .programa li{grid-template-columns:36px 1fr; row-gap:2px} .programa .c{grid-column:2; text-align:left; white-space:normal} .programa .d{grid-column:2} }
+    /* orquesta */
+    .cifras{display:grid; grid-template-columns:repeat(3,1fr); gap:0; margin:40px 0 0; border:1px solid var(--line); border-radius:4px}
+    .cifras div{padding:20px 22px; border-right:1px solid var(--line)}
+    .cifras div:last-child{border-right:none}
+    .cifras strong{display:block; font-family:var(--mono); font-size:24px; margin-bottom:4px; font-weight:600; color:var(--citrus); line-height:1.1}
+    .cifras span{font-size:14.5px; color:#B9BFD8}
+    @media (max-width:900px){ .cifras{grid-template-columns:1fr} .cifras div{border-right:none; border-bottom:1px solid var(--line)} .cifras div:last-child{border-bottom:none} }
+    figure.disposicion{margin:48px 0 0}
+    .diagrama{width:100%; height:auto}
+    .dg-lab{font-family:var(--mono); font-size:13px; fill:var(--subtle); letter-spacing:.04em}
+    .dg-lab.hl{fill:var(--citrus); font-weight:600}
+    .dg-ip{font-family:var(--mono); font-size:15px; font-weight:600; fill:var(--ink)}
+    figcaption{font-size:14.5px; color:var(--subtle); max-width:46em; margin:10px auto 0; text-align:center}
 
-    .pillrow{display:flex; flex-wrap:wrap; gap:10px; margin:14px 0 18px}
-    .pill{
-      font-size:13px; color:var(--text); opacity:.95;
-      border:1px solid var(--border);
-      padding:6px 10px; border-radius:999px;
-      background:rgba(255,255,255,.03);
-    }
-    .cta{display:flex; flex-wrap:wrap; gap:10px; margin-top:14px}
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      padding:10px 14px; border-radius:12px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.04);
-      color:var(--text); font-weight:600; font-size:14px;
-    }
-    .btn.primary{
-      background:linear-gradient(135deg, rgba(96,165,250,.95), rgba(52,211,153,.85));
-      border:none; color:#061018;
-    }
-    .btn:hover{transform: translateY(-1px); transition:.15s ease}
+    /* repertorio */
+    .obras{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:4px; overflow:hidden; margin-top:36px}
+    .obra{background:var(--ink); padding:26px 24px 28px; position:relative}
+    .obra .autor{font-family:var(--mono); font-size:13px; color:var(--subtle); margin:0 0 14px}
+    .obra p{font-size:15.5px; color:#C3C8DD; margin:0}
+    .obra .tipo{position:absolute; top:24px; right:22px; font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--node)}
+        @media (max-width:600px){ .obras{grid-template-columns:1fr} }
 
-    .grid{
-      display:grid; gap:14px;
-      grid-template-columns: repeat(12, 1fr);
-      margin-top:14px;
-    }
-    .span12{grid-column: span 12}
-    .span8{grid-column: span 8}
-    .span6{grid-column: span 6}
-    .span4{grid-column: span 4}
-    @media (max-width: 900px){
-      .span6,.span4,.span8{grid-column: span 12}
-      .header-copy h1{font-size:28px}
-      .header-hero img.header-photo{height:min(46vh, 420px)}
-      .header-content{flex-direction:column; align-items:flex-start}
-      .header-uc{height:82px; max-width:260px;}
-      .brand{min-width:auto}
-    }
+    /* integrantes */
+    .director{display:flex; gap:22px; align-items:center; padding:24px; border:1px solid rgba(244,196,48,.4); border-radius:4px; margin:36px 0 18px; background:rgba(20,27,61,.5)}
+    .director img{width:64px; height:auto; flex:0 0 auto}
+    .director p{margin:0}
+    .director .ayudante{margin-left:auto; padding-left:28px; border-left:1px solid var(--line); white-space:nowrap}
+    @media (max-width:700px){ .director{flex-wrap:wrap} .director .ayudante{margin-left:0; padding-left:0; border-left:none; width:100%} }
+    div.persona:hover{border-color:var(--line)}
+    .gente{display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
+    @media (max-width:900px){ .gente{grid-template-columns:1fr 1fr} }
+    @media (max-width:600px){ .gente{grid-template-columns:1fr} }
+    .persona{border:1px solid var(--line); border-radius:4px; padding:20px 22px; display:flex; flex-direction:column; gap:4px; transition:border-color .15s}
+    .persona:hover{border-color:var(--blue); text-decoration:none}
+    .persona .nombre{font-family:var(--mono); font-weight:600; font-size:16.5px; color:var(--light)}
+    .persona .proy{font-size:15px; color:#B9BFD8}
+    .persona .ir{font-family:var(--mono); font-size:12.5px; color:var(--blue); margin-top:8px}
+    .nota{font-size:14.5px; color:var(--subtle); margin-top:18px}
 
-    ul{margin:0; padding-left:18px}
-    li{margin:6px 0}
+    /* participa / faq */
+    .faq details{border-bottom:1px solid var(--line); padding:16px 0}
+    .faq details:first-child{border-top:1px solid var(--line)}
+    .faq summary{cursor:pointer; font-family:var(--mono); font-weight:500; font-size:16px; list-style:none; display:flex; justify-content:space-between; gap:16px}
+    .faq summary::-webkit-details-marker{display:none}
+    .faq summary::after{content:"+"; color:var(--citrus); font-size:20px; line-height:1}
+    .faq details[open] summary::after{content:"\2212"}
+    .faq details p{margin:12px 0 0; color:#B9BFD8; font-size:16px}
 
-    .kpi{display:flex; gap:12px; flex-wrap:wrap; margin-top:10px}
-    .kpi .box{
-      flex:1; min-width:160px;
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:12px;
-      background:rgba(255,255,255,.03);
-    }
-    .box strong{display:block; font-size:18px}
+    .video{position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border:1px solid var(--line); border-radius:4px; background:#000; margin-top:28px}
+    .video iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
 
-    .badge{
-      display:inline-block;
-      font-size:12px;
-      padding:5px 10px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.03);
-      color:var(--muted);
-      margin-bottom:10px;
-    }
+    /* pie */
+    footer{border-top:1px solid var(--line); padding:56px 0 64px; background:#0B1028}
+    footer .wrap{display:grid; grid-template-columns:1fr auto; gap:32px; align-items:end}
+    footer .marca img{height:44px; width:auto; margin-bottom:18px}
+    footer p{font-size:14px; color:var(--subtle); margin:0 0 6px}
+    .pie-financia{color:var(--light) !important; font-size:15px !important}
+    .pie-financia strong{color:var(--citrus)}
+    .ucpuc img{height:72px; width:auto}
+    @media (max-width:700px){ footer .wrap{grid-template-columns:1fr; align-items:start} }
 
-    figure{margin:14px 0 0; padding:0;}
-    figure img{
-      width:100%;
-      border-radius:18px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.02);
-      box-shadow:0 10px 26px rgba(0,0,0,.28);
-      display:block;
-    }
-    figcaption{margin-top:8px; color:var(--muted); font-size:13px;}
-
-    .video-embed{
-      position: relative;
-      width: 100%;
-      padding-bottom: 56.25%;
-      height: 0;
-      overflow: hidden;
-      border-radius: 18px;
-      border: 1px solid var(--border);
-      box-shadow: 0 10px 26px rgba(0,0,0,.28);
-      background: #000;
-      margin-top:12px;
-    }
-    .video-embed iframe{
-      position:absolute;
-      top:0; left:0;
-      width:100%;
-      height:100%;
-    }
-
-    .faq details{
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:12px 12px;
-      background:rgba(255,255,255,.03);
-      margin:10px 0;
-    }
-    .faq summary{cursor:pointer; font-weight:700}
-
-    footer{
-      border-top:1px solid var(--border);
-      margin-top:30px; padding-top:18px;
-      color:var(--muted); font-size:13px;
-    }
-    .small{font-size:13px}
-    .mono{font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    :focus-visible{outline:2px solid var(--citrus); outline-offset:3px}
   </style>
 </head>
 
 <body>
-<header>
-  <nav class="nav">
-    <div class="brand">
-      <img class="ucmark" src="assets/logoUClaptop.png" alt="Logo Pontificia Universidad Católica de Chile" />
-      <div class="brandtext">
-        <strong>Orquesta de Laptops UC</strong>
-        <span>Pontificia Universidad Católica de Chile</span>
-      </div>
-    </div>
-
-    <div class="links">
-      <a href="#que-es">¿Qué es?</a>
-      <a href="#que-hacemos">Qué hacemos</a>
-      <a href="#sumate">Súmate</a>
-      <a href="#conciertos">Conciertos</a>
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#inicio" aria-label="Orquesta de Laptops UC, inicio">
+      <img src="assets/identidad/oluc-logo-horizontal-oscuro-transparente.svg" alt="Orquesta de Laptops UC" />
+    </a>
+    <nav class="menu" aria-label="Secciones">
+      <a href="#concierto">Concierto</a>
+      <a href="#orquesta">La orquesta</a>
       <a href="#repertorio">Repertorio</a>
-      <a href="#playlist">Videos</a>
-      <a href="#faq">FAQ</a>
+      <a href="#integrantes">Integrantes</a>
+      <a href="#participa">Participa</a>
       <a href="2026/portafolios/index.html">Portafolios</a>
       <a href="#contacto">Contacto</a>
-    </div>
-  </nav>
+    </nav>
+  </div>
 </header>
 
-<section class="header-hero" aria-label="Foto de cabecera">
-  <img class="header-photo" src="assets/header.png" alt="Presentación de una orquesta de laptops en escenario" />
-  <div class="header-overlay" aria-hidden="true"></div>
+<main id="inicio">
 
-  <div class="header-content">
-    <img class="header-uc" src="assets/logoUClaptop.png" alt="Logo Pontificia Universidad Católica de Chile" />
-    <div class="header-copy">
-      <span class="badge">Ensayo • creación • conciertos • mediación</span>
-      <h1>Orquesta de Laptops UC</h1>
-        <p><b>Director: </b><a href="http://rodrigocadiz.com">Rodrigo F. Cádiz</a>, profesor titular, Instituto de Música y Departamento de Ingeniería Eléctrica UC.</p>
-      
-    </div>
-  </div>
-</section>
+  <section class="hero" aria-label="Portada">
+    <canvas id="red" aria-hidden="true"></canvas>
+    <div class="wrap">
+      <p class="kicker">Pontificia Universidad Católica de Chile</p>
+      <h1>Orquesta de Laptops <span class="uc">UC</span></h1>
+      <a class="entrada" href="#concierto" aria-label="Concierto de cierre 2026, viernes 11 de diciembre, 19:00, Auditorio Luksic">
+        <div class="fecha"><span class="dia">11</span><span class="mes">dic · vie</span></div>
+        <div class="info">
+          <p class="tit">Concierto de cierre 2026</p>
+          <p class="lugar">Auditorio Luksic</p>
+          <p class="det">Viernes 11 de diciembre · 19:00 h · Campus San Joaquín UC · entrada gratuita</p>
+          <p class="cuenta" id="cuenta"></p>
+        </div>
+      </a>
 
-<main class="wrap">
+      <p class="financia">Un proyecto <strong>Impacto UC</strong> de la Dirección de Artes y Cultura UC</p>
 
-  <section class="grid" id="inicio">
-    <div class="card span8">
-      <h2>¿De qué se trata?</h2>
-      <p>
-        La Orquesta de Laptops UC es un ensamble, el primero de su tipo en Chile, donde cada integrante interpreta música en vivo usando un computador portátil, software de síntesis y procesamiento de audio, y <a href="http://nime.org" target="_blank">nuevas interfaces de expresión musical</a>. Este formato se ha desarrollado en distintos contextos universitarios y artísticos en el mundo, incluyendo proyectos como la <a href="http://slork.stanford.edu"v>Stanford Laptop Orchestra (SLOrk)</a>, la <a href="http://plork.princeton.edu" target="_blank">Princeton Laptop Orchestra (PLOrk)</a> y otras orquestas afines alrededor del mundo.</p>
-
-      <div class="pillrow" aria-label="Características">
-        <span class="pill">Música contemporánea</span>
-        <span class="pill">Música computacional</span>
-        <span class="pill">Música electroacústica</span>
-        <span class="pill">Diseño sonoro</span>
-        <span class="pill">Performance digital</span>
-        <span class="pill">Obras nuevas</span>
-        <span class="pill">Conciertos y actividades abiertas</span>
-      </div>
-
-        <p>Durante el primer semestre de 2026 se desarrollará a través un taller abierto a alumnos de la UC previa inscripción, entrevista y selección. Los cupos son limitados. Durante el segundo semestre 2026 la participación será a través de un curso.</p>
-
-      <div class="cta">
-        <a class="btn primary" href="#sumate">Quiero sumarme</a>
-        <a class="btn" href="#playlist">Ver videos</a>
+      <div class="acciones">
+        <a class="btn primario" href="#concierto">Detalles del concierto</a>
+        <a class="btn" href="#orquesta">Conoce la orquesta</a>
       </div>
     </div>
-
-    <aside class="card span4">
-      <h2>¿Para quién es?</h2>
-      <p class="muted">
-        Para estudiantes UC con interés por el sonido, la música y/o la tecnología, que quieran componer y/o interpretar música para un formato tecnológico e interactivo. No necesitas saberlo todo para entrar: se aprende en equipo.
-      </p>
-      <div class="kpi" aria-label="Datos rápidos">
-        <div class="box">
-          <strong>Ensayos</strong>
-          <span class="muted">trabajos periódicos de ensamble y escucha</span>
-        </div>
-        <div class="box">
-          <strong>Creación</strong>
-          <span class="muted">obras nuevas y repertorio</span>
-        </div>
-        <div class="box">
-          <strong>Conciertos</strong>
-          <span class="muted">presentaciones y mediación</span>
-        </div>
-      </div>
-    </aside>
   </section>
 
-  <section class="grid" id="que-es">
-    <div class="card span12">
-      <h2>¿Qué es una orquesta de laptops?</h2>
-      <p>
-        Es un ensamble musical donde cada integrante utiliza un computador portátil como instrumento. En vez de simplemente “reproducir audio”, aquí el computador se interpreta: se controlan sonidos, ritmos, texturas y transformaciones en tiempo real. Esto puede hacerse mediante el teclado, cámaras web, mouse, joysticks, microcontroladores, celulares, tablets, o muchos otros dipositivos que se puedan conectar a un laptop.
-      </p>
-      <p>
-        Un elemento distintivo del formato es la proyección sonora: cada estación cuenta con un sistema de amplificación propio, tal como sucede con los instrumentos en una orquesta tradicional, lo que abre posibilidades escénicas y espaciales.
-      </p>
+  <section class="bloque" id="concierto">
+    <div class="wrap dos">
+      <div>
+        <p class="etiqueta">Concierto</p>
+        <h2>Concierto de cierre 2026</h2>
+        <p>La Orquesta de Laptops UC cierra su año con un concierto público en el Auditorio Luksic. El programa reúne obras creadas por los integrantes y el director de la orquesta, y versiones para este ensamble de obras de otros autores. Cada obra trae su propio instrumento, programado por la orquesta, que corre en sus laptops.</p>
+        <h3 class="prog-tit">Programa</h3>
+        <ol class="programa">
+          <li><span class="n">I</span><span class="o">Dawn of Computer Music</span><span class="c">Terry Feng, Soohyun Kim y Yikai Li<small>montaje de Rocío Navas Nervi</small></span><p class="d">Dos movimientos: una fanfarria del amanecer, a partir de Strauss, tocada con instrumentos invisibles, y un collage de música concreta. Todas las laptops parten juntas desde la laptop de la directora, conectadas en red.</p></li>
+          <li><span class="n">II</span><span class="o">Muerte eléctrica en un mundo indiferente</span><span class="c">Lukas Recart</span><p class="d">Un relato hecho con motores eléctricos simulados en MotorSynth, el instrumento web del autor: zumbidos de 50 Hz, motores que aceleran, alarmas, sirenas y el pulso de un resonador magnético acompañan a una persona que no logra despertar, a través de una emergencia médica. Los intérpretes se coordinan de oído e improvisan dentro de cada sección.</p></li>
+          <li><span class="n">III</span><span class="o">Genesis OLUC</span><span class="c">Felipe Osorio</span><p class="d">Reinterpretación de «genesis» de Robin Callaway, entre el noise rock y el shoegaze. Teclados y ambientes se van sumando hasta construir la canción; la obra tiende un puente entre la orquesta de laptops y una canción de estructura popular.</p></li>
+          <li><span class="n">IV</span><span class="o">The World Looks White / The World Looks Red</span><span class="c">Heaven Pierce Her (ULTRAKILL)<small>versión de Alvaro Bustos</small></span><p class="d">Versión de dos temas de la banda sonora del videojuego ULTRAKILL. Con Keyboard Instruments, la app que el autor programó para la orquesta, cada laptop toca una parte con el teclado del computador: batería, guitarra, cello y otras.</p></li>
+          <li><span class="n">V</span><span class="o">BPM128</span><span class="c">Federico Fodic</span><p class="d">Un pulso de house a 128 BPM repartido entre las laptops: kick, percusión, bajo, acordes y efectos. La obra parte ordenada, se desarma dando libertad a los intérpretes y vuelve a sincronizarse; el desfase del grupo pasa a ser parte de la forma.</p></li>
+          <li><span class="n">VI</span><span class="o">Yo tenía 10 corcheas</span><span class="c">Lucas Nervi</span><p class="d">Parte de una canción infantil de conteo regresivo, pero lo que se reduce es la frase: en cada sección se acorta, de 10 a 4 corcheas. Diez laptops con timbre de vibráfono, cada una con una nota fija, y un handpan que improvisa hasta unirse al ritmo del conjunto al final.</p></li>
+          <li><span class="n">VII</span><span class="o">Enjambres</span><span class="c">Rodrigo F. Cádiz</span><p class="d">Síntesis por dinámica de enjambres, a partir del modelo de Vicsek y del método de Huepe, Colasso y Cádiz (2014). Una laptop maestra simula el enjambre; cada intérprete agrega, quita y silencia sus agentes, que vuelan por el semicírculo y suenan en las laptops más cercanas.</p></li>
+          <li><span class="n">VIII</span><span class="o pend">Obra por confirmar</span><span class="c">Gabriel Kauer</span></li>
+        </ol>
+        <p class="suave">Programa en confirmación.</p>
+      </div>
+      <div>
+      <div class="ficha">
+        <dl>
+          <div class="fila"><dt>Fecha</dt><dd>Viernes 11 de diciembre de 2026</dd></div>
+          <div class="fila"><dt>Lugar</dt><dd>Auditorio Luksic, Campus San Joaquín UC<br /><span class="suave">Av. Vicuña Mackenna 4860, Macul, Santiago</span><br /><a href="https://www.google.com/maps/search/?api=1&amp;query=Auditorio+Luksic+Campus+San+Joaqu%C3%ADn+UC+Av.+Vicu%C3%B1a+Mackenna+4860" target="_blank" rel="noopener">Ver en el mapa</a></dd></div>
+          <div class="fila"><dt>Hora</dt><dd>19:00 h</dd></div>
+          <div class="fila"><dt>Entrada</dt><dd>Gratuita</dd></div>
+          <div class="fila"><dt>Programa</dt><dd>Obras de los integrantes y del director <span class="pendiente">en confirmación</span></dd></div>
+          <div class="fila"><dt>Dirección</dt><dd>Rodrigo F. Cádiz</dd></div>
+          <div class="fila"><dt>Proyecto</dt><dd><strong>Impacto UC</strong>, Dirección de Artes y Cultura UC</dd></div>
+        </dl>
+      </div>
+        <div class="apoyo">
+          <p class="tit">Impacto UC</p>
+          <p>La Orquesta de Laptops UC es un proyecto <strong>Impacto UC</strong> de la Dirección de Artes y Cultura de la Pontificia Universidad Católica de Chile.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-      <figure>
-        <img src="assets/croquis.png" alt="Croquis de una orquesta de laptops con altavoces hemisféricos y estaciones de trabajo" />
-        <figcaption>
-          Croquis referencial: estaciones individuales con laptop e interfaz, y altavoces de proyección sonora distribuidos en escena.
-        </figcaption>
+  <section class="bloque" id="orquesta">
+    <div class="wrap">
+      <div class="dos">
+        <div>
+          <p class="etiqueta">La orquesta</p>
+          <h2>Un computador portátil como instrumento</h2>
+          <p>La Orquesta de Laptops UC es el primer ensamble de su tipo en Chile. Sus integrantes no reproducen audio grabado: tocan instrumentos que ellos mismos programan, que sintetizan y transforman sonido en tiempo real y que se controlan con el teclado, el mouse, joysticks, Gametrak, controladores MIDI y otros dispositivos.</p>
+          <p>Como en una orquesta tradicional, el sonido sale de cada puesto: cada estación tiene su propia amplificación, de modo que la música se reparte en el espacio. Una red local propia conecta a todas las laptops, que pueden compartir reloj, partitura y parámetros desde una laptop maestra, sin depender de internet.</p>
+        </div>
+        <div>
+          <p class="suave">En 2026 la orquesta funciona como curso de la Universidad, <span class="mono">IEE2003 Orquesta de Laptops UC</span>, con estudiantes de Ingeniería y de Música. Durante el semestre sus integrantes aprenden síntesis y procesamiento de sonido, construyen sus instrumentos, arman la red del ensamble, montan repertorio y componen obras nuevas, documentadas en sus <a href="2026/portafolios/index.html">portafolios</a>.</p>
+          <p class="suave">Dirige la orquesta <a href="http://rodrigocadiz.com">Rodrigo F. Cádiz</a>, profesor titular del Instituto de Música y del Departamento de Ingeniería Eléctrica UC.</p>
+        </div>
+      </div>
+
+      <div class="cifras">
+        <div><strong>Red</strong><span>local propia del ensamble, Wi-Fi 6E, sin depender de internet</span></div>
+        <div><strong>Software</strong><span>Max/MSP, Pure Data y ChucK, comunicados por OSC</span></div>
+        <div><strong>Web</strong><span>instrumentos que corren en el navegador, sin instalar nada</span></div>
+      </div>
+
+      <figure class="disposicion">
+<svg viewBox="0 0 960 470" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="dg-t dg-d" class="diagrama"><title id="dg-t">Disposición de la Orquesta de Laptops UC</title><desc id="dg-d">Estaciones en semicírculo alrededor de la laptop maestra; todas conectadas por la red del ensamble.</desc><circle cx="480.0" cy="420" r="90" fill="none" stroke="#1B2350" stroke-width="1.2"/><circle cx="480.0" cy="420" r="145" fill="none" stroke="#1B2350" stroke-width="1.2"/><circle cx="480.0" cy="420" r="200" fill="none" stroke="#1B2350" stroke-width="1.2"/><circle cx="480.0" cy="420" r="255" fill="none" stroke="#1B2350" stroke-width="1.2"/><circle cx="480.0" cy="420" r="310" fill="none" stroke="#1B2350" stroke-width="1.2"/><circle cx="480.0" cy="420" r="365" fill="none" stroke="#1B2350" stroke-width="1.2"/><line x1="428.5" y1="412.8" x2="179.0" y2="377.7" stroke="#323D78" stroke-width="1.4" stroke-dasharray="3 6" stroke-linecap="round"/><line x1="432.6" y1="398.5" x2="203.2" y2="294.4" stroke="#323D78" stroke-width="1.4" stroke-dasharray="3 6" stroke-linecap="round"/><line x1="440.6" y1="386.0" x2="249.9" y2="221.4" stroke="#323D78" stroke-width="1.4" stroke-dasharray="3 6" stroke-linecap="round"/><line x1="451.8" y1="376.3" x2="315.3" y2="164.5" stroke="#F4C430" stroke-width="2" stroke-linecap="round"/><line x1="465.3" y1="370.1" x2="394.2" y2="128.4" stroke="#323D78" stroke-width="1.4" stroke-dasharray="3 6" stroke-linecap="round"/><line x1="480.0" y1="368.0" x2="480.0" y2="116.0" stroke="#323D78" stroke-width="1.4" stroke-dasharray="3 6" stroke-linecap="round"/><line x1="494.7" y1="370.1" x2="565.8" y2="128.4" stroke="#323D78" stroke-width="1.4" stroke-dasharray="3 6" stroke-linecap="round"/><line x1="508.2" y1="376.3" x2="644.7" y2="164.5" stroke="#323D78" stroke-width="1.4" stroke-dasharray="3 6" stroke-linecap="round"/><line x1="519.4" y1="386.0" x2="710.1" y2="221.4" stroke="#323D78" stroke-width="1.4" stroke-dasharray="3 6" stroke-linecap="round"/><line x1="527.4" y1="398.5" x2="756.8" y2="294.4" stroke="#323D78" stroke-width="1.4" stroke-dasharray="3 6" stroke-linecap="round"/><line x1="531.5" y1="412.8" x2="781.0" y2="377.7" stroke="#323D78" stroke-width="1.4" stroke-dasharray="3 6" stroke-linecap="round"/><g transform="translate(153.2 374.1) rotate(-82.0)"><rect x="-15" y="-10" width="30" height="20" rx="3" fill="#0E1430" stroke="#56649F" stroke-width="2"/><line x1="-18" y1="13" x2="18" y2="13" stroke="#56649F" stroke-width="2.4" stroke-linecap="round"/><path d="M -9 -17 A 9 9 0 0 1 9 -17 Z" fill="#3654BE" opacity="0.85"/></g><g transform="translate(179.5 283.7) rotate(-65.6)"><rect x="-15" y="-10" width="30" height="20" rx="3" fill="#0E1430" stroke="#56649F" stroke-width="2"/><line x1="-18" y1="13" x2="18" y2="13" stroke="#56649F" stroke-width="2.4" stroke-linecap="round"/><path d="M -9 -17 A 9 9 0 0 1 9 -17 Z" fill="#3654BE" opacity="0.85"/></g><g transform="translate(230.2 204.4) rotate(-49.2)"><rect x="-15" y="-10" width="30" height="20" rx="3" fill="#0E1430" stroke="#56649F" stroke-width="2"/><line x1="-18" y1="13" x2="18" y2="13" stroke="#56649F" stroke-width="2.4" stroke-linecap="round"/><path d="M -9 -17 A 9 9 0 0 1 9 -17 Z" fill="#3654BE" opacity="0.85"/></g><g transform="translate(301.2 142.6) rotate(-32.8)"><rect x="-15" y="-10" width="30" height="20" rx="3" fill="#0E1430" stroke="#F4C430" stroke-width="2"/><line x1="-18" y1="13" x2="18" y2="13" stroke="#F4C430" stroke-width="2.4" stroke-linecap="round"/><path d="M -9 -17 A 9 9 0 0 1 9 -17 Z" fill="#F4C430" opacity="1"/></g><g transform="translate(386.8 103.4) rotate(-16.4)"><rect x="-15" y="-10" width="30" height="20" rx="3" fill="#0E1430" stroke="#56649F" stroke-width="2"/><line x1="-18" y1="13" x2="18" y2="13" stroke="#56649F" stroke-width="2.4" stroke-linecap="round"/><path d="M -9 -17 A 9 9 0 0 1 9 -17 Z" fill="#3654BE" opacity="0.85"/></g><g transform="translate(480.0 90.0) rotate(0.0)"><rect x="-15" y="-10" width="30" height="20" rx="3" fill="#0E1430" stroke="#56649F" stroke-width="2"/><line x1="-18" y1="13" x2="18" y2="13" stroke="#56649F" stroke-width="2.4" stroke-linecap="round"/><path d="M -9 -17 A 9 9 0 0 1 9 -17 Z" fill="#3654BE" opacity="0.85"/></g><g transform="translate(573.2 103.4) rotate(16.4)"><rect x="-15" y="-10" width="30" height="20" rx="3" fill="#0E1430" stroke="#56649F" stroke-width="2"/><line x1="-18" y1="13" x2="18" y2="13" stroke="#56649F" stroke-width="2.4" stroke-linecap="round"/><path d="M -9 -17 A 9 9 0 0 1 9 -17 Z" fill="#3654BE" opacity="0.85"/></g><g transform="translate(658.8 142.6) rotate(32.8)"><rect x="-15" y="-10" width="30" height="20" rx="3" fill="#0E1430" stroke="#56649F" stroke-width="2"/><line x1="-18" y1="13" x2="18" y2="13" stroke="#56649F" stroke-width="2.4" stroke-linecap="round"/><path d="M -9 -17 A 9 9 0 0 1 9 -17 Z" fill="#3654BE" opacity="0.85"/></g><g transform="translate(729.8 204.4) rotate(49.2)"><rect x="-15" y="-10" width="30" height="20" rx="3" fill="#0E1430" stroke="#56649F" stroke-width="2"/><line x1="-18" y1="13" x2="18" y2="13" stroke="#56649F" stroke-width="2.4" stroke-linecap="round"/><path d="M -9 -17 A 9 9 0 0 1 9 -17 Z" fill="#3654BE" opacity="0.85"/></g><g transform="translate(780.5 283.7) rotate(65.6)"><rect x="-15" y="-10" width="30" height="20" rx="3" fill="#0E1430" stroke="#56649F" stroke-width="2"/><line x1="-18" y1="13" x2="18" y2="13" stroke="#56649F" stroke-width="2.4" stroke-linecap="round"/><path d="M -9 -17 A 9 9 0 0 1 9 -17 Z" fill="#3654BE" opacity="0.85"/></g><g transform="translate(806.8 374.1) rotate(82.0)"><rect x="-15" y="-10" width="30" height="20" rx="3" fill="#0E1430" stroke="#56649F" stroke-width="2"/><line x1="-18" y1="13" x2="18" y2="13" stroke="#56649F" stroke-width="2.4" stroke-linecap="round"/><path d="M -9 -17 A 9 9 0 0 1 9 -17 Z" fill="#3654BE" opacity="0.85"/></g><circle cx="480.0" cy="420" r="40" fill="#F4C430"/><text x="534.0" y="425" text-anchor="start" class="dg-lab hl">MAESTRA</text><text x="480.0" y="426" text-anchor="middle" class="dg-ip">.100</text></svg>
+        <figcaption>Disposición de la orquesta: estaciones en semicírculo, cada una con su amplificación, conectadas por la red del ensamble a una laptop maestra.</figcaption>
       </figure>
     </div>
   </section>
 
-  <section class="grid" id="que-hacemos">
-    <div class="card span12">
-      <h2>Qué hacemos</h2>
-      <div class="grid" style="margin-top:8px">
-        <div class="card span4" style="background:rgba(255,255,255,.02)">
-          <h3>Ensayos</h3>
-          <p class="muted">Coordinación, escucha, balance y armado de un sonido colectivo. Creación de tecnología de audio y de expresión musical.</p>
-        </div>
-        <div class="card span4" style="background:rgba(255,255,255,.02)">
-          <h3>Repertorio</h3>
-          <p class="muted">Obras del repertorio nacional o internacional para orquestas de laptops y adaptaciones al grupo.</p>
-        </div>
-        <div class="card span4" style="background:rgba(255,255,255,.02)">
-          <h3>Creación</h3>
-          <p class="muted">Obras nuevas por encargo y piezas creadas por integrantes de la orquesta en forma individual o colectiva.</p>
-        </div>
+  <section class="bloque" id="repertorio">
+    <div class="wrap">
+      <p class="etiqueta">Repertorio</p>
+      <h2>Repertorio 2026</h2>
+      <p class="suave" style="max-width:44em">Obras con que la orquesta trabaja este año. La lista completa se publicará junto con el programa del concierto.</p>
+
+      <div class="obras">
+        <article class="obra">
+          <span class="tipo">en red</span>
+          <h3>Enjambres</h3>
+          <p class="autor">Rodrigo F. Cádiz (2026)</p>
+          <p>Síntesis por dinámica de enjambres (modelo de Vicsek), a partir de Huepe, Colasso y Cádiz (2014). Los agentes vuelan por el semicírculo y suenan en las laptops que tienen más cerca.</p>
+        </article>
+        <article class="obra">
+          <span class="tipo">en red</span>
+          <h3>Dawn of Computer Music</h3>
+          <p class="autor">Terry Feng, Soohyun Kim y Yikai Li (2023)</p>
+          <p>Fanfarria con instrumentos invisibles y un collage de música concreta. Montaje en red para la orquesta a cargo de Rocío Navas Nervi.</p>
+        </article>
       </div>
     </div>
   </section>
 
-  <section class="grid" id="sumate">
-    <div class="card span12">
-      <h2>Súmate</h2>
-      <p>
-        Si eres estudiante (idealmente de Música, Ingeniería o carreras afines) de pre o postgrado y te interesa participar, <a href="https://forms.gle/emDUUcQwFdJcGgmE8" target="_blank">inscríbete en este formulario</a> para recibir información
-        sobre audiciones, entrevistas, cupos, requisitos y horarios.
-      </p>
+  <section class="bloque" id="integrantes">
+    <div class="wrap">
+      <p class="etiqueta">Integrantes 2026</p>
+      <h2>Quiénes tocan</h2>
+      <p class="suave" style="max-width:44em">Los estudiantes del curso desarrollan sus propias obras e instrumentos para la orquesta; los proyectos están en curso y se documentan en sus portafolios.</p>
+
+      <div class="director">
+        <img src="assets/identidad/oluc-simbolo-oscuro-transparente.svg" alt="" />
+        <p><span class="mono" style="color:var(--subtle); font-size:13px; letter-spacing:.14em; text-transform:uppercase">Director</span><br />
+          <a href="http://rodrigocadiz.com"><strong>Rodrigo F. Cádiz</strong></a>, compositor, profesor titular del Instituto de Música y del Departamento de Ingeniería Eléctrica UC.</p>
+        <p class="ayudante"><span class="mono" style="color:var(--subtle); font-size:13px; letter-spacing:.14em; text-transform:uppercase">Ayudante</span><br />
+          <strong>Cristián Alvear</strong></p>
+      </div>
+
+      <div class="gente">
+        <a class="persona" href="2026/portafolios/Alvaro_Bustos/index.html">
+          <span class="nombre">Alvaro Bustos</span>
+          <span class="proy">Versión de The World Looks White / The World Looks Red (Heaven Pierce Her, ULTRAKILL)</span>
+          <span class="ir">Portafolio →</span>
+        </a>
+        <a class="persona" href="2026/portafolios/Federico_Fodic/index.html">
+          <span class="nombre">Federico Fodic</span>
+          <span class="proy">BPM128: un pulso de house que se desarma entre los intérpretes y vuelve a sincronizarse.</span>
+          <span class="ir">Portafolio →</span>
+        </a>
+        <a class="persona" href="2026/portafolios/Felipe_Osorio/index.html">
+          <span class="nombre">Felipe Osorio</span>
+          <span class="proy">Genesis OLUC</span>
+          <span class="ir">Portafolio →</span>
+        </a>
+        <div class="persona">
+          <span class="nombre">Gabriel Kauer</span>
+          <span class="proy">Compositor e intérprete.</span>
+        </div>
+        <a class="persona" href="2026/portafolios/Lucas_Nervi/index.html">
+          <span class="nombre">Lucas Nervi</span>
+          <span class="proy">Yo tenía 10 corcheas</span>
+          <span class="ir">Portafolio →</span>
+        </a>
+        <a class="persona" href="2026/portafolios/Lukas_Recart/index.html">
+          <span class="nombre">Lukas Recart</span>
+          <span class="proy">Muerte eléctrica en un mundo indiferente</span>
+          <span class="ir">Portafolio →</span>
+        </a>
+        <a class="persona" href="2026/portafolios/Rocio_Navas_Nervi/index.html">
+          <span class="nombre">Rocío Navas Nervi</span>
+          <span class="proy">Dawn of Computer Music: montaje en red de la obra para la orquesta.</span>
+          <span class="ir">Portafolio →</span>
+        </a>
+        <div class="persona">
+          <span class="nombre">Verónica Marín</span>
+        </div>
+        <div class="persona">
+          <span class="nombre">Yair Gómez</span>
+        </div>
+      </div>
+      <p class="nota">El programa completo del concierto del 11 de diciembre se publicará en esta página.</p>
     </div>
   </section>
 
-  <section class="grid" id="conciertos">
-    <div class="card span12">
-      <h2>Conciertos</h2>
-      <p class="muted">Próximamente publicaremos fechas, lugares, programas y registros.</p>
-    </div>
-  </section>
-
-  <section class="grid" id="repertorio">
-    <div class="card span12">
-      <h2>Repertorio</h2>
-      <p class="muted">Próximamente: obras interpretadas, obras encargadas y creaciones del grupo.</p>
-    </div>
-  </section>
-
-  <section class="grid" id="playlist">
-    <div class="card span12">
-      <h2>Videos</h2>
-      <p class="muted">
-        Esta playlist de youtube contiene una selección de ejemplos de orquestas de laptops de distintos lugares del mundo, los cuales sirven como inspiración para el trabajo proyectado con esta orquesta.
-      </p>
-      <div class="video-embed">
-        <iframe
-          src="https://www.youtube.com/embed/videoseries?list=PLj4BX1QkmDLq2Cs8badcraUDFzV4V5sfn"
-          title="Orquestas de Laptops – Playlist"
-          frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen>
-        </iframe>
+  <section class="bloque" id="participa">
+    <div class="wrap dos">
+      <div>
+        <p class="etiqueta">Participa</p>
+        <h2>Toca en la orquesta</h2>
+        <p>La orquesta se forma a través del curso <span class="mono">IEE2003 Orquesta de Laptops UC</span>, abierto a estudiantes de pre y postgrado de la UC. Estudiantes de Música pueden cursarlo como <span class="mono">MUC865 Síntesis de Sonidos</span>. Es un trabajo presencial y colectivo: se ensaya todas las semanas y el semestre termina en concierto.</p>
+        <p class="suave">Si te interesa la próxima versión, deja tus datos y te avisaremos de fechas, requisitos y horarios.</p>
+        <div class="acciones">
+          <a class="btn primario" href="https://forms.gle/emDUUcQwFdJcGgmE8" target="_blank" rel="noopener">Formulario de interés</a>
+          <a class="btn" href="mailto:rcadiz@uc.cl?subject=Orquesta%20de%20Laptops%20UC">Colaboraciones y prensa</a>
+        </div>
+      </div>
+      <div class="faq">
+        <details>
+          <summary>¿Necesito saber programar?</summary>
+          <p>No es requisito. El primer mes del curso es de nivelación, y se trabaja con Max/MSP, Pure Data y ChucK. Ayuda tener alguna experiencia con síntesis o programación, pero se aprende en equipo.</p>
+        </details>
+        <details>
+          <summary>¿Necesito un laptop propio?</summary>
+          <p>No. La orquesta tiene laptops propias, configuradas para el ensamble y conectadas a su red.</p>
+        </details>
+        <details>
+          <summary>¿Necesito formación musical?</summary>
+          <p>No. La orquesta reúne a estudiantes de Ingeniería, Música y otras carreras.</p>
+        </details>
+        <details>
+          <summary>¿Qué compromiso se requiere?</summary>
+          <p>Asistencia presencial a los ensayos y al concierto.</p>
+        </details>
       </div>
     </div>
   </section>
 
-  <section class="grid faq" id="faq">
-    <div class="card span12">
-      <h2>Preguntas frecuentes</h2>
-      <details>
-        <summary>¿Necesito saber programar?</summary>
-        <p class="muted">Idealmente se requiere alguna experiencia con software de síntesis y control sonoro como <a href="https://cycling74.com/" target="_blank">MaxMSP</a>, <a href="https://msp.ucsd.edu/software.html" target="_blank">Pure Data</a>, <a href="https://supercollider.github.io/" target="_blank">Supercollider</a> o <a href="https://chuck.stanford.edu/" target="_blank">Chuck</a>. Sin embargo, no es requisito saber programar. Se aprende en equipo.</p>
-      </details>
-      <details>
-        <summary>¿Qué compromiso se requiere para participar?</summary>
-        <p class="muted">Asistir a todos los ensayos y presentaciones de la orquesta. Este es un trabajo presencial y colectivo. En resumen, se requiere compromiso de participación presencial y constante.</p>
-      </details>
-      <details>
-        <summary>¿Necesito tener un laptop para participar?</summary>
-        <p class="muted">No necesariamente. La orquesta cuenta con sus propios laptops que aseguran un mínimo de integrantes en el ensamble.</p>
-      </details>        
+  <section class="bloque" id="referentes">
+    <div class="wrap">
+      <p class="etiqueta">Referentes</p>
+      <h2>Otras orquestas de laptops</h2>
+      <p class="suave" style="max-width:46em">El formato nació en orquestas como la <a href="http://slork.stanford.edu" target="_blank" rel="noopener">Stanford Laptop Orchestra (SLOrk)</a> y la <a href="http://plork.princeton.edu" target="_blank" rel="noopener">Princeton Laptop Orchestra (PLOrk)</a>, y se cruza con el campo de las <a href="http://nime.org" target="_blank" rel="noopener">nuevas interfaces de expresión musical</a>. Esta lista reúne ejemplos de otros ensambles del mundo.</p>
+      <div class="video">
+        <iframe src="https://www.youtube.com/embed/videoseries?list=PLj4BX1QkmDLq2Cs8badcraUDFzV4V5sfn"
+          title="Orquestas de laptops en el mundo, lista de YouTube" loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
     </div>
   </section>
 
-  <section class="grid" id="contacto">
-    <div class="card span12">
-      <h2>Contacto</h2>
-      <p class="muted">Para participación, colaboraciones o actividades, contactar a Rodrigo F. Cádiz, director de la orquesta.</p>
-      <p>
-        <strong>Correo:</strong> <a href="mailto:rcadiz@uc.cl">rcadiz@uc.cl</a>
-      </p>
+  <section class="bloque" id="contacto">
+    <div class="wrap">
+      <p class="etiqueta">Contacto</p>
+      <h2>Escríbenos</h2>
+      <p>Para participar, colaborar, proponer una obra para la orquesta o cubrir el concierto: <a href="mailto:rcadiz@uc.cl">rcadiz@uc.cl</a></p>
     </div>
   </section>
-
-  <footer>
-    <p>© <span id="year"></span> Orquesta de Laptops UC, Rodrigo F. Cádiz y Pontificia Universidad Católica de Chile.</p>
-  </footer>
 
 </main>
 
+<footer>
+  <div class="wrap">
+    <div>
+      <div class="marca"><img src="assets/identidad/oluc-logo-horizontal-oscuro-transparente.svg" alt="Orquesta de Laptops UC" /></div>
+      <p>Instituto de Música y Escuela de Ingeniería · Pontificia Universidad Católica de Chile</p>
+      <p class="pie-financia">Un proyecto <strong>Impacto UC</strong> de la Dirección de Artes y Cultura UC</p>
+      <p>© <span id="anio">2026</span> Orquesta de Laptops UC · <a href="2026/portafolios/index.html">Portafolios 2026</a></p>
+    </div>
+    <div class="ucpuc"><img src="assets/identidad/logo-uc-blanco.png" alt="Pontificia Universidad Católica de Chile" /></div>
+  </div>
+</footer>
+
 <script>
-  document.getElementById("year").textContent = new Date().getFullYear();
+(() => {
+  document.getElementById("anio").textContent = new Date().getFullYear();
+
+  // Cuenta regresiva al concierto (hora de Chile)
+  const cuenta = document.getElementById("cuenta");
+  const hoy = new Date(), conc = new Date(2026, 11, 11);
+  const dias = Math.round((conc - new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())) / 864e5);
+  if (dias > 1) cuenta.textContent = "Faltan " + dias + " días";
+  else if (dias === 1) cuenta.textContent = "Es mañana";
+  else if (dias === 0) cuenta.textContent = "Es hoy";
+  else cuenta.remove();
+
+  // ---------- Portada: la red de la identidad, en movimiento ----------
+  // Misma geometría que generar_identidad.py: 16 estaciones de 174° a 6°.
+  const LEVELS = [0.40,0.62,0.50,0.80,0.58,0.72,0.47,1.00,0.90,0.52,0.76,0.56,0.84,0.48,0.64,0.42];
+  const CYCLES = [2.5,3,2,3.5,2.5,3,2,4,3.5,2,3,2.5,3.5,2,3,2.5];
+  const N = 16, TH = [...Array(N)].map((_, i) => (174 + (6 - 174) * i / (N - 1)) * Math.PI / 180);
+  const C = {spoke:"#2B4A9E", mesh:"#232C5A", node:"#2E3A70", ring:"#1B2350", hl:"#F4C430"};
+  const cv = document.getElementById("red"), ctx = cv.getContext("2d");
+  const quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let W, H, k, cx, cy, dpr;
+
+  function medir() {
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const ancho = W > 900;
+    k = ancho ? Math.min(H / 1506 * 1.05, W / 2600) : Math.min(W / 2150, H / 2000);
+    cx = ancho ? W * 0.68 : W / 2;
+    cy = H + 60 * k;
+  }
+
+  let hl = 6, hlPrev = 6, tCambio = 0;
+  const vecinos = i => [i - 3, i - 2, i - 1, i + 1, i + 2, i + 3].filter(j => j >= 0 && j < N);
+
+  function puntas(t) {
+    return TH.map((a, i) => {
+      const lv = quieto ? LEVELS[i] : LEVELS[i] * (0.86 + 0.14 * Math.sin(t * 0.00035 * CYCLES[i] + i * 1.7));
+      const r0 = 400 * k, L = (250 + 570 * lv) * k;
+      return {a, x0: cx + r0 * Math.cos(a), y0: cy - r0 * Math.sin(a), x: cx + (r0 + L) * Math.cos(a), y: cy - (r0 + L) * Math.sin(a)};
+    });
+  }
+
+  function linea(x1, y1, x2, y2, col, w, alpha = 1) {
+    ctx.globalAlpha = alpha; ctx.strokeStyle = col; ctx.lineWidth = w;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.globalAlpha = 1;
+  }
+
+  function dibujar(t) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.lineCap = "round";
+    for (let r = 240; r < 1700; r += 120) {
+      ctx.strokeStyle = C.ring; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(cx, cy, r * k, 0, Math.PI * 2); ctx.stroke();
+    }
+    const P = puntas(t), w = 20 * k;
+    for (let i = 0; i < N; i++) for (const d of [1, 2, 3]) if (i + d < N)
+      linea(P[i].x, P[i].y, P[i + d].x, P[i + d].y, C.mesh, Math.max(1, w * 0.2));
+    // cambio de estación destacada: el amarillo pasa de una laptop a otra por la red
+    const fase = quieto ? 1 : Math.min(1, (t - tCambio) / 900);
+    P.forEach((p, i) => { if (i !== hl) linea(p.x0, p.y0, p.x, p.y, C.spoke, w * 0.9); });
+    P.forEach((p, i) => { ctx.fillStyle = C.node; ctx.beginPath(); ctx.arc(p.x, p.y, w * 0.62, 0, 7); ctx.fill(); });
+    const h = P[hl];
+    for (const j of vecinos(hl)) linea(h.x, h.y, P[j].x, P[j].y, C.hl, Math.max(1.2, w * 0.2), fase);
+    if (!quieto && fase < 1) {          // paquete que viaja desde la anterior
+      const a = P[hlPrev]; ctx.fillStyle = C.hl;
+      ctx.beginPath(); ctx.arc(a.x + (h.x - a.x) * fase, a.y + (h.y - a.y) * fase, w * 0.5, 0, 7); ctx.fill();
+    }
+    linea(h.x0, h.y0, h.x, h.y, C.hl, w * 0.9, 0.35 + 0.65 * fase);
+    ctx.fillStyle = C.hl; ctx.beginPath(); ctx.arc(h.x, h.y, w * 0.62, 0, 7); ctx.fill();
+    ctx.fillStyle = C.hl; ctx.beginPath(); ctx.arc(cx, cy, 150 * k, 0, 7); ctx.fill();
+  }
+
+  function cuadro(t) {
+    if (t - tCambio > 2600) {
+      hlPrev = hl;
+      const v = vecinos(hl); hl = v[Math.floor(Math.random() * v.length)];
+      tCambio = t;
+    }
+    dibujar(t);
+    req = requestAnimationFrame(cuadro);
+  }
+
+  let req = null;
+  medir();
+  addEventListener("resize", () => { medir(); if (quieto) dibujar(0); });
+  if (quieto) { dibujar(0); return; }
+  // animar solo con la portada a la vista
+  new IntersectionObserver(([e]) => {
+    if (e.isIntersecting && !req) req = requestAnimationFrame(cuadro);
+    else if (!e.isIntersecting && req) { cancelAnimationFrame(req); req = null; }
+  }).observe(cv);
+})();
 </script>
 </body>
 </html>

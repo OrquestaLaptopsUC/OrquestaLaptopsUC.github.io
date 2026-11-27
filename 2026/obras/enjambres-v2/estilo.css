@@ -1,0 +1,88 @@
+/* ENJAMBRES 2 · estilo compartido por la página de laptop y la de la maestra */
+:root{
+  --bg:#070a10; --panel:#0e131c; --panel2:#131a26; --line:#1f2836; --tx:#e4eaf2; --dim:#8492a8; --tenue:#56647a;
+  --acc:#7fb4ff; --acc2:#f0b65c; --ok:#6fd49a; --warn:#f0705e; --mio:#7fb4ff;
+  --ui: ui-sans-serif,system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --mono: ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:radial-gradient(1200px 700px at 35% 0%,#0d1422 0%,var(--bg) 60%);color:var(--tx);font:12.5px/1.45 var(--ui);
+     display:flex;flex-direction:column;overflow:hidden;user-select:none;-webkit-user-select:none}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 14px;border-bottom:1px solid var(--line);
+       background:rgba(14,19,28,.85);backdrop-filter:blur(8px)}
+header h1{font-size:14px;margin:0;letter-spacing:.34em;font-weight:700}
+header h1 sup{font-size:9px;letter-spacing:.08em;color:var(--acc2);margin-left:2px;font-weight:700}
+.chip{font-size:10.5px;letter-spacing:.14em;font-weight:800;padding:3px 10px;border-radius:99px;background:var(--mio);color:#0c1017}
+.chip.maestra{background:var(--acc2)}
+.chip.ensayo{background:transparent;color:var(--acc2);box-shadow:inset 0 0 0 1px var(--acc2)}
+.grow{flex:1}
+label,.lbl{color:var(--dim);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+select,button,input[type=text],input[type=number]{background:var(--panel2);color:var(--tx);border:1px solid var(--line);border-radius:7px;padding:5px 9px;font:12px var(--ui)}
+button{cursor:pointer;transition:border-color .12s,background .12s}
+button:hover{border-color:var(--acc)}
+button:disabled{opacity:.35;cursor:default}
+button.on{background:var(--acc2);color:#1a1204;border-color:var(--acc2);font-weight:700}
+button.chico{padding:2px 8px;font-size:11px}
+button.peligro:hover{border-color:var(--warn)}
+button.armado{background:var(--warn);border-color:var(--warn);color:#1a0806;font-weight:700}
+input[type=range]{accent-color:var(--acc);width:100%;margin:0}
+.punto{width:9px;height:9px;border-radius:50%;background:#4a525c;display:inline-block;flex:none}
+.punto.ok{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.punto.mal{background:var(--warn)}
+kbd{background:#1a2230;border:1px solid var(--line);border-radius:4px;padding:0 5px;font:10.5px var(--mono);color:var(--tx)}
+.nota{font-size:10.5px;color:var(--tenue)}
+.oculto,.oculta{display:none !important}
+
+main{flex:1;display:grid;grid-template-columns:1fr 452px;min-height:0}
+#escena{position:relative;min-width:0;min-height:0}
+#lienzo{width:100%;display:block;touch-action:none}
+#panel{border-left:1px solid var(--line);background:rgba(14,19,28,.9);min-width:0}
+.sec{padding:11px 14px 13px;border-bottom:1px solid var(--line)}
+.sec h2{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;margin:0 0 8px;font-weight:700;display:flex;gap:8px;align-items:center;color:#c3ccda}
+.sec h2 small{color:var(--tenue);letter-spacing:.02em;text-transform:none;font-weight:400}
+
+/* pads */
+.pads{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.pads .grupoPad{grid-column:1/-1;font-size:9.5px;letter-spacing:.2em;color:var(--tenue);text-transform:uppercase;margin:2px 0 -4px}
+.pad{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pad .padCab{display:flex;justify-content:space-between;align-items:center;gap:4px;font-size:9.5px;letter-spacing:.14em;min-height:18px;color:#c3ccda}
+.pad .padCab b{font-weight:700}
+.pad .padVal{color:var(--dim);font:10px var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+.pad canvas{width:100%;aspect-ratio:1/1;display:block;border:1px solid var(--line);border-radius:10px;touch-action:none;cursor:crosshair}
+.pad.bloqueado canvas{cursor:not-allowed}
+.pad.tenue{opacity:.45}
+.pad .candPad{font-size:8.5px;letter-spacing:.08em;padding:1px 6px;border-radius:99px;cursor:pointer;border:1px solid;font-weight:700}
+.pad .candPad.ret,.cand.ret{background:#2b2214;border-color:#6d5427;color:var(--acc2)}
+.pad .candPad.ced,.cand.ced{background:#122033;border-color:#2c4a6c;color:#8cc0f0}
+.pad .candPad.mixto{background:#1b2128;border-color:#3a4552;color:#c9d2dc}
+.segmentos{display:flex;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.segmentos button{flex:1;border:0;border-radius:0;border-right:1px solid var(--line);padding:6px 2px;font-size:11.5px;background:var(--panel2)}
+.segmentos button:last-child{border-right:0}
+.segmentos button.on{background:var(--mio);color:#0c1017;font-weight:700}
+.segmentos.bloqueado{opacity:.45}
+.opcion{display:grid;grid-template-columns:74px 1fr;gap:8px;align-items:center;margin-top:9px}
+.ayudaVoz{font-size:10.5px;color:var(--tenue);margin:4px 0 0 82px;min-height:1.4em}
+details.avanzado>summary{cursor:pointer;color:var(--dim);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:4px 0}
+
+/* filas de parámetros */
+.fila{display:grid;grid-template-columns:74px 1fr 58px;gap:4px 8px;align-items:center;padding:3px 0}
+.fila.sin{grid-template-columns:1fr 58px}
+.fila .nom{grid-column:1/-1;font-size:11px;color:var(--dim);display:flex;justify-content:space-between;margin-bottom:-3px}
+.fila .val{text-align:right;font:11px var(--mono)}
+.fila select{width:100%;padding:2px 4px}
+.fila.apagada .ctl,.fila.apagada .val{opacity:.35}
+.cand{font-size:9px;letter-spacing:.08em;padding:2px 0;width:74px;text-align:center;border-radius:99px;font-weight:700}
+
+/* agentes */
+#chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;max-height:64px;overflow-y:auto}
+.ag{font:700 10px var(--mono);padding:1px 6px;border-radius:99px;cursor:pointer;color:#0c1017;border:1px solid transparent;background:var(--mio)}
+.ag.mudo{background:#2c333d !important;color:#8b97a6;text-decoration:line-through}
+.ag:hover{border-color:#fff}
+
+/* espectrograma */
+#cajaEsp{position:relative;background:#05070c}
+#espectro{height:100%;width:100%;display:block}
+#marcas{position:absolute;inset:0;pointer-events:none;font-size:10px;color:#62708a}
+#marcas span{position:absolute;right:6px;transform:translateY(-50%)}
+#marcas b{position:absolute;left:8px;top:4px;font-weight:400;letter-spacing:.06em}

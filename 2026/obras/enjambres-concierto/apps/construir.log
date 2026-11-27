@@ -1,0 +1,16 @@
+== 2026-11-27 13:33:32  Rodrigo’s MacBook Pro  macOS 26.5.1
+Apple Swift version 5.9.2 (swiftlang-5.9.2.2.56 clang-1500.1.0.2.5)
+Target: arm64-apple-darwin25.5.0
+==== Enjambres
+-- compilando arm64
+-- compilando x86_64
+/Users/rcadiz/Development/OrquestaLaptopsUC.github.io/2026/obras/enjambres-concierto/apps/Enjambres.app: replacing existing signature
+LISTO: /Users/rcadiz/Development/OrquestaLaptopsUC.github.io/2026/obras/enjambres-concierto/apps/Enjambres.app
+Architectures in the fat file: /Users/rcadiz/Development/OrquestaLaptopsUC.github.io/2026/obras/enjambres-concierto/apps/Enjambres.app/Contents/MacOS/Enjambres are: x86_64 arm64 
+==== Enjambres Director
+-- compilando arm64
+-- compilando x86_64
+/Users/rcadiz/Development/OrquestaLaptopsUC.github.io/2026/obras/enjambres-concierto/apps/Enjambres Director.app: replacing existing signature
+LISTO: /Users/rcadiz/Development/OrquestaLaptopsUC.github.io/2026/obras/enjambres-concierto/apps/Enjambres Director.app
+Architectures in the fat file: /Users/rcadiz/Development/OrquestaLaptopsUC.github.io/2026/obras/enjambres-concierto/apps/Enjambres Director.app/Contents/MacOS/EnjambresDirector are: x86_64 arm64 
+== fin
